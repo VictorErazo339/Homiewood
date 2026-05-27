@@ -15,10 +15,6 @@ function mostrarMensaje(texto, tipo = "error") {
     }
 }
 
-// ===============================
-// LOGIN
-// ===============================
-
 loginForm.addEventListener("submit", async function (event) {
     event.preventDefault();
 
@@ -55,18 +51,14 @@ loginForm.addEventListener("submit", async function (event) {
         mostrarMensaje("Inicio de sesión correcto.", "ok");
 
         setTimeout(() => {
-            window.location.href = "home.html";
+            window.location.href = "/html/home.html";
         }, 700);
 
     } catch (error) {
-        console.error("Error conectando con el backend:", error);
+        console.error(error);
         mostrarMensaje("No se pudo conectar con el backend.");
     }
 });
-
-// ===============================
-// REGISTRO
-// ===============================
 
 registroForm.addEventListener("submit", async function (event) {
     event.preventDefault();
@@ -119,20 +111,16 @@ registroForm.addEventListener("submit", async function (event) {
         mostrarMensaje("Cuenta creada correctamente.", "ok");
 
         setTimeout(() => {
-            window.location.href = "home.html";
+            window.location.href = "/html/home.html";
         }, 700);
 
     } catch (error) {
-        console.error("Error conectando con el backend:", error);
+        console.error(error);
         mostrarMensaje("No se pudo conectar con el backend.");
     }
 });
 
-// ===============================
-// RECUPERAR CONTRASEÑA
-// ===============================
-
 recuperarForm.addEventListener("submit", function (event) {
     event.preventDefault();
-    mostrarMensaje("Recuperación de contraseña aún no implementada.");
+    mostrarMensaje("Recuperación de contraseña aún no implementada.", "error");
 });

@@ -1,4 +1,12 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api";
+
+
+// CORREGIDO: Si no existe import.meta.env, usa directo tu backend de Spring Boot en local
+const API_BASE_URL = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL) 
+    ? import.meta.env.VITE_API_URL 
+    : "http://localhost:8080/api";
+
+
+//const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api";
 
 export function guardarToken(token) {
     localStorage.setItem("token", token);
