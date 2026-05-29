@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HOMIEWOOD - Por ver</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../css/profile.css">
+</head>
+
+<body>
+
+    <nav class="navbar-homi">
+        <a href="./home.html" class="brand">
+            <img src="../img/hamstersolo.webp" alt="Homiwood" class="brand-logo">
+        </a>
+
+        <ul class="nav-links">
+            <li><a href="./trending.html">Trending</a></li>
+            <li><a href="./home.html">Mis Homies</a></li>
+            <li><a href="#">Cartelera</a></li>
+        </ul>
+
+        <div class="nav-icons">
+            <button type="button" aria-label="Buscar">
+                <i class="bi bi-search"></i>
+            </button>
+
+            <button type="button" aria-label="Notificaciones">
+                <i class="bi bi-bell-fill"></i>
+            </button>
+        </div>
+    </nav>
+
+    <header class="profile-banner">
+        <div class="banner-film-strip"></div>
+    </header>
+
+    <main class="profile-container">
+
+        <section class="profile-header">
+            <div class="d-flex gap-4 align-items-start flex-wrap">
+
+                <div class="avatar-wrap">
+                    <div class="avatar-circle">
+                        <i class="bi bi-person"></i>
+                    </div>
+                    <div class="avatar-badge">🎬</div>
+                </div>
+
+                <div class="profile-info">
+
+                    <div class="profile-top-row">
+                        <div>
+                            <h1 class="profile-name" id="profileName">Usuario</h1>
+                            <p class="profile-username" id="profileUsername">@usuario</p>
+                        </div>
+
+                        <button class="edit-btn">
+                            ✏️ Editar perfil
+                        </button>
+                    </div>
+
+                    <p class="profile-bio-inline">
+                        Cinéfilo 🎥 Fan del terror psicológico y el drama independiente.
+                    </p>
+
+                    <div class="stats-tags-row">
+
+                        <div class="profile-stats">
+                            <div class="stat-item">
+                                <span class="stat-number" id="statPosts">0</span>
+                                <span class="stat-label">Posts</span>
+                            </div>
+
+                            <div class="stat-divider"></div>
+
+                            <div class="stat-item">
+                                <span class="stat-number">342</span>
+                                <span class="stat-label">Homies</span>
+                            </div>
+
+                            <div class="stat-divider"></div>
+
+                            <div class="stat-item">
+                                <span class="stat-number">519</span>
+                                <span class="stat-label">Siguiendo</span>
+                            </div>
+                        </div>
+
+                        <div class="vertical-divider"></div>
+
+                        <ul id="bioTags" class="bio-tags list-unstyled mb-0" aria-label="Géneros favoritos" role="list">
+                            <li>
+                                <span class="bio-tag">🎬 Sin preferencias aún</span>
+                            </li>
+                        </ul>
+
+                    </div>
+
+                </div>
+
+                <div class="profile-achievements ms-auto">
+                    <div class="achievement-item">
+                        <span class="ach-icon">🏆</span>
+                        <span class="ach-name">Top Crítico</span>
+                    </div>
+
+                    <div class="achievement-item">
+                        <span class="ach-icon">🎬</span>
+                        <span class="ach-name">100 Reseñas</span>
+                    </div>
+
+                    <div class="achievement-item">
+                        <span class="ach-icon">🔥</span>
+                        <span class="ach-name">Racha 30 días</span>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <section class="top5-section">
+
+            <div class="top5-title-row">
+                <h2 class="section-title">
+                    🎬 <span>MI TOP 5</span>
+                </h2>
+
+                <button
+                    class="edit-btn"
+                    data-bs-toggle="modal"
+                    data-bs-target="#top5Modal">
+                    + Agregar al Top 5
+                </button>
+            </div>
+
+            <div id="top5Grid" class="top5-grid"></div>
+
+        </section>
+
+        <nav class="profile-tabs" aria-label="Secciones del perfil">
+            <a href="./profile.html" class="profile-tab">Hilo</a>
+            <a href="./vistas.html" class="profile-tab">Vistas</a>
+            <a href="./porver.html" class="profile-tab active" aria-current="page">Por ver</a>
+        </nav>
+
+        <section class="movies-view-section">
+
+            <div class="view-title-row">
+                <h2 class="view-title">Películas y series por ver</h2>
+
+                <button
+                    type="button"
+                    class="edit-btn"
+                    data-bs-toggle="modal"
+                    data-bs-target="#porverModal">
+                    + Agregar por ver
+                </button>
+            </div>
+
+            <div class="movie-library-grid" id="porverGrid"></div>
+
+        </section>
+
+    </main>
+
+    <!-- MODAL TOP 5 -->
+    <div class="modal fade" id="top5Modal" tabindex="-1" aria-labelledby="top5ModalLabel" aria-hidden="true">
+
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+
+            <div class="modal-content modal-box">
+
+                <h3 class="modal-title" id="top5ModalLabel">
+                    AGREGAR AL TOP 5
+                </h3>
+
+                <label class="form-label" for="top5SearchInput">
+                    BUSCAR PELÍCULA O SERIE
+                </label>
+
+                <input
+                    id="top5SearchInput"
+                    class="form-control"
+                    type="text"
+                    placeholder="Busca por título..."
+                    autocomplete="off">
+
+                <div class="top5-picker-layout mt-3">
+
+                    <div id="top5Results" class="top5-results">
+                        <p class="top5-empty">
+                            Escribe para buscar.
+                        </p>
+                    </div>
+
+                    <div class="top5-editor-panel">
+
+                        <div id="top5Preview" class="top5-preview">
+                            Elige una película o serie
+                        </div>
+
+                        <label class="form-label">
+                            ELEGIR POSICIÓN
+                        </label>
+
+                        <div class="top5-slot-options">
+
+                            <button type="button" class="top5-slot-btn" data-pos="0">
+                                <strong>#1</strong>
+                                <span>Vacío</span>
+                            </button>
+
+                            <button type="button" class="top5-slot-btn" data-pos="1">
+                                <strong>#2</strong>
+                                <span>Vacío</span>
+                            </button>
+
+                            <button type="button" class="top5-slot-btn" data-pos="2">
+                                <strong>#3</strong>
+                                <span>Vacío</span>
+                            </button>
+
+                            <button type="button" class="top5-slot-btn" data-pos="3">
+                                <strong>#4</strong>
+                                <span>Vacío</span>
+                            </button>
+
+                            <button type="button" class="top5-slot-btn" data-pos="4">
+                                <strong>#5</strong>
+                                <span>Vacío</span>
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="modal-actions">
+
+                    <button
+                        type="button"
+                        class="btn-cancel"
+                        data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+
+                    <button
+                        type="button"
+                        id="saveTop5Btn"
+                        class="btn-save">
+                        Guardar en Top 5
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- MODAL POR VER -->
+    <div class="modal fade" id="porverModal" tabindex="-1" aria-labelledby="porverModalLabel" aria-hidden="true">
+
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+
+            <div class="modal-content modal-box">
+
+                <h3 class="modal-title" id="porverModalLabel">
+                    AGREGAR A POR VER
+                </h3>
+
+                <label class="form-label" for="porverSearchInput">
+                    BUSCAR PELÍCULA O SERIE
+                </label>
+
+                <input
+                    id="porverSearchInput"
+                    class="form-control"
+                    type="text"
+                    placeholder="Busca por título..."
+                    autocomplete="off">
+
+                <div id="porverResults" class="top5-results mt-3">
+                    <p class="top5-empty">
+                        Escribe para buscar.
+                    </p>
+                </div>
+
+                <div class="modal-actions">
+                    <button
+                        type="button"
+                        class="btn-cancel"
+                        data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <nav class="bottom-nav">
+        <div class="bottom-nav-inner">
+
+            <button class="bottom-nav-btn" onclick="window.location.href='./trending.html'">
+                <span class="bottom-nav-icon">
+                    <img src="../img/trending.webp" alt="Trending">
+                </span>
+                <span class="bottom-nav-label">Trending</span>
+            </button>
+
+            <button class="bottom-nav-btn is-homies" onclick="window.location.href='./home.html'">
+                <span class="bottom-nav-icon">
+                    <img src="../img/myhomies.webp" alt="Mis Homies">
+                </span>
+                <span class="bottom-nav-label">Mis Homies</span>
+            </button>
+
+            <button class="bottom-nav-btn">
+                <span class="bottom-nav-icon">
+                    <img src="../img/clapperboard.webp" alt="Cartelera">
+                </span>
+                <span class="bottom-nav-label">Cartelera</span>
+            </button>
+
+            <button class="bottom-nav-btn active">
+                <span class="bottom-nav-icon">
+                    <img src="../img/home_profileicon(noglow).webp" alt="Perfil">
+                </span>
+                <span class="bottom-nav-label">Perfil</span>
+            </button>
+
+        </div>
+    </nav>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script type="module" src="../src/JS/porver.js"></script>
+
+</body>
+
+</html>

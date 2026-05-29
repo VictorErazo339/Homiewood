@@ -92,6 +92,7 @@ public class ResponseMapper {
                 calificacion.getContenido().getIdContenido(),
                 calificacion.getContenido().getTitulo(),
                 calificacion.getContenido().getTipoContenido(),
+                calificacion.getContenido().getPosterUrl(),
                 calificacion.getPuntaje(),
                 calificacion.getComentario(),
                 calificacion.getFechaCalificacion()

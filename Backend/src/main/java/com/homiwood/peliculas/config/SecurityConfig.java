@@ -11,6 +11,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 
 @Configuration
 @EnableWebSecurity
@@ -24,36 +25,27 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-
         return http
                 .csrf(csrf -> csrf.disable())
-                .cors(Customizer.withDefaults()) // Busca y aplica el Bean de CORS configurado
+                .cors(Customizer.withDefaults())
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
-                        // 1. Rutas de autenticación globales
                         .requestMatchers(
+                                "/ws/**",
+                                "/ws/info/**",
+                                "/topic/**",
+                                "/app/**",
+                                // cambiar despues para colocar privado usuario.
+                                "/api/usuarios/**",
                                 "/api/auth/**",
-                                "/api/health"
+                                "/api/health",
+                                "/api/catalogo/**",
+                                "/api/calificaciones/**",
+                                "/api/likes-calificacion/**",
+                                "/api/comentarios-calificacion/**"
                         ).permitAll()
-
-                        // 2. CORREGIDO: Abrir todo el catálogo (incluyendo /guardar)
-                        .requestMatchers(
-                                "/api/catalogo/**"
-                        ).permitAll()
-
-                        // 3. CORREGIDO: Abrir las calificaciones para tus pruebas
-                        .requestMatchers(
-                                "/api/calificaciones/**"
-                        ).permitAll()
-
-                        // 4. CORREGIDO: Dar acceso público al endpoint del WebSocket
-                        .requestMatchers(
-                                "/ws/**"
-                        ).permitAll()
-
-                        // Todo lo demás sigue requiriendo token JWT obligatoriamente
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(

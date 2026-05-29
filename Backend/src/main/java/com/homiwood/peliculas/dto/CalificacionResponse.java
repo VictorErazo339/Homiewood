@@ -10,6 +10,7 @@ public record CalificacionResponse(
         Long idContenido,
         String tituloContenido,
         String tipoContenido,
+        String posterUrl,
         Integer puntaje,
         String comentario,
         LocalDateTime fechaCalificacion

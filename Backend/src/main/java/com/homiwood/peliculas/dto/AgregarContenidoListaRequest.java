@@ -5,6 +5,10 @@ import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import jakarta.validation.constraints.Pattern;
 
+import lombok.Data;
+
+
+@Data
 public class AgregarContenidoListaRequest {
 
     @NotNull(message = "El idContenido es obligatorio")
@@ -40,19 +44,12 @@ public class AgregarContenidoListaRequest {
         this.posicion = posicion;
     }
 
-    public String getEstado() {
-        return estado;
-    }
+    public String getEstado() {return estado;}
 
-    public void setEstado(String estado) {
-        this.estado = estado;
-    }
 
-    public String getNotaUsuario() {
-        return notaUsuario;
-    }
 
-    public void setNotaUsuario(String notaUsuario) {
-        this.notaUsuario = notaUsuario;
-    }
+
+
+
+
 }

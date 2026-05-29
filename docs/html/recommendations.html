@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HOMIEWOOD - Recomendaciones</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="../css/recommendations.css" />
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="navbar-homi" aria-label="Navegación principal">
+        <a href="./home.html" class="brand">
+            <img src="../img/hamstersolo.webp" alt="Homiewood" width="40px">
+        </a>
+
+        <div class="nav-links d-none d-md-flex gap-4">
+            <a href="./trending.html">Trending</a>
+            <a href="./home.html">Mis Homies</a>
+            <a href="#">Cartelera</a>
+        </div>
+
+        <div class="nav-search-wrap" id="navSearchWrap">
+            <button type="button" class="nav-search-toggle" id="navSearchToggle" aria-label="Buscar"
+                aria-expanded="false">
+                <i class="bi bi-search"></i>
+            </button>
+
+            <div class="nav-search-bar" id="navSearchBar" aria-hidden="true">
+                <input type="text" id="navSearchInput" placeholder="Buscar películas, series..." autocomplete="off" />
+
+                <button type="button" class="nav-search-close" id="navSearchClose" aria-label="Cerrar búsqueda">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="nav-icons d-flex gap-1">
+            <button type="button" aria-label="Notificaciones">
+                <i class="bi bi-bell-fill"></i>
+            </button>
+
+            <button type="button" class="sidebar-toggle d-md-none" id="sidebarToggle" aria-label="Ver recomendaciones">
+                <i class="bi bi-list"></i>
+            </button>
+        </div>
+
+        <span id="nombreUsuario" class="nombre-usuario">Usuario</span>
+
+        <button type="button" class="avatar" onclick="window.location.href='./profile.html'" title="Ver perfil">
+            <img src="../img/hamstericon.webp" alt="Perfil" width="30px">
+        </button>
+    </nav>
+
+    <!-- PÁGINA PRINCIPAL -->
+    <main class="rec-page">
+
+        <div class="rec-header">
+            <div class="rec-header-left">
+                <h1 class="rec-title">
+                    <img src="../img/recommend(noglow).webp" alt="Homiewood recomendaciones" width="150px" />
+                    Recomendaciones
+                </h1>
+
+                <p class="rec-subtitle">
+                    Descubre qué están viendo tus homies
+                </p>
+            </div>
+
+            <div class="rec-header-right">
+                <span class="rec-count" id="recCount">+200 títulos</span>
+            </div>
+        </div>
+
+        <!-- Barra de búsqueda principal -->
+        <div class="rec-search-wrap">
+            <i class="bi bi-search rec-search-icon"></i>
+
+            <input type="text" id="recSearchInput" class="rec-search-input"
+                placeholder="Buscar por título, actor o director..." autocomplete="off" />
+
+            <button type="button" class="rec-search-clear" id="recSearchClear" aria-label="Limpiar búsqueda">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        <!-- FILTROS -->
+        <div class="filters-bar" id="filtersBar">
+
+            <!-- ORDEN -->
+            <div class="filter-group">
+                <label class="filter-label" for="filterOrden">Orden</label>
+
+                <div class="filter-select-wrap">
+                    <select id="filterOrden" class="filter-select">
+                        <option value="reciente">Reciente a Antiguo</option>
+                        <option value="antiguo">Antiguo a Reciente</option>
+                        <option value="az">Alfabético A–Z</option>
+                        <option value="za">Alfabético Z–A</option>
+                    </select>
+
+                    <i class="bi bi-chevron-down filter-chevron"></i>
+                </div>
+            </div>
+
+            <!-- TIPO -->
+            <div class="filter-group">
+                <label class="filter-label" for="filterTipo">Tipo</label>
+
+                <div class="filter-select-wrap">
+                    <select id="filterTipo" class="filter-select">
+                        <option value="">Todos</option>
+                        <option value="Película">Película</option>
+                        <option value="Serie">Serie</option>
+                        <option value="Anime">Anime</option>
+                    </select>
+
+                    <i class="bi bi-chevron-down filter-chevron"></i>
+                </div>
+            </div>
+
+            <!-- GENERO -->
+            <div class="filter-group">
+                <label class="filter-label" for="filterGenero">Género</label>
+
+                <div class="filter-select-wrap">
+                    <select id="filterGenero" class="filter-select">
+                        <option value="">Todos</option>
+                        <option value="Acción">Acción</option>
+                        <option value="Aventura">Aventura</option>
+                        <option value="Animación">Animación</option>
+                        <option value="Anime">Anime</option>
+                        <option value="Biopic">Biopic</option>
+                        <option value="Comedia">Comedia</option>
+                        <option value="Crimen">Crimen</option>
+                        <option value="Deporte">Deporte</option>
+                        <option value="Documental">Documental</option>
+                        <option value="Drama">Drama</option>
+                        <option value="Familia">Familia</option>
+                        <option value="Fantasía">Fantasía</option>
+                        <option value="Film-Noir">Film-Noir</option>
+                        <option value="Historia">Historia</option>
+                        <option value="Música">Música</option>
+                        <option value="Musical">Musical</option>
+                        <option value="Misterio">Misterio</option>
+                        <option value="Reality TV">Reality TV</option>
+                        <option value="Romance">Romance</option>
+                        <option value="Sci-Fi">Sci-Fi</option>
+                        <option value="Terror">Terror</option>
+                        <option value="Videojuegos">Videojuegos</option>
+                        <option value="Guerra">Guerra</option>
+                        <option value="Western">Western</option>
+                    </select>
+
+                    <i class="bi bi-chevron-down filter-chevron"></i>
+                </div>
+            </div>
+
+            <!-- PUNTUACIÓN -->
+            <div class="filter-group">
+                <label class="filter-label" for="filterPuntuacion">Puntuación</label>
+
+                <div class="filter-select-wrap">
+                    <select id="filterPuntuacion" class="filter-select">
+                        <option value="">Todas</option>
+                        <option value="5">★★★★★ (5)</option>
+                        <option value="4">★★★★☆ (4+)</option>
+                        <option value="3">★★★☆☆ (3+)</option>
+                        <option value="2">★★☆☆☆ (2+)</option>
+                        <option value="1">★☆☆☆☆ (1+)</option>
+                    </select>
+
+                    <i class="bi bi-chevron-down filter-chevron"></i>
+                </div>
+            </div>
+
+            <!-- AÑO -->
+            <div class="filter-group">
+                <label class="filter-label" for="filterAnio">Año</label>
+
+                <div class="filter-select-wrap">
+                    <select id="filterAnio" class="filter-select">
+                        <option value="">Todos</option>
+                    </select>
+
+                    <i class="bi bi-chevron-down filter-chevron"></i>
+                </div>
+            </div>
+
+            <!-- IDIOMA -->
+            <div class="filter-group">
+                <label class="filter-label" for="filterIdioma">Idioma</label>
+
+                <div class="filter-select-wrap">
+                    <select id="filterIdioma" class="filter-select">
+                        <option value="">Todos</option>
+                        <option value="es">Español</option>
+                        <option value="en">Inglés</option>
+                        <option value="ja">Japonés</option>
+                        <option value="ko">Coreano</option>
+                        <option value="pt">Portugués</option>
+                        <option value="hi">Indio</option>
+                    </select>
+
+                    <i class="bi bi-chevron-down filter-chevron"></i>
+                </div>
+            </div>
+
+            <!-- LIMPIAR -->
+            <button type="button" class="filters-reset" id="filtersReset" aria-label="Limpiar filtros">
+                <i class="bi bi-x-circle"></i>
+                <span>Limpiar</span>
+            </button>
+
+        </div>
+
+        <!-- GRID -->
+        <div class="rec-grid" id="recGrid"></div>
+
+        <!-- SIN RESULTADOS -->
+        <div class="rec-empty" id="recEmpty" aria-live="polite">
+            <i class="bi bi-film"></i>
+
+            <p>No se encontraron títulos con esos filtros.</p>
+
+            <button type="button" class="filters-reset" id="recEmptyReset">
+                Limpiar filtros
+            </button>
+        </div>
+
+        <!-- PAGINACIÓN -->
+        <nav class="pagination-wrap" id="paginationWrap" aria-label="Paginación">
+            <button type="button" class="page-btn page-prev" id="pagePrev" aria-label="Página anterior">
+                <i class="bi bi-chevron-left"></i>
+            </button>
+
+            <div class="page-numbers" id="pageNumbers"></div>
+
+            <button type="button" class="page-btn page-next" id="pageNext" aria-label="Página siguiente">
+                <i class="bi bi-chevron-right"></i>
+            </button>
+        </nav>
+
+    </main>
+
+    <!-- MODAL -->
+    <div class="film-modal-overlay" id="filmModalOverlay" aria-hidden="true">
+        <div class="film-modal" role="dialog" aria-modal="true" aria-labelledby="filmModalTitle">
+
+            <button class="film-modal-close" id="filmModalClose" aria-label="Cerrar">
+                <i class="bi bi-x-lg"></i>
+            </button>
+
+            <div class="film-modal-body">
+                <div class="film-modal-poster" id="filmModalPoster"></div>
+
+                <div class="film-modal-info">
+                    <div class="film-modal-title" id="filmModalTitle"></div>
+                    <div class="film-modal-sub" id="filmModalSub"></div>
+                    <div class="film-modal-tags" id="filmModalTags"></div>
+                    <div class="film-modal-cast" id="filmModalCast"></div>
+                    <p class="film-modal-desc" id="filmModalDesc"></p>
+
+                    <!-- VALORACIÓN -->
+                    <div class="film-modal-rating">
+                        <span class="film-modal-section-label">Tu valoración</span>
+
+                        <div class="star-rating" id="filmModalStars" role="group"
+                            aria-label="Valoración de 1 a 5 estrellas">
+                            <button type="button" class="star-btn" data-value="1" aria-label="1 estrella">
+                                <i class="bi bi-star"></i>
+                            </button>
+
+                            <button type="button" class="star-btn" data-value="2" aria-label="2 estrellas">
+                                <i class="bi bi-star"></i>
+                            </button>
+
+                            <button type="button" class="star-btn" data-value="3" aria-label="3 estrellas">
+                                <i class="bi bi-star"></i>
+                            </button>
+
+                            <button type="button" class="star-btn" data-value="4" aria-label="4 estrellas">
+                                <i class="bi bi-star"></i>
+                            </button>
+
+                            <button type="button" class="star-btn" data-value="5" aria-label="5 estrellas">
+                                <i class="bi bi-star"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- AGREGAR A LISTA -->
+                    <div class="film-modal-lists">
+                        <span class="film-modal-section-label">Agregar a lista</span>
+
+                        <div class="add-to-list-wrap">
+                            <button type="button" class="add-to-list-btn" id="addToListBtn" aria-expanded="false"
+                                aria-label="Agregar a lista">
+                                <i class="bi bi-plus-lg"></i>
+                            </button>
+
+                            <div class="add-to-list-dropdown" id="addToListDropdown" aria-hidden="true">
+                                <button type="button" class="list-option" data-list="top5">
+                                    <img src="../img/TOP5LIST(noglow).webp" width="40px" alt="Top 5">
+                                    <span>Top 5</span>
+                                    <i class="bi bi-check2 list-check" id="check-top5"></i>
+                                </button>
+
+                                <button type="button" class="list-option" data-list="watchlist">
+                                    <img src="../img/WATCHLIST(noglow).webp" width="40px" alt="Watchlist">
+                                    <span>Watchlist</span>
+                                    <i class="bi bi-check2 list-check" id="check-watchlist"></i>
+                                </button>
+
+                                <button type="button" class="list-option" data-list="porver">
+                                    <img src="../img/PENDINGLIST(noglow).webp" width="40px" alt="Por ver">
+                                    <span>Por ver</span>
+                                    <i class="bi bi-check2 list-check" id="check-porver"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="list-badges" id="listBadges"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- BOTTOM NAV MOVIL -->
+    <nav class="bottom-nav" aria-label="Navegación móvil">
+        <div class="inner">
+            <button class="bottom-nav-btn" onclick="window.location.href='./trending.html'">
+                <span>
+                    <img src="../img/trending.webp" alt="Trending" width="50px">
+                </span>
+                <span class="bottom-nav-label">Trending</span>
+            </button>
+
+            <button class="bottom-nav-btn" onclick="window.location.href='./home.html'">
+                <span>
+                    <img src="../img/myhomies.webp" alt="Mis Homies" width="70px">
+                </span>
+                <span class="bottom-nav-label">Mis Homies</span>
+            </button>
+
+            <button class="bottom-nav-btn">
+                <span>
+                    <img src="../img/clapperboard.webp" alt="Estrenos" width="40px">
+                </span>
+                <span class="bottom-nav-label">Estrenos</span>
+            </button>
+
+            <button class="bottom-nav-btn" onclick="window.location.href='./profile.html'">
+                <span>
+                    <img src="../img/home_profileicon(noglow).webp" alt="Perfil" width="40px">
+                </span>
+                <span class="bottom-nav-label">Perfil</span>
+            </button>
+        </div>
+    </nav>
+
+    <script type="module" src="../src/JS/recommendations.js"></script>
+
+</body>
+
+</html>
