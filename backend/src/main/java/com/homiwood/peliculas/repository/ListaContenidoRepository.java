@@ -6,12 +6,17 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ListaContenidoRepository extends JpaRepository<ListaContenido, Long> {
 
     List<ListaContenido> findByListaIdLista(Long idLista);
 
     List<ListaContenido> findByListaUsuarioIdUsuario(Long idUsuario);
+
+    Optional<ListaContenido> findByListaIdListaAndContenidoIdContenido(Long idLista, Long idContenido);
+
+    List<ListaContenido> findByListaUsuarioIdUsuarioAndEstado(Long idUsuario, String estado);
 
     boolean existsByListaIdListaAndContenidoIdContenido(Long idLista, Long idContenido);
 

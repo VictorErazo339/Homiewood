@@ -1,6 +1,7 @@
 package com.homiwood.peliculas.dto;
 
 import jakarta.validation.constraints.*;
+import java.util.List;
 
 public class GuardarYAgregarContenidoRequest {
 
@@ -57,6 +58,16 @@ public class GuardarYAgregarContenidoRequest {
     @Size(max = 1000, message = "La nota no puede superar los 1000 caracteres")
     private String notaUsuario;
 
+
+    private List<String> generos;
+
+    public List<String> getGeneros() {
+        return generos;
+    }
+
+    public void setGeneros(List<String> generos) {
+        this.generos = generos;
+    }
     public String getProveedor() {
         return proveedor;
     }
