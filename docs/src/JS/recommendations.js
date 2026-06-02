@@ -10,8 +10,17 @@ document.addEventListener("DOMContentLoaded", async () => {
         return;
     }
 
+    mostrarUsuario(usuario);
     await cargarRecomendaciones(usuario.idUsuario || usuario.id);
 });
+
+function mostrarUsuario(usuario) {
+    const nombreEl = document.getElementById("nombreUsuario");
+
+    if (nombreEl) {
+        nombreEl.textContent = `@${usuario.username || usuario.nombre || "usuario"}`;
+    }
+}
 
 async function cargarRecomendaciones(idUsuario) {
     const grid = document.getElementById("recGrid");
@@ -20,9 +29,11 @@ async function cargarRecomendaciones(idUsuario) {
     try {
         grid.innerHTML = `<p class="rec-loading">Cargando recomendaciones...</p>`;
 
-        recomendaciones = await apiRequest(`/recomendaciones/usuario/${idUsuario}?limite=24`);
+        recomendaciones = await apiRequest(`/recomendaciones/usuario/${idUsuario}?limite=30`);
 
-        count.textContent = `+${recomendaciones.length} títulos`;
+        if (count) {
+            count.textContent = `${recomendaciones.length} títulos`;
+        }
 
         if (!recomendaciones || recomendaciones.length === 0) {
             grid.innerHTML = `
@@ -38,6 +49,7 @@ async function cargarRecomendaciones(idUsuario) {
 
     } catch (error) {
         console.error("Error cargando recomendaciones:", error);
+
         grid.innerHTML = `
             <div class="rec-empty visible">
                 <i class="bi bi-exclamation-triangle"></i>
@@ -67,18 +79,39 @@ function renderRecomendaciones(items) {
                 <h3 class="rec-card-title">${escapeHtml(item.titulo)}</h3>
 
                 <p class="rec-card-meta">
-                    ${escapeHtml(item.tipoContenido || "Contenido")}
+                    ${escapeHtml(formatearTipo(item.tipoContenido))}
                     ${item.anioEstreno ? " · " + item.anioEstreno : ""}
                 </p>
 
                 <div class="rec-card-tags">
                     <span class="rec-card-tag tag-yellow">
-                        ${escapeHtml(item.motivo || "Recomendado para ti")}
+                        ${escapeHtml(formatearMotivo(item.motivo))}
                     </span>
                 </div>
             </div>
         </article>
     `).join("");
+}
+
+function formatearTipo(tipo) {
+    if (!tipo) return "Contenido";
+    if (tipo === "PELICULA") return "Película";
+    if (tipo === "SERIE") return "Serie";
+    return tipo;
+}
+
+function formatearMotivo(motivo) {
+    if (!motivo) return "Recomendado para ti";
+
+    if (motivo.includes("coincide con géneros")) {
+        return "Según tus gustos";
+    }
+
+    if (motivo.includes("general")) {
+        return "Popular en Homiewood";
+    }
+
+    return motivo;
 }
 
 function escapeHtml(texto) {

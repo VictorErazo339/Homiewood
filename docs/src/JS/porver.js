@@ -252,7 +252,7 @@ async function buscarContenidoPorVer(query) {
     }
 }
 
-function agregarPorVer(item) {
+async function agregarPorVer(item) {
     const existe = porver.some(p =>
         p.apiId === item.apiId &&
         p.proveedor === item.proveedor
@@ -262,6 +262,12 @@ function agregarPorVer(item) {
         porver.unshift(item);
         guardarPorVer();
         renderPorVer();
+
+        try {
+            await guardarPorVerEnBackend(item);
+        } catch (error) {
+            console.error("Error guardando por ver en backend:", error);
+        }
     }
 
     document.getElementById("porverSearchInput").value = "";
@@ -269,6 +275,31 @@ function agregarPorVer(item) {
         `<p class="top5-empty">Agregado correctamente.</p>`;
 }
 
+async function guardarPorVerEnBackend(item) {
+    const idUsuario = obtenerIdUsuario();
+
+    return await apiRequest(`/usuarios/${idUsuario}/listas/porver/contenidos/externo`, {
+        method: "POST",
+        body: JSON.stringify({
+            proveedor: item.proveedor,
+            apiId: String(item.apiId),
+            titulo: item.titulo,
+            tipoContenido: convertirTipoBackend(item.tipoVisual),
+            descripcion: item.descripcion || "",
+            fechaEstreno: item.fechaEstreno || null,
+            anioEstreno: item.anioEstreno || null,
+            posterUrl: item.posterUrl || "",
+            idiomaOriginal: item.idioma || "",
+            puntajeExterno: item.puntajeExterno || 0,
+            estado: "POR_VER",
+            generos: item.generos || []
+        })
+    });
+}
+function convertirTipoBackend(tipoVisual) {
+    if (tipoVisual === "Película") return "PELICULA";
+    return "SERIE";
+}
 /* ===============================
    PINES
    IMPORTANTE:

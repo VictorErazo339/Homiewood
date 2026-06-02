@@ -424,7 +424,7 @@ function inicializarTop5Modal() {
         });
     });
 
-    saveBtn.addEventListener("click", function () {
+    saveBtn.addEventListener("click", async function () {
         if (!peliculaSeleccionada) {
             alert("Primero elige una película o serie.");
             return;
@@ -436,6 +436,7 @@ function inicializarTop5Modal() {
         }
 
         top5[posicionSeleccionada] = peliculaSeleccionada;
+        await guardarTop5EnBackend(peliculaSeleccionada, posicionSeleccionada + 1);
 
         guardarTop5();
         renderTop5();
@@ -451,6 +452,28 @@ function inicializarTop5Modal() {
     });
 }
 
+async function guardarTop5EnBackend(item, posicion) {
+    const idUsuario = usuarioActual.idUsuario || usuarioActual.id;
+
+    return await apiRequest(`/usuarios/${idUsuario}/listas/top5/contenidos/externo`, {
+        method: "POST",
+        body: JSON.stringify({
+            proveedor: item.proveedor,
+            apiId: String(item.apiId),
+            titulo: item.titulo,
+            tipoContenido: item.tipoBackend || convertirTipoBackend(item.tipoVisual),
+            descripcion: item.descripcion || "",
+            fechaEstreno: item.fechaEstreno || null,
+            anioEstreno: item.anioEstreno || null,
+            posterUrl: item.posterUrl || "",
+            idiomaOriginal: item.idioma || "",
+            puntajeExterno: item.puntajeExterno || 0,
+            posicion: posicion,
+            estado: "FAVORITO",
+            generos: item.generos || []
+        })
+    });
+}
 async function buscarPeliculasTop5(query) {
     const results = document.getElementById("top5Results");
 
