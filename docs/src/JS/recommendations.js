@@ -312,7 +312,7 @@ function obtenerRecomendacionesFiltradas() {
 
         const coincideTipo = !tipo || item.tipo === tipo;
         const coincideGenero = !genero || item.genero === genero;
-        const coincidePuntuacion = !puntuacion || Number(item.rating) >= Number(puntuacion);
+        const coincidePuntuacion = !puntuacion || Number(item.rating) === Number(puntuacion);
         const coincideAnio = !anio || String(item.anio) === String(anio);
         const coincideIdioma = !idioma || item.idioma === idioma;
 

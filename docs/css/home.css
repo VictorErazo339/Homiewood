@@ -698,6 +698,73 @@ body {
     cursor: not-allowed;
 }
 
+/* ---------- COMPOSER RATING ---------- */
+.composer-rating {
+    display: none;
+    margin-bottom: 1rem;
+}
+
+.composer-rating.visible {
+    display: block;
+}
+
+.composer-star-rating {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    margin-bottom: 4px;
+}
+
+.composer-rating-value {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--gold);
+    min-height: 1.2em;
+    display: block;
+}
+
+/* ---------- PAGINACIÓN ---------- */
+.feed-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 24px 0 16px;
+    flex-wrap: wrap;
+}
+
+.pagination-btn {
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 7px 14px;
+    font-family: var(--font-body);
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s, color 0.2s;
+    min-width: 38px;
+    text-align: center;
+}
+
+.pagination-btn:hover {
+    background: var(--card-hover);
+    border-color: var(--gold-dim);
+    color: var(--gold);
+}
+
+.pagination-btn.active {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: var(--black);
+}
+
+.pagination-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
 /* ---------- POST CARD ---------- */
 .post-card {
     background: #47260049;
@@ -713,14 +780,124 @@ body {
     margin-bottom: 10px;
 }
 
+/* --- Layout de 3 columnas del post --- */
+.post-layout {
+    display: grid;
+    grid-template-columns: 125px 0.6fr 1fr;
+    gap: 14px;
+    align-items: start;
+}
+
+/* Columna izquierda: poster */
+.post-col-poster {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Columna central: datos de la película */
+.post-col-film {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+
+.post-film-title {
+    font-family: var(--font-title);
+    font-size: 21px;
+    color: #fff;
+    line-height: 1.2;
+    word-break: break-word;
+}
+
+.post-film-meta {
+    font-size: 0.78rem;
+    color: var(--gold-dim);
+    font-weight: 600;
+}
+
+.post-film-cast {
+    font-size: 0.75rem;
+    color: var(--muted);
+    font-weight: 500;
+    line-height: 1.4;
+}
+
+.post-film-desc {
+    font-size: 0.78rem;
+    color: var(--text);
+    opacity: 0.8;
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.post-film-rating {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+.post-film-rating-stars {
+    display: flex;
+    gap: 1px;
+}
+
+.post-film-rating-stars .bi {
+    font-size: 15px;
+    color: var(--gold);
+}
+
+.post-film-rating-value {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--gold);
+}
+
+.post-col-film .add-to-list-wrap {
+    margin-top: 4px;
+}
+
+
+/* Columna derecha: info social */
+.post-col-social {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+    justify-content: space-between;
+    height: 100%;
+}
+
 .post-card .username {
     font-weight: 0;
-    font-size: 20px;
-    color: #fff;
+    font-size: 19px;
+    color: #ffca1b;
     font-family: var(--font-title);
     display: flex;
     align-items: center;
     gap: 8px;
+}
+
+/* Fila de comentarios + likes/dislikes alineada */
+.post-footer-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: auto;
+    padding-top: 8px;
+}
+
+.post-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-shrink: 0;
 }
 
 .user-icon {
@@ -761,8 +938,8 @@ body {
 }
 
 .post-thumb {
-    width: 95px;
-    height: 128px;
+    width: 135px;
+    height: 208px;
     border-radius: 10px;
     flex-shrink: 0;
     display: flex;
@@ -785,7 +962,7 @@ body {
 
 .post-text {
     color: #ffffff;
-    font-weight: 600;
+    font-weight: 200;
     padding-top: 4px;
 }
 
@@ -817,7 +994,7 @@ body {
 }
 
 .glow-image {
-    width: 70px;
+    width: 35px;
     transition: transform 0.3s ease, filter 0.3s ease;
     cursor: pointer;
 }
@@ -825,6 +1002,16 @@ body {
 .glow-image:hover {
     transform: scale(1.28);
     filter: drop-shadow(0 0 3px rgb(255, 216, 44));
+}
+
+.glow-image:active {
+    transform: scale(1.28);
+    filter: drop-shadow(0 0 3px rgb(255, 216, 44));
+}
+
+.post-actions button.active .glow-image {
+    transform: scale(1.15);
+    filter: drop-shadow(0 0 6px rgb(255, 216, 44));
 }
 
 /* ---------- COMENTARIOS ---------- */
@@ -835,7 +1022,7 @@ body {
     font-size: 0.82rem;
     font-weight: 700;
     cursor: pointer;
-    padding: 8px 0 0 0;
+    padding: 20px 0 0 0;
     display: block;
     width: 100%;
     text-align: left;
@@ -1344,21 +1531,6 @@ body {
     transform: scaleX(1);
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /* ---------- RESPONSIVE: MÓVIL ---------- */
 @media (max-width: 767px) {
 
@@ -1416,5 +1588,56 @@ body {
 
     .film-modal-title {
         font-size: 1.25rem;
+    }
+
+    /* Post layout en móvil: 2 columnas (poster + contenido apilado) */
+    .post-layout {
+        grid-template-columns: 120px 1fr;
+        grid-template-rows: auto auto;
+    }
+
+    .post-col-social {
+        grid-column: 1/ -1;
+        grid-row: 3;
+
+    }
+
+    /* Estrellas del composer en móvil más pequeñas */
+    .composer-star-rating .star-btn {
+        font-size: 1rem;
+        padding: 1px 2px;
+    }
+
+    /* Paginación en móvil */
+    .pagination-btn {
+        padding: 6px 10px;
+        font-size: 0.8rem;
+        min-width: 32px;
+    }
+
+    /* Star rating del modal en móvil */
+    .star-rating {
+        flex-wrap: wrap;
+        gap: 2px;
+    }
+
+    .star-btn {
+        font-size: 1.1rem;
+    }
+}
+
+/* ---------- RESPONSIVE: TABLET ---------- */
+@media (min-width: 768px) and (max-width: 1024px) {
+    .post-layout {
+        grid-template-columns: 85px 1fr 1fr;
+    }
+
+    .star-rating {
+        flex-wrap: wrap;
+        gap: 2px;
+    }
+
+    .star-btn {
+        font-size: 1.1rem;
     }
 }
