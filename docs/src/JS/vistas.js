@@ -17,10 +17,12 @@ document.addEventListener("DOMContentLoaded", async function () {
     const idUsuario = usuarioActual.idUsuario || usuarioActual.id;
     await cargarDatosUsuario(idUsuario);
     await cargarCantidadPosts(idUsuario);
+    await cargarVistasDesdeBackend();
+
     cargarTop5();
     renderTop5();
 
-    cargarVistas();
+    
     renderVistas();
     renderBioTags();
 
@@ -69,6 +71,45 @@ async function cargarDatosUsuario(idUsuario) {
 
     } catch (error) {
         console.error("Error cargando usuario:", error);
+    }
+}
+
+async function cargarVistasDesdeBackend() {
+    try {
+        const idUsuario = obtenerIdUsuario();
+
+        const data = await apiRequest(
+            `/usuarios/${idUsuario}/listas/contenidos?estado=VISTO`
+        );
+
+        const top5Vistos = top5.filter(Boolean);
+
+        const vistasBackend = data.map(item => ({
+            idContenido: item.idContenido,
+            titulo: item.tituloContenido,
+            tipoVisual: item.tipoContenido === "PELICULA" ? "Película" : "Serie",
+            tipoBackend: item.tipoContenido,
+            posterUrl: item.posterUrl,
+            anioEstreno: item.anioEstreno,
+            apiId: String(item.apiId || item.idContenido),
+            proveedor: item.apiProvider || "BD",
+            generos: item.generos || []
+        }));
+
+        const combinadas = [...top5Vistos, ...vistasBackend];
+
+        vistas = combinadas.filter((item, index, array) =>
+            index === array.findIndex(i =>
+                String(i.apiId) === String(item.apiId) &&
+                i.proveedor === item.proveedor
+            )
+        );
+
+        guardarVistas();
+
+    } catch (error) {
+        console.error("Error cargando vistas desde backend:", error);
+        cargarVistas();
     }
 }
 

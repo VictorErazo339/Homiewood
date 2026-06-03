@@ -18,8 +18,8 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     await cargarDatosUsuario(usuarioActual.idUsuario);
     await cargarPostsUsuario(usuarioActual.idUsuario);
+    await cargarTop5DesdeBackend();
 
-    cargarTop5();
     renderTop5();
     renderBioTags();
 
@@ -88,6 +88,45 @@ async function cargarPostsUsuario(idUsuario) {
         console.error("Error cargando posts:", e);
     }
 }
+
+async function cargarTop5DesdeBackend() {
+    try {
+        const idUsuario = usuarioActual.idUsuario || usuarioActual.id;
+
+        const data = await apiRequest(
+            `/usuarios/${idUsuario}/listas/contenidos?estado=FAVORITO`
+        );
+
+        top5 = [null, null, null, null, null];
+
+        data.forEach(item => {
+            const posicion = item.posicion ? item.posicion - 1 : null;
+
+            const normalizado = {
+                idContenido: item.idContenido,
+                titulo: item.tituloContenido,
+                tipoVisual: item.tipoContenido === "PELICULA" ? "Película" : "Serie",
+                tipoBackend: item.tipoContenido,
+                posterUrl: item.posterUrl,
+                anioEstreno: item.anioEstreno,
+                apiId: String(item.apiId || item.idContenido),
+                proveedor: item.apiProvider || "BD",
+                generos: item.generos || []
+            };
+
+            if (posicion !== null && posicion >= 0 && posicion < 5) {
+                top5[posicion] = normalizado;
+            }
+        });
+
+        guardarTop5();
+
+    } catch (error) {
+        console.error("Error cargando Top 5 desde backend:", error);
+        cargarTop5();
+    }
+}
+
 
 function renderPost(c) {
     const fecha = c.fechaCalificacion

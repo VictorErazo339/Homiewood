@@ -53,7 +53,7 @@ loginForm.addEventListener("submit", async function (event) {
         mostrarMensaje("Inicio de sesión correcto.", "ok");
 
         setTimeout(() => {
-            window.location.href = "/DeployHo/html/home.html";
+            window.location.href = "./home.html";
         }, 700);
 
     } catch (error) {
@@ -113,7 +113,7 @@ registroForm.addEventListener("submit", async function (event) {
         mostrarMensaje("Cuenta creada correctamente.", "ok");
 
         setTimeout(() => {
-            window.location.href = "/DeployHo/html/home.html";
+            window.location.href = "./home.html";
         }, 700);
 
     } catch (error) {
