@@ -1,3 +1,4 @@
+
 import { obtenerUsuarioAutenticado } from "../api/authApi.js";
 import { buscarTmdb, buscarAnime, guardarContenidoExterno } from "../api/catalogoApi.js";
 import { apiRequest } from "../api/api.js";
@@ -23,7 +24,6 @@ document.addEventListener("DOMContentLoaded", async function () {
     inicializarModalPelicula();
     inicializarSidebarDrawer();
     inicializarComposer();
-    inicializarListasFeed();
     await cargarFeed();
     await cargarRecomendacionesHome();
 });
@@ -39,7 +39,7 @@ async function cargarUsuarioLogueado() {
 
     if (!token) {
         console.warn("No hay token. Redirigiendo al login.");
-        window.location.href = "/Homiewood/html/login.html";
+        window.location.href = "/DeployHo/html/login.html";
         return;
     }
 
@@ -62,7 +62,7 @@ async function cargarUsuarioLogueado() {
         console.error("Error cargando usuario:", error);
         localStorage.removeItem("token");
         localStorage.removeItem("usuario");
-        window.location.href = "/Homiewood/html/login.html";
+        window.location.href = "/DeployHo/html/login.html";
     }
 }
 
@@ -73,7 +73,7 @@ function obtenerNombreUsuarioActual() {
 function cerrarSesion() {
     localStorage.removeItem("token");
     localStorage.removeItem("usuario");
-    window.location.href = "/Homiewood/html/login.html";
+    window.location.href = "/DeployHo/html/login.html";
 }
 
 // ===============================
@@ -107,209 +107,67 @@ function escapeHtml(texto) {
 }
 
 // ===============================
-// FEED DESDE BACKEND (PAGINADO)
+// FEED DESDE BACKEND
 // ===============================
-
-const POSTS_PER_PAGE = 10;
-let feedPagina = 1;
-let feedTodos = [];
 
 async function cargarFeed() {
     try {
         const calificaciones = await apiRequest("/calificaciones");
-        feedTodos = calificaciones.reverse();
-        feedPagina = 1;
-        renderFeedPagina();
+        const feed = document.getElementById("feed");
+        if (!feed) return;
+        feed.innerHTML = calificaciones.reverse().map(c => renderCalificacion(c)).join("");
+
+        for (const c of calificaciones) {
+            await cargarLikes(c.idCalificacion);
+        }
     } catch (e) {
         console.log("Error cargando feed:", e);
     }
 }
 
-async function renderFeedPagina() {
-    const feed = document.getElementById("feed");
-    if (!feed) return;
-
-    const totalPaginas = Math.ceil(feedTodos.length / POSTS_PER_PAGE);
-    const inicio = (feedPagina - 1) * POSTS_PER_PAGE;
-    const fin = inicio + POSTS_PER_PAGE;
-    const pagina = feedTodos.slice(inicio, fin);
-
-    feed.innerHTML = pagina.map(c => renderCalificacion(c)).join("");
-
-    for (const c of pagina) {
-        await cargarLikes(c.idCalificacion);
-    }
-
-    renderPaginacion(totalPaginas);
-}
-
-function renderPaginacion(totalPaginas) {
-    let paginacionEl = document.getElementById("feedPaginacion");
-    if (!paginacionEl) {
-        paginacionEl = document.createElement("div");
-        paginacionEl.id = "feedPaginacion";
-        paginacionEl.className = "feed-pagination";
-        document.getElementById("feed").after(paginacionEl);
-    }
-
-    if (totalPaginas <= 1) {
-        paginacionEl.innerHTML = "";
-        return;
-    }
-
-    let html = `<button class="pagination-btn" id="pagPrev" aria-label="Página anterior" ${feedPagina === 1 ? "disabled" : ""}>&#8592;</button>`;
-
-    for (let i = 1; i <= totalPaginas; i++) {
-        const esPuntos = (i > 2 && i < feedPagina - 1) || (i < totalPaginas - 1 && i > feedPagina + 1);
-        const esAdyacente = Math.abs(i - feedPagina) <= 1 || i === 1 || i === totalPaginas;
-
-        if (esPuntos) {
-            if (html.slice(-4) !== "...") html += `<span class="pagination-btn" style="cursor:default;opacity:0.4">...</span>`;
-        } else if (esAdyacente) {
-            html += `<button class="pagination-btn ${i === feedPagina ? "active" : ""}" data-pagina="${i}">${i}</button>`;
-        }
-    }
-
-    html += `<button class="pagination-btn" id="pagNext" aria-label="Página siguiente" ${feedPagina === totalPaginas ? "disabled" : ""}>&#8594;</button>`;
-
-    paginacionEl.innerHTML = html;
-
-    paginacionEl.querySelectorAll("[data-pagina]").forEach(btn => {
-        btn.addEventListener("click", () => {
-            feedPagina = parseInt(btn.dataset.pagina);
-            renderFeedPagina();
-            document.getElementById("feed").scrollIntoView({ behavior: "smooth", block: "start" });
-        });
-    });
-
-    const prev = document.getElementById("pagPrev");
-    const next = document.getElementById("pagNext");
-
-    if (prev) {
-        prev.addEventListener("click", () => {
-            if (feedPagina > 1) {
-                feedPagina--;
-                renderFeedPagina();
-                document.getElementById("feed").scrollIntoView({ behavior: "smooth", block: "start" });
-            }
-        });
-    }
-
-    if (next) {
-        next.addEventListener("click", () => {
-            const total = Math.ceil(feedTodos.length / POSTS_PER_PAGE);
-            if (feedPagina < total) {
-                feedPagina++;
-                renderFeedPagina();
-                document.getElementById("feed").scrollIntoView({ behavior: "smooth", block: "start" });
-            }
-        });
-    }
-}
-
-
-function renderEstrellas(puntaje, total = 10) {
-    let html = '<div class="post-film-rating-stars">';
-    for (let i = 1; i <= total; i++) {
-        html += `<i class="bi ${i <= puntaje ? 'bi-star-fill' : 'bi-star'}"></i>`;
-    }
-    html += '</div>';
-    return html;
-}
-
 function renderCalificacion(c) {
     const fecha = c.fechaCalificacion ? c.fechaCalificacion.split("T")[0] : "";
     const tipo = c.tipoContenido || "Contenido";
-    const puntaje = c.puntaje || 0;
-
-    const posterStyle = c.posterUrl
-        ? `background-image:url('${c.posterUrl}');background-size:cover;background-position:center;`
-        : 'background:linear-gradient(135deg,#2a1a4a,#5a2a8a)';
-
-    const posterContent = c.posterUrl ? '' : escapeHtml(c.tituloContenido);
-
-    const tagsHtml = `<span class="tag ${tagClass(tipo)}">${escapeHtml(tipo)}</span>`;
-
-    const ratingHtml = puntaje > 0
-        ? `<div class="post-film-rating">
-               ${renderEstrellas(puntaje)}
-           </div>`
-        : '';
 
     return `
     <div class="post-card" id="post-${c.idCalificacion}">
         <div class="timestamp">${fecha}</div>
-
-        <div class="post-layout">
-
-            <!-- Columna 1: Poster -->
-            <div class="post-col-poster">
-                <div class="post-thumb" style="${posterStyle}"
-                    data-film-id="${c.idCalificacion}">
-                    ${posterContent}
-                </div>
+ 
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+            <div class="username">
+                <div class="user-icon">👤</div>
+                ${escapeHtml(c.username || c.nombreUsuario)}
             </div>
-
-            <!-- Columna 2: Datos de la película -->
-            <div class="post-col-film">
-                <div class="post-film-title">${escapeHtml(c.tituloContenido || "Sin título")}</div>
-                <div class="d-flex gap-2 flex-wrap">
-                ${tagsHtml}
-                </div>
-                ${c.director ? `<div class="post-film-meta">Dir. ${escapeHtml(c.director)} ${c.anio ? '· ' + escapeHtml(String(c.anio)) : ''}</div>` : ''}
-                ${c.protagonistas ? `<div class="post-film-cast">${escapeHtml(c.protagonistas)}</div>` : ''}
-                ${c.descripcion ? `<p class="post-film-desc">${escapeHtml(c.descripcion)}</p>` : ''}
-                ${ratingHtml}
-                <div class="add-to-list-wrap" id="list-wrap-${c.idCalificacion}">
-                    <button type="button" class="add-to-list-btn post-add-list-btn"
-                        aria-expanded="false"
-                        aria-label="Agregar a lista"
-                        data-post-id="${c.idCalificacion}">
-                        <i class="bi bi-plus-lg"></i>
-                    </button>
-                    <div class="add-to-list-dropdown" id="post-list-dropdown-${c.idCalificacion}" aria-hidden="true">
-                        <button type="button" class="list-option" data-list="watchlist" data-post-id="${c.idCalificacion}">
-                            <img src="../img/WATCHLIST(noglow).webp" width="40px" alt="Watchlist">
-                            <span>Watchlist</span>
-                            <i class="bi bi-check2 list-check"></i>
-                        </button>
-                        <button type="button" class="list-option" data-list="porver" data-post-id="${c.idCalificacion}">
-                            <img src="../img/PENDINGLIST(noglow).webp" width="40px" alt="Por ver">
-                            <span>Por ver</span>
-                            <i class="bi bi-check2 list-check"></i>
-                        </button>
-                    </div>
-                </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <span class="tag ${tagClass(tipo)}">${escapeHtml(tipo)}</span>
             </div>
-
-            <!-- Columna 3: Info social -->
-            <div class="post-col-social">
-                <div class="username">
-                    <div class="user-icon">👤</div>
-                    ${escapeHtml(c.username || c.nombreUsuario)}
-                </div>
-                <p class="post-text mb-0">${escapeHtml(c.comentario || "")}</p>
-
-                <div class="post-footer-row">
-                    <button class="comment-toggle" onclick="toggleComments(${c.idCalificacion})">
-                        <img src="../img/hamstercomment.webp" alt="Comentar" width="40px">
-                        <span id="comment-count-${c.idCalificacion}">0 comentarios</span>
-                    </button>
-                    <div class="post-actions">
-                        <button id="btn-like-${c.idCalificacion}" onclick="toggleLike(${c.idCalificacion}, 'LIKE')">
-                            <img src="../img/postlike.webp" alt="Me gustó" width="50px" class="glow-image">
-                            <span id="count-like-${c.idCalificacion}">0</span>
-                        </button>
-                        <button id="btn-dislike-${c.idCalificacion}" onclick="toggleLike(${c.idCalificacion}, 'DISLIKE')">
-                            <img src="../img/postdislike.webp" alt="No me gustó" width="50px" class="glow-image">
-                            <span id="count-dislike-${c.idCalificacion}">0</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
         </div>
-
+ 
+        <div class="d-flex gap-3">
+            <div class="post-thumb" style="${c.posterUrl
+            ? `background-image:url('${c.posterUrl}');background-size:cover;background-position:center;`
+            : 'background:linear-gradient(135deg,#2a1a4a,#5a2a8a)'}">
+                ${c.posterUrl ? '' : escapeHtml(c.tituloContenido)}
+            </div>
+            <p class="post-text mb-0">${escapeHtml(c.comentario || "")}</p>
+        </div>
+ 
+        <div class="post-actions">
+            <button id="btn-like-${c.idCalificacion}" onclick="toggleLike(${c.idCalificacion}, 'LIKE')">
+                <img src="../img/postlike.webp" alt="Me gustó" width="50px" class="glow-image">
+                <span id="count-like-${c.idCalificacion}">0</span>
+            </button>
+            <button id="btn-dislike-${c.idCalificacion}" onclick="toggleLike(${c.idCalificacion}, 'DISLIKE')">
+                <img src="../img/postdislike.webp" alt="No me gustó" width="50px" class="glow-image">
+                <span id="count-dislike-${c.idCalificacion}">0</span>
+            </button>
+        </div>
+ 
+        <button class="comment-toggle" onclick="toggleComments(${c.idCalificacion})">
+            <img src="../img/hamstercomment.webp" alt="Comentar" width="40px">
+            0 comentarios
+        </button>
+ 
         <div class="comment-section" id="comments-${c.idCalificacion}">
             <div class="comment-list" id="comment-list-${c.idCalificacion}"></div>
             <div class="comment-input-row">
@@ -321,7 +179,6 @@ function renderCalificacion(c) {
         </div>
     </div>`;
 }
-
 
 
 // ===============================
@@ -404,12 +261,7 @@ async function cargarComentarios(idCalificacion) {
 
         if (toggle) {
             const count = comentarios.length;
-            const countSpan = document.getElementById(`comment-count-${idCalificacion}`);
-            if (countSpan) {
-                countSpan.textContent = `${count} comentario${count !== 1 ? "s" : ""}`;
-            } else {
-                toggle.innerHTML = `<img src="../img/hamstercomment.webp" alt="Comentar" width="40px"> ${count} comentario${count !== 1 ? "s" : ""}`;
-            }
+            toggle.innerHTML = `<img src="../img/hamstercomment.webp" alt="Comentar" width="40px"> ${count} comentario${count !== 1 ? "s" : ""}`;
         }
     } catch (e) {
         console.log("Error cargando comentarios:", e);
@@ -568,7 +420,6 @@ function selectFilm(film) {
 
     filmSearchWrap.style.display = "none";
     selectedFilmEl.classList.add("show");
-    mostrarRatingComposer(true);
     checkPostReady();
 }
 
@@ -588,9 +439,6 @@ function inicializarPublicador() {
     postBtn.addEventListener("click", async () => {
         console.log("selectedFilm:", selectedFilm);
         try {
-            const starsWrap = document.getElementById("composerStars");
-            const puntaje = starsWrap ? (parseInt(starsWrap.dataset.rating) || 0) : 0;
-
             const contenido = await guardarContenidoExterno({
                 proveedor: selectedFilm.proveedor,
                 apiId: selectedFilm.apiId,
@@ -605,7 +453,7 @@ function inicializarPublicador() {
                 body: JSON.stringify({
                     idUsuario: usuario.idUsuario,
                     idContenido: contenido.idContenido,
-                    puntaje: puntaje,
+                    puntaje: 3,
                     comentario: postText.value.trim(),
                 })
             });
@@ -629,7 +477,6 @@ function inicializarPublicador() {
             selectedFilmEl.classList.remove("show");
             filmSearchWrap.style.display = "";
             if (filmSearchInput) filmSearchInput.value = "";
-            mostrarRatingComposer(false);
             checkPostReady();
         });
     }
@@ -638,10 +485,8 @@ function inicializarPublicador() {
 function checkPostReady() {
     const postText = document.getElementById("postText");
     const postBtn = document.getElementById("postBtn");
-    const starsWrap = document.getElementById("composerStars");
     if (!postText || !postBtn) return;
-    const puntaje = starsWrap ? (parseInt(starsWrap.dataset.rating) || 0) : 0;
-    postBtn.disabled = !(selectedFilm && postText.value.trim() && puntaje > 0);
+    postBtn.disabled = !(selectedFilm && postText.value.trim());
 }
 
 // ===============================
@@ -905,117 +750,11 @@ function inicializarComposer() {
         composerTrigger.setAttribute("aria-expanded", "false");
         composerBody.setAttribute("aria-hidden", "true");
     });
-
-    inicializarEstrellasComposer();
 }
 
-function inicializarEstrellasComposer() {
-    const starsWrap = document.getElementById("composerStars");
-    const ratingValue = document.getElementById("composerRatingValue");
-    if (!starsWrap) return;
-
-    let currentRating = 0;
-
-    starsWrap.querySelectorAll(".star-btn").forEach(btn => {
-        const val = parseInt(btn.dataset.value);
-
-        btn.addEventListener("mouseenter", () => {
-            starsWrap.querySelectorAll(".star-btn").forEach(b => {
-                const v = parseInt(b.dataset.value);
-                b.querySelector("i").className = v <= val ? "bi bi-star-fill" : "bi bi-star";
-                b.classList.toggle("hovered", v <= val);
-            });
-            if (ratingValue) ratingValue.textContent = `${val}/10`;
-        });
-
-        btn.addEventListener("mouseleave", () => {
-            starsWrap.querySelectorAll(".star-btn").forEach(b => {
-                const v = parseInt(b.dataset.value);
-                b.querySelector("i").className = v <= currentRating ? "bi bi-star-fill" : "bi bi-star";
-                b.classList.remove("hovered");
-                b.classList.toggle("selected", v <= currentRating);
-            });
-            if (ratingValue) ratingValue.textContent = currentRating > 0 ? `${currentRating}/10` : "";
-        });
-
-        btn.addEventListener("click", () => {
-            currentRating = currentRating === val ? 0 : val;
-            starsWrap.querySelectorAll(".star-btn").forEach(b => {
-                const v = parseInt(b.dataset.value);
-                b.querySelector("i").className = v <= currentRating ? "bi bi-star-fill" : "bi bi-star";
-                b.classList.toggle("selected", v <= currentRating);
-            });
-            if (ratingValue) ratingValue.textContent = currentRating > 0 ? `${currentRating}/10` : "";
-            starsWrap.dataset.rating = currentRating;
-            checkPostReady();
-        });
-    });
-}
-
-function mostrarRatingComposer(mostrar) {
-    const wrap = document.getElementById("composerRatingWrap");
-    if (wrap) wrap.classList.toggle("visible", mostrar);
-    if (!mostrar) {
-        const starsWrap = document.getElementById("composerStars");
-        const ratingValue = document.getElementById("composerRatingValue");
-        if (starsWrap) {
-            starsWrap.dataset.rating = 0;
-            starsWrap.querySelectorAll(".star-btn").forEach(b => {
-                b.querySelector("i").className = "bi bi-star";
-                b.classList.remove("selected", "hovered");
-            });
-        }
-        if (ratingValue) ratingValue.textContent = "";
-    }
-}
-
-// Inicializar dropdown de listas en los posts del feed (delegado)
-function inicializarListasFeed() {
-    document.addEventListener("click", function (e) {
-        const btn = e.target.closest(".post-add-list-btn");
-        if (btn) {
-            e.stopPropagation();
-            const postId = btn.dataset.postId;
-            const dropdown = document.getElementById(`post-list-dropdown-${postId}`);
-            if (!dropdown) return;
-            const isOpen = dropdown.classList.contains("open");
-            document.querySelectorAll(".add-to-list-dropdown.open").forEach(d => {
-                d.classList.remove("open");
-                d.setAttribute("aria-hidden", "true");
-            });
-            document.querySelectorAll(".post-add-list-btn.open").forEach(b => b.classList.remove("open"));
-            if (!isOpen) {
-                dropdown.classList.add("open");
-                dropdown.setAttribute("aria-hidden", "false");
-                btn.classList.add("open");
-            }
-            return;
-        }
-
-        const listOpt = e.target.closest(".list-option[data-post-id]");
-        if (listOpt) {
-            const key = listOpt.dataset.list;
-            const postId = listOpt.dataset.postId;
-            if (!window.postLists) window.postLists = {};
-            if (!window.postLists[postId]) window.postLists[postId] = {};
-            window.postLists[postId][key] = !window.postLists[postId][key];
-            const check = listOpt.querySelector(".list-check");
-            if (check) check.classList.toggle("visible", window.postLists[postId][key]);
-            listOpt.classList.toggle("in-list", window.postLists[postId][key]);
-            return;
-        }
-
-        if (!e.target.closest(".add-to-list-wrap")) {
-            document.querySelectorAll(".add-to-list-dropdown.open").forEach(d => {
-                d.classList.remove("open");
-                d.setAttribute("aria-hidden", "true");
-            });
-            document.querySelectorAll(".post-add-list-btn.open").forEach(b => b.classList.remove("open"));
-        }
-    });
-}
-
-
+async function cargarRecomendacionesHome() {
+    const desktop = document.getElementById("recommendationsGrid");
+    const mobile = document.getElementById("recommendationsGridMobile");
 
     if (!desktop && !mobile) return;
 

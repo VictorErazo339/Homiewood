@@ -14,29 +14,16 @@
 
 <body>
 
-    <!-- NAVBAR -->
-    <nav class="navbar-homi" aria-label="Navegación principal">
-        <a href="../home.html" class="brand">
-            <img src="../img/hamstersolo.webp" alt="Homiewood" width="40px">
-        </a>
+<nav class="navbar-homi" aria-label="Navegación principal">
+    <a href="./home.html" class="brand">
+        <img src="../img/hamstersolo.webp" alt="Homiewood" width="40px">
+    </a>
 
-        <div class="nav-links d-none d-md-flex gap-4">
-            <a href="../trending.html">Trending</a>
-            <a href="../home.html">Mis Homies</a>
-            <a href="#">Cartelera</a>
-        </div>
-
-        <div class="nav-search-wrap" id="navSearchWrap">
-            <button type="button" class="nav-search-toggle" id="navSearchToggle" aria-label="Buscar" aria-expanded="false">
-                <i class="bi bi-search"></i>
-            </button>
-            <div class="nav-search-bar" id="navSearchBar" aria-hidden="true">
-                <input type="text" id="navSearchInput" placeholder="Buscar películas, series..." autocomplete="off" />
-                <button type="button" class="nav-search-close" id="navSearchClose" aria-label="Cerrar búsqueda">
-                    <i class="bi bi-x-lg"></i>
-                </button>
-            </div>
-        </div>
+    <div class="nav-links d-none d-md-flex gap-4">
+        <a href="#">Trending</a>
+        <a href="#">Mis Homies</a>
+        <a href="#">Lanzamientos</a>
+    </div>
 
     <div class="nav-search-wrap" id="navSearchWrap">
         <button type="button" class="nav-search-toggle" id="navSearchToggle" aria-label="Buscar" aria-expanded="false">
@@ -55,49 +42,14 @@
         <button type="button" class="sidebar-toggle d-md-none" id="sidebarToggle" aria-label="Ver recomendaciones">
             <i class="bi bi-list"></i>
         </button>
-    </nav>
-
-    <!-- MAIN -->
-    <div class="main-row">
-
-        <!-- FEED -->
-        <div class="feed-col">
-
-            <!-- COMPOSER -->
-            <div class="composer" id="composer">
-                <button class="composer-collapsed-trigger" id="composerTrigger" aria-expanded="false">
-                    <div class="user-icon">🎥</div>
-                    <span>¿Qué estás viendo hoy?</span>
-                </button>
-
-                <div class="composer-body" id="composerBody" aria-hidden="true">
-                    <p class="composer-label">Elige una película o serie</p>
-
-                    <div class="film-search-wrap" id="filmSearchWrap">
-                        <input type="text" id="filmSearchInput" placeholder="🎬 Buscar película o serie..." autocomplete="off">
-                        <div class="film-dropdown" id="filmDropdown"></div>
-                    </div>
+    </div>
 
     <span id="navbar-username" class="nombre-usuario">Usuario</span>
 
-                    <div class="composer-rating" id="composerRatingWrap">
-                        <p class="composer-label">¿Cuanto le das?</p>
-                        <div class="composer-star-rating" id="composerStars" role="group" aria-label="Valoración de 1 a 10 estrellas">
-                            <button type="button" class="star-btn" data-value="1" aria-label="1 estrella"><i class="bi bi-star"></i></button>
-                            <button type="button" class="star-btn" data-value="2" aria-label="2 estrellas"><i class="bi bi-star"></i></button>
-                            <button type="button" class="star-btn" data-value="3" aria-label="3 estrellas"><i class="bi bi-star"></i></button>
-                            <button type="button" class="star-btn" data-value="4" aria-label="4 estrellas"><i class="bi bi-star"></i></button>
-                            <button type="button" class="star-btn" data-value="5" aria-label="5 estrellas"><i class="bi bi-star"></i></button>
-                            <button type="button" class="star-btn" data-value="6" aria-label="6 estrellas"><i class="bi bi-star"></i></button>
-                            <button type="button" class="star-btn" data-value="7" aria-label="7 estrellas"><i class="bi bi-star"></i></button>
-                            <button type="button" class="star-btn" data-value="8" aria-label="8 estrellas"><i class="bi bi-star"></i></button>
-                            <button type="button" class="star-btn" data-value="9" aria-label="9 estrellas"><i class="bi bi-star"></i></button>
-                            <button type="button" class="star-btn" data-value="10" aria-label="10 estrellas"><i class="bi bi-star"></i></button>
-                        </div>
-                        <span class="composer-rating-value" id="composerRatingValue"></span>
-                    </div>
-
-                    <p class="composer-label">¿Qué quieres compartir?</p>
+    <button type="button" class="avatar" onclick="window.location.href='./profile.html'" title="Ver perfil">
+        <img src="../img/hamstericon.webp" alt="Perfil" width="30px">
+    </button>
+</nav>
 
 <div class="main-row">
 
@@ -112,11 +64,9 @@
             <div class="composer-body" id="composerBody" aria-hidden="true">
                 <p class="composer-label">1. Elige una película o serie</p>
 
-                <div class="sidebar-header">
-                    <span>RECOMENDACIONES PARA TI</span>
-                    <button class="btn-ver-todas" onclick="window.location.href='./recommendations.html'">
-                        Ver todas
-                    </button>
+                <div class="film-search-wrap" id="filmSearchWrap">
+                    <input type="text" id="filmSearchInput" placeholder="🎬 Buscar película o serie..." autocomplete="off">
+                    <div class="film-dropdown" id="filmDropdown"></div>
                 </div>
 
                 <div class="selected-film" id="selectedFilm">
@@ -129,12 +79,7 @@
                     <button class="remove-film" id="removeFilm" title="Quitar">✕</button>
                 </div>
 
-                <div class="sidebar-header">
-                    <span>CARTELERA</span>
-                    <button class="btn-ver-todas" onclick="window.location.href='./recommendations.html?section=lanzamientos'">
-                        Ver todas
-                    </button>
-                </div>
+                <p class="composer-label">2. ¿Qué quieres compartir?</p>
 
                 <textarea id="postText" placeholder="Cuéntale a tus homies..." class="mb-3"></textarea>
 
@@ -152,7 +97,9 @@
 
             <div class="sidebar-header">
                 <span>RECOMENDACIONES PARA TI</span>
-                <a href="../html/recommendations.html">Ver todas</a>
+                <button class="btn-ver-todas" onclick="window.location.href='./recommendations.html'">
+                    Ver todas
+                </button>
             </div>
 
             <div class="row g-2 mb-3" id="recommendationsGrid">
@@ -160,8 +107,10 @@
             </div>
 
             <div class="sidebar-header">
-                <span>CARTELERA</span>
-                <a href="#">Ver todas</a>
+                <span>LANZAMIENTOS</span>
+                <button class="btn-ver-todas" onclick="window.location.href='./recommendations.html?section=lanzamientos'">
+                    Ver todas
+                </button>
             </div>
 
             <div class="row g-2">
@@ -198,39 +147,84 @@
     </aside>
 </div>
 
-    <!-- OVERLAY del drawer -->
-    <div class="sidebar-drawer-overlay" id="sidebarDrawerOverlay"></div>
+<div class="sidebar-drawer" id="sidebarDrawer" aria-hidden="true">
+    <div class="sidebar-drawer-inner">
 
-    <!-- MODAL DE PELÍCULA -->
-    <div class="film-modal-overlay" id="filmModalOverlay" aria-hidden="true">
-        <div class="film-modal" role="dialog" aria-modal="true" aria-labelledby="filmModalTitle">
-            <button class="film-modal-close" id="filmModalClose" aria-label="Cerrar">✕</button>
+        <button class="sidebar-drawer-close" id="sidebarDrawerClose" aria-label="Cerrar recomendaciones">
+            <i class="bi bi-x-lg"></i>
+        </button>
 
-            <div class="film-modal-body">
-                <div class="film-modal-poster" id="filmModalPoster"></div>
+        <div class="sidebar-header">
+            <span>RECOMENDACIONES PARA TI</span>
+            <a href="./recommendations.html">Ver todas</a>
+        </div>
 
-                <div class="film-modal-info">
-                    <div class="film-modal-title" id="filmModalTitle"></div>
-                    <div class="film-modal-sub" id="filmModalSub"></div>
-                    <div class="film-modal-tags" id="filmModalTags"></div>
-                    <div class="film-modal-cast" id="filmModalCast"></div>
-                    <p class="film-modal-desc" id="filmModalDesc"></p>
+        <div class="row g-2 mb-3" id="recommendationsGridMobile">
+            <p class="recommendations-loading">Cargando recomendaciones...</p>
+        </div>
 
-                    <!-- ESTRELLAS -->
-                    <div class="film-modal-rating">
-                        <span class="film-modal-section-label">TU VALORACIÓN HOMIE</span>
-                        <div class="star-rating" id="filmModalStars" role="group" aria-label="Valoración de 1 a 10 estrellas">
-                            <button class="star-btn" data-value="1" aria-label="1 estrella"><i class="bi bi-star"></i></button>
-                            <button class="star-btn" data-value="2" aria-label="2 estrellas"><i class="bi bi-star"></i></button>
-                            <button class="star-btn" data-value="3" aria-label="3 estrellas"><i class="bi bi-star"></i></button>
-                            <button class="star-btn" data-value="4" aria-label="4 estrellas"><i class="bi bi-star"></i></button>
-                            <button class="star-btn" data-value="5" aria-label="5 estrellas"><i class="bi bi-star"></i></button>
-                            <button class="star-btn" data-value="6" aria-label="6 estrellas"><i class="bi bi-star"></i></button>
-                            <button class="star-btn" data-value="7" aria-label="7 estrellas"><i class="bi bi-star"></i></button>
-                            <button class="star-btn" data-value="8" aria-label="8 estrellas"><i class="bi bi-star"></i></button>
-                            <button class="star-btn" data-value="9" aria-label="9 estrellas"><i class="bi bi-star"></i></button>
-                            <button class="star-btn" data-value="10" aria-label="10 estrellas"><i class="bi bi-star"></i></button>
-                        </div>
+        <div class="sidebar-header">
+            <span>LANZAMIENTOS</span>
+            <a href="./recommendations.html?section=lanzamientos">Ver todas</a>
+        </div>
+
+        <div class="row g-2">
+            <div class="col-4">
+                <div class="cover c5 cover-clickable" data-title="Devil Wears Prada 2"
+                    data-director="David Frankel" data-year="2025" data-tags="Película,Drama"
+                    data-cast="Meryl Streep, Anne Hathaway, Emily Blunt"
+                    data-desc="Miranda Priestly regresa con nuevos desafíos."
+                    data-grad="linear-gradient(135deg,#1a0050,#c050a0)">
+                    <img src="https://m.media-amazon.com/images/M/MV5BZmM3ZDU3ODItZmY5Yi00OTQ2LWE5OTctZTA5NDBhMWJkOGY3XkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg" alt="Devil Wears Prada 2" width="80px">
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="cover c6 cover-clickable" data-title="Michael"
+                    data-director="Antoine Fuqua" data-year="2025" data-tags="Película,Drama"
+                    data-cast="Jaafar Jackson, Nia Long, Colman Domingo"
+                    data-desc="Biopic sobre la vida de Michael Jackson."
+                    data-grad="linear-gradient(135deg,#0a0a0a,#1a1a3a)">
+                    <img src="https://m.media-amazon.com/images/M/MV5BNzllNmRlN2EtMDQyOC00ODJjLTg4OWQtZDNmNGU3YzlkNjc1XkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg" alt="Michael" width="80px">
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="cover c7 cover-clickable" data-title="Toy Story 5"
+                    data-director="Andrew Stanton" data-year="2026" data-tags="Película,Aventura"
+                    data-cast="Tom Hanks, Tim Allen, Annie Potts"
+                    data-desc="Woody y Buzz regresan en una nueva aventura."
+                    data-grad="linear-gradient(135deg,#000820,#1a4080)">
+                    <img src="https://m.media-amazon.com/images/M/MV5BZTI1YTBiNmEtYWUxZi00YzFkLWIzNjMtMmZjMmY2NzM0ZWMzXkEyXkFqcGc@._V1_.jpg" alt="Toy Story 5" width="80px">
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div class="sidebar-drawer-overlay" id="sidebarDrawerOverlay"></div>
+
+<div class="film-modal-overlay" id="filmModalOverlay" aria-hidden="true">
+    <div class="film-modal" role="dialog" aria-modal="true" aria-labelledby="filmModalTitle">
+        <button class="film-modal-close" id="filmModalClose" aria-label="Cerrar">✕</button>
+
+        <div class="film-modal-body">
+            <div class="film-modal-poster" id="filmModalPoster"></div>
+
+            <div class="film-modal-info">
+                <div class="film-modal-title" id="filmModalTitle"></div>
+                <div class="film-modal-sub" id="filmModalSub"></div>
+                <div class="film-modal-tags" id="filmModalTags"></div>
+                <div class="film-modal-cast" id="filmModalCast"></div>
+                <p class="film-modal-desc" id="filmModalDesc"></p>
+
+                <div class="film-modal-rating">
+                    <span class="film-modal-section-label">TU VALORACIÓN</span>
+                    <div class="star-rating" id="filmModalStars" role="group" aria-label="Valoración de 1 a 5 estrellas">
+                        <button class="star-btn" data-value="1" aria-label="1 estrella"><i class="bi bi-star"></i></button>
+                        <button class="star-btn" data-value="2" aria-label="2 estrellas"><i class="bi bi-star"></i></button>
+                        <button class="star-btn" data-value="3" aria-label="3 estrellas"><i class="bi bi-star"></i></button>
+                        <button class="star-btn" data-value="4" aria-label="4 estrellas"><i class="bi bi-star"></i></button>
+                        <button class="star-btn" data-value="5" aria-label="5 estrellas"><i class="bi bi-star"></i></button>
                     </div>
                 </div>
 
