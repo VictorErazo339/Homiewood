@@ -25,6 +25,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     inicializarComposer();
     inicializarListasFeed();
     await cargarFeed();
+    await cargarRecomendacionesHome();
 });
 
 // ===============================
@@ -749,7 +750,7 @@ function abrirModalPelicula(film) {
             castEl.innerHTML = "";
         }
     }
-     // ESTRELLAS
+    // ESTRELLAS
     const starsEl = document.getElementById("filmModalStars");
     if (starsEl) {
         if (!window.userRatings) window.userRatings = {};
@@ -1016,6 +1017,62 @@ function inicializarListasFeed() {
 
 
 
+    if (!desktop && !mobile) return;
+
+    try {
+        const usuario = JSON.parse(localStorage.getItem("usuario"));
+        const idUsuario = usuario?.idUsuario || usuario?.id;
+
+        if (!idUsuario) return;
+
+        const recomendaciones = await apiRequest(
+            `/recomendaciones/usuario/${idUsuario}?limite=4`
+        );
+
+        const html = renderRecomendacionesHome(recomendaciones);
+
+        if (desktop) desktop.innerHTML = html;
+        if (mobile) mobile.innerHTML = html;
+
+    } catch (error) {
+        console.error("Error cargando recomendaciones home:", error);
+
+        const errorHtml = `
+            <p class="recommendations-loading">
+                No se pudieron cargar las recomendaciones.
+            </p>
+        `;
+
+        if (desktop) desktop.innerHTML = errorHtml;
+        if (mobile) mobile.innerHTML = errorHtml;
+    }
+}
+
+function renderRecomendacionesHome(recomendaciones) {
+    if (!recomendaciones || recomendaciones.length === 0) {
+        return `
+            <p class="recommendations-loading">
+                Agrega títulos a tu Top 5 o Vistas para recibir recomendaciones.
+            </p>
+        `;
+    }
+
+    return recomendaciones.map(item => `
+        <div class="col-6">
+            <div class="cover cover-clickable"
+                data-title="${escapeHtml(item.titulo)}"
+                data-year="${item.anioEstreno || ''}"
+                data-tags="${escapeHtml(item.tipoContenido || 'Contenido')}"
+                data-desc="${escapeHtml(item.motivo || 'Recomendado para ti')}"
+                data-grad="linear-gradient(135deg,#1a1a2e,#0a0a0a)">
+                ${item.posterUrl
+            ? `<img src="${item.posterUrl}" alt="${escapeHtml(item.titulo)}" width="130px">`
+            : `<span>${escapeHtml(item.titulo)}</span>`
+        }
+            </div>
+        </div>
+    `).join("");
+}
 
 
 window.toggleComments = toggleComments;

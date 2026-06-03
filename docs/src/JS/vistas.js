@@ -187,7 +187,7 @@ async function buscarContenidoVistas(query) {
     }
 }
 
-function agregarVista(item) {
+async function agregarVista(item) {
     const existe = vistas.some(v =>
         v.apiId === item.apiId &&
         v.proveedor === item.proveedor
@@ -198,11 +198,43 @@ function agregarVista(item) {
         guardarVistas();
         renderVistas();
         renderBioTags();
+
+        try {
+            await guardarVistaEnBackend(item);
+        } catch (error) {
+            console.error("Error guardando vista en backend:", error);
+        }
     }
 
     document.getElementById("vistasSearchInput").value = "";
     document.getElementById("vistasResults").innerHTML =
         `<p class="top5-empty">Agregado correctamente.</p>`;
+}
+
+async function guardarVistaEnBackend(item) {
+    const idUsuario = obtenerIdUsuario();
+
+    return await apiRequest(`/usuarios/${idUsuario}/listas/vistas/contenidos/externo`, {
+        method: "POST",
+        body: JSON.stringify({
+            proveedor: item.proveedor,
+            apiId: String(item.apiId),
+            titulo: item.titulo,
+            tipoContenido: convertirTipoBackend(item.tipoVisual),
+            descripcion: item.descripcion || "",
+            fechaEstreno: item.fechaEstreno || null,
+            anioEstreno: item.anioEstreno || null,
+            posterUrl: item.posterUrl || "",
+            idiomaOriginal: item.idioma || "",
+            puntajeExterno: item.puntajeExterno || 0,
+            estado: "VISTO",
+            generos: item.generos || []
+        })
+    });
+}
+function convertirTipoBackend(tipoVisual) {
+    if (tipoVisual === "Película") return "PELICULA";
+    return "SERIE";
 }
 
 function renderBioTags() {
@@ -255,7 +287,11 @@ function normalizarContenidoApi(item) {
         anioEstreno: item.anioEstreno || item.year || obtenerAnioDesdeFecha(item.fechaEstreno || item.release_date || item.aired?.from),
         genero: item.genero || "",
         generos: item.generos || extraerGenerosApi(item),
-        descripcion: item.descripcion || item.overview || item.synopsis || ""
+        descripcion: item.descripcion || item.overview || item.synopsis || "",
+        tipoBackend: convertirTipoBackend(tipoVisual),
+        fechaEstreno: item.fechaEstreno || item.release_date || item.aired?.from || null,
+        idioma: item.idioma || item.idiomaOriginal || item.original_language || "",
+        puntajeExterno: item.puntajeExterno || item.vote_average || item.score || 0
     };
 }
 
