@@ -27,7 +27,9 @@ public class ListaContenidoController {
     }
 
     @GetMapping("/{idLista}/contenidos")
-    public List<ListaContenidoResponse> listarContenidoDeLista(@PathVariable Long idLista) {
+    public List<ListaContenidoResponse> listarContenidoDeLista(
+            @PathVariable Long idLista
+    ) {
         return listaContenidoService.listarContenidoDeLista(idLista)
                 .stream()
                 .map(responseMapper::toListaContenidoResponse)
@@ -39,13 +41,37 @@ public class ListaContenidoController {
             @PathVariable Long idLista,
             @Valid @RequestBody AgregarContenidoListaRequest request
     ) {
-        ListaContenido resultado = listaContenidoService.agregarContenidoALista(idLista, request);
-        return ResponseEntity.ok(responseMapper.toListaContenidoResponse(resultado));
+        ListaContenido resultado =
+                listaContenidoService.agregarContenidoALista(idLista, request);
+
+        return ResponseEntity.ok(
+                responseMapper.toListaContenidoResponse(resultado)
+        );
     }
 
     @DeleteMapping("/contenidos/{idListaContenido}")
-    public ResponseEntity<String> eliminarContenidoDeLista(@PathVariable Long idListaContenido) {
+    public ResponseEntity<String> eliminarContenidoDeLista(
+            @PathVariable Long idListaContenido
+    ) {
         listaContenidoService.eliminarContenidoDeLista(idListaContenido);
         return ResponseEntity.ok("Contenido eliminado de la lista correctamente");
+    }
+
+    @DeleteMapping("/{idLista}/contenidos/{idContenido}")
+    public ResponseEntity<Void> quitarContenidoDeLista(
+            @PathVariable Long idLista,
+            @PathVariable Long idContenido
+    ) {
+        listaContenidoService.quitarContenidoDeLista(idLista, idContenido);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/{idLista}/posiciones/{posicion}")
+    public ResponseEntity<Void> quitarContenidoPorPosicion(
+            @PathVariable Long idLista,
+            @PathVariable Integer posicion
+    ) {
+        listaContenidoService.quitarContenidoPorPosicion(idLista, posicion);
+        return ResponseEntity.noContent().build();
     }
 }

@@ -339,7 +339,8 @@ async function guardarContenidoExterno(item) {
             anioEstreno: item.anioEstreno || null,
             posterUrl: item.posterUrl || "",
             idiomaOriginal: item.idioma || "",
-            puntajeExterno: item.puntajeExterno || 0
+            puntajeExterno: item.puntajeExterno || 0,
+            generos: item.generos || []
         })
     });
 }
