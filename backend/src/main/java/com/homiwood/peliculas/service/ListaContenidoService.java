@@ -2,7 +2,6 @@ package com.homiwood.peliculas.service;
 
 import com.homiwood.peliculas.dto.AgregarContenidoListaRequest;
 import com.homiwood.peliculas.exception.BadRequestException;
-import com.homiwood.peliculas.exception.DuplicateResourceException;
 import com.homiwood.peliculas.exception.NotFoundException;
 import com.homiwood.peliculas.model.Contenido;
 import com.homiwood.peliculas.model.Lista;
@@ -11,6 +10,7 @@ import com.homiwood.peliculas.repository.ContenidoRepository;
 import com.homiwood.peliculas.repository.ListaContenidoRepository;
 import com.homiwood.peliculas.repository.ListaRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -32,10 +32,25 @@ public class ListaContenidoService {
     }
 
     public List<ListaContenido> listarContenidoDeLista(Long idLista) {
+        if (idLista == null) {
+            throw new BadRequestException("El idLista es obligatorio");
+        }
+
         return listaContenidoRepository.findByListaIdLista(idLista);
     }
 
-    public ListaContenido agregarContenidoALista(Long idLista, AgregarContenidoListaRequest request) {
+    @Transactional
+    public ListaContenido agregarContenidoALista(
+            Long idLista,
+            AgregarContenidoListaRequest request
+    ) {
+        if (idLista == null) {
+            throw new BadRequestException("El idLista es obligatorio");
+        }
+
+        if (request == null) {
+            throw new BadRequestException("Los datos del contenido son obligatorios");
+        }
 
         if (request.getIdContenido() == null) {
             throw new BadRequestException("El idContenido es obligatorio");
@@ -47,34 +62,38 @@ public class ListaContenidoService {
         Contenido contenido = contenidoRepository.findById(request.getIdContenido())
                 .orElseThrow(() -> new NotFoundException("Contenido no encontrado"));
 
-        boolean yaExiste = listaContenidoRepository.existsByListaIdListaAndContenidoIdContenido(
+        if (request.getPosicion() != null) {
+            listaContenidoRepository.deleteByListaIdListaAndPosicion(
+                    idLista,
+                    request.getPosicion()
+            );
+        }
+
+        listaContenidoRepository.deleteByListaIdListaAndContenidoIdContenido(
                 idLista,
                 request.getIdContenido()
         );
 
-        if (yaExiste) {
-            throw new DuplicateResourceException("Este contenido ya existe en la lista");
-        }
-
-        validarEstado(request.getEstado());
-
         ListaContenido listaContenido = new ListaContenido();
+
         listaContenido.setLista(lista);
         listaContenido.setContenido(contenido);
         listaContenido.setPosicion(request.getPosicion());
-
-        if (request.getEstado() == null || request.getEstado().isBlank()) {
-            listaContenido.setEstado("POR_VER");
-        } else {
-            listaContenido.setEstado(request.getEstado().toUpperCase());
-        }
-
+        listaContenido.setEstado(
+                request.getEstado() != null && !request.getEstado().isBlank()
+                        ? request.getEstado().toUpperCase()
+                        : "POR_VER"
+        );
         listaContenido.setNotaUsuario(request.getNotaUsuario());
 
         return listaContenidoRepository.save(listaContenido);
     }
 
+    @Transactional
     public void eliminarContenidoDeLista(Long idListaContenido) {
+        if (idListaContenido == null) {
+            throw new BadRequestException("El idListaContenido es obligatorio");
+        }
 
         if (!listaContenidoRepository.existsById(idListaContenido)) {
             throw new NotFoundException("Contenido de lista no encontrado");
@@ -83,19 +102,35 @@ public class ListaContenidoService {
         listaContenidoRepository.deleteById(idListaContenido);
     }
 
-    private void validarEstado(String estado) {
-        if (estado == null || estado.isBlank()) {
-            return;
+    @Transactional
+    public void quitarContenidoDeLista(Long idLista, Long idContenido) {
+        if (idLista == null) {
+            throw new BadRequestException("El idLista es obligatorio");
         }
 
-        String estadoNormalizado = estado.toUpperCase();
-
-        if (!estadoNormalizado.equals("POR_VER") &&
-                !estadoNormalizado.equals("VIENDO") &&
-                !estadoNormalizado.equals("VISTO") &&
-                !estadoNormalizado.equals("ABANDONADO") &&
-                !estadoNormalizado.equals("FAVORITO")) {
-            throw new BadRequestException("Estado inválido. Usa POR_VER, VIENDO, VISTO, ABANDONADO o FAVORITO");
+        if (idContenido == null) {
+            throw new BadRequestException("El idContenido es obligatorio");
         }
+
+        listaContenidoRepository.deleteByListaIdListaAndContenidoIdContenido(
+                idLista,
+                idContenido
+        );
+    }
+
+    @Transactional
+    public void quitarContenidoPorPosicion(Long idLista, Integer posicion) {
+        if (idLista == null) {
+            throw new BadRequestException("El idLista es obligatorio");
+        }
+
+        if (posicion == null) {
+            throw new BadRequestException("La posición es obligatoria");
+        }
+
+        listaContenidoRepository.deleteByListaIdListaAndPosicion(
+                idLista,
+                posicion
+        );
     }
 }

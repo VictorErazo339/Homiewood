@@ -44,8 +44,10 @@ public class CatalogoListaService {
         guardarRequest.setPosterUrl(request.getPosterUrl());
         guardarRequest.setIdiomaOriginal(request.getIdiomaOriginal());
         guardarRequest.setPuntajeExterno(request.getPuntajeExterno());
-
-        Contenido contenidoGuardado = catalogoGuardarService.guardarContenidoExterno(guardarRequest);
+        guardarRequest.setGeneros(request.getGeneros());
+        
+        Contenido contenidoGuardado =
+                catalogoGuardarService.guardarContenidoExterno(guardarRequest);
 
         AgregarContenidoListaRequest agregarRequest = new AgregarContenidoListaRequest();
 

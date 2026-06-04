@@ -14,11 +14,30 @@ public interface ListaContenidoRepository extends JpaRepository<ListaContenido, 
 
     List<ListaContenido> findByListaUsuarioIdUsuario(Long idUsuario);
 
-    Optional<ListaContenido> findByListaIdListaAndContenidoIdContenido(Long idLista, Long idContenido);
+    Optional<ListaContenido> findByListaIdListaAndContenidoIdContenido(
+            Long idLista,
+            Long idContenido
+    );
 
-    List<ListaContenido> findByListaUsuarioIdUsuarioAndEstado(Long idUsuario, String estado);
+    List<ListaContenido> findByListaUsuarioIdUsuarioAndEstado(
+            Long idUsuario,
+            String estado
+    );
 
-    boolean existsByListaIdListaAndContenidoIdContenido(Long idLista, Long idContenido);
+    boolean existsByListaIdListaAndContenidoIdContenido(
+            Long idLista,
+            Long idContenido
+    );
+
+    void deleteByListaIdListaAndPosicion(
+            Long idLista,
+            Integer posicion
+    );
+
+    void deleteByListaIdListaAndContenidoIdContenido(
+            Long idLista,
+            Long idContenido
+    );
 
     @Query(value = """
             SELECT COUNT(DISTINCT l.id_usuario)

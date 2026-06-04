@@ -9,7 +9,9 @@ import com.homiwood.peliculas.repository.ContenidoRepository;
 import com.homiwood.peliculas.repository.UsuarioRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class RecomendacionService {
@@ -33,25 +35,25 @@ public class RecomendacionService {
         validarUsuario(idUsuario);
         validarLimite(limite);
 
-        List<Contenido> recomendaciones = contenidoRepository.recomendarPorGustos(idUsuario, limite);
+        List<Contenido> recomendaciones =
+                contenidoRepository.recomendarPorAfinidadUsuario(idUsuario, limite);
 
-        if (recomendaciones.isEmpty()) {
-            recomendaciones = contenidoRepository.recomendarPopularesNoAgregados(idUsuario, limite);
-
-            return recomendaciones.stream()
-                    .map(contenido -> mapearRespuesta(
-                            contenido,
-                            "Recomendación general basada en calificaciones o contenido reciente"
-                    ))
-                    .toList();
+        if (!recomendaciones.isEmpty()) {
+            return mapearListaSinDuplicados(
+                    recomendaciones,
+                    limite,
+                    "Según tus gustos"
+            );
         }
 
-        return recomendaciones.stream()
-                .map(contenido -> mapearRespuesta(
-                        contenido,
-                        "Recomendado porque coincide con géneros que tienes como vistos o favoritos"
-                ))
-                .toList();
+        recomendaciones =
+                contenidoRepository.recomendarPopularesNoAgregados(idUsuario, limite);
+
+        return mapearListaSinDuplicados(
+                recomendaciones,
+                limite,
+                "Popular en Homiewood"
+        );
     }
 
     public List<RecomendacionResponse> recomendarDesdeOtroUsuario(
@@ -67,25 +69,80 @@ public class RecomendacionService {
             throw new BadRequestException("No puedes comparar recomendaciones contigo mismo");
         }
 
-        List<Contenido> recomendaciones = contenidoRepository.recomendarDesdeOtroUsuario(
-                idUsuario,
-                idOtroUsuario,
-                limite
-        );
+        List<Contenido> recomendaciones =
+                contenidoRepository.recomendarDesdeOtroUsuario(
+                        idUsuario,
+                        idOtroUsuario,
+                        limite
+                );
 
-        return recomendaciones.stream()
-                .map(contenido -> mapearRespuesta(
-                        contenido,
-                        "Recomendado desde las listas públicas de otro usuario"
+        return mapearListaSinDuplicados(
+                recomendaciones,
+                limite,
+                "Recomendado desde las listas públicas de otro usuario"
+        );
+    }
+
+    private List<RecomendacionResponse> mapearListaSinDuplicados(
+            List<Contenido> contenidos,
+            int limite,
+            String motivo
+    ) {
+        return contenidos.stream()
+                .collect(Collectors.toMap(
+                        contenido -> normalizarTitulo(contenido.getTitulo()),
+                        contenido -> contenido,
+                        this::elegirMejorContenidoDuplicado,
+                        LinkedHashMap::new
                 ))
+                .values()
+                .stream()
+                .limit(limite)
+                .map(contenido -> mapearRespuesta(contenido, motivo))
                 .toList();
     }
 
-    private RecomendacionResponse mapearRespuesta(Contenido contenido, String motivo) {
+    private Contenido elegirMejorContenidoDuplicado(
+            Contenido contenido1,
+            Contenido contenido2
+    ) {
+        if (contenido1.getAnioEstreno() != null && contenido2.getAnioEstreno() == null) {
+            return contenido1;
+        }
 
-        Double promedio = calificacionRepository.calcularPromedioPorContenido(
-                contenido.getIdContenido()
-        );
+        if (contenido1.getAnioEstreno() == null && contenido2.getAnioEstreno() != null) {
+            return contenido2;
+        }
+
+        if (contenido1.getPosterUrl() != null && contenido2.getPosterUrl() == null) {
+            return contenido1;
+        }
+
+        if (contenido1.getPosterUrl() == null && contenido2.getPosterUrl() != null) {
+            return contenido2;
+        }
+
+        return contenido1;
+    }
+
+    private String normalizarTitulo(String titulo) {
+        if (titulo == null) {
+            return "";
+        }
+
+        return titulo
+                .toLowerCase()
+                .trim();
+    }
+
+    private RecomendacionResponse mapearRespuesta(
+            Contenido contenido,
+            String motivo
+    ) {
+        Double promedio =
+                calificacionRepository.calcularPromedioPorContenido(
+                        contenido.getIdContenido()
+                );
 
         if (promedio == null) {
             promedio = 0.0;
