@@ -102,20 +102,10 @@
           </div>
         </div>
 
-        <div class="profile-achievements ms-auto">
-          <div class="achievement-item">
-            <span class="ach-icon" aria-hidden="true">🏆</span>
-            <span class="ach-name">Top Crítico</span>
-          </div>
-
-          <div class="achievement-item">
-            <span class="ach-icon" aria-hidden="true">🎬</span>
-            <span class="ach-name">100 Reseñas</span>
-          </div>
-
-          <div class="achievement-item">
-            <span class="ach-icon" aria-hidden="true">🔥</span>
-            <span class="ach-name">Racha 30 días</span>
+        <div class="profile-achievements ms-auto" id="profileAchievements">
+          <div class="achievement-item achievement-empty">
+            <span class="ach-icon" aria-hidden="true">🏅</span>
+            <span class="ach-name">Sin logros destacados</span>
           </div>
 
           <button class="edit-btn" type="button" data-bs-toggle="modal" data-bs-target="#achievementsModal">
@@ -252,92 +242,49 @@
   </div>
 
   <div class="modal fade" id="achievementsModal" tabindex="-1" aria-labelledby="achievementsModalLabel"
-    aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-      <div class="modal-content modal-box">
+  aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content modal-box">
 
-        <h3 class="modal-title" id="achievementsModalLabel">🏆 MIS LOGROS</h3>
-
-        <p class="ach-modal-section-label">OBTENIDOS</p>
-
-        <ul class="ach-modal-grid" id="achObtained" role="list">
-          <li class="ach-modal-card is-unlocked">
-            <span class="ach-modal-icon" aria-hidden="true">🏆</span>
-            <div class="ach-modal-info">
-              <strong>Top Crítico</strong>
-              <small>Recibiste 50 likes en tus reseñas</small>
-            </div>
-            <span class="ach-modal-badge">✓</span>
-          </li>
-
-          <li class="ach-modal-card is-unlocked">
-            <span class="ach-modal-icon" aria-hidden="true">🎬</span>
-            <div class="ach-modal-info">
-              <strong>100 Reseñas</strong>
-              <small>Publicaste 100 posts</small>
-            </div>
-            <span class="ach-modal-badge">✓</span>
-          </li>
-
-          <li class="ach-modal-card is-unlocked">
-            <span class="ach-modal-icon" aria-hidden="true">🔥</span>
-            <div class="ach-modal-info">
-              <strong>Racha 30 días</strong>
-              <small>Posteaste 30 días seguidos</small>
-            </div>
-            <span class="ach-modal-badge">✓</span>
-          </li>
-        </ul>
-
-        <p class="ach-modal-section-label">POR DESBLOQUEAR</p>
-
-        <ul class="ach-modal-grid" id="achLocked" role="list">
-          <li class="ach-modal-card is-locked">
-            <span class="ach-modal-icon" aria-hidden="true">🌟</span>
-            <div class="ach-modal-info">
-              <strong>Cinéfilo Élite</strong>
-              <small>Registra 500 películas vistas</small>
-            </div>
-            <span class="ach-modal-lock">🔒</span>
-          </li>
-
-          <li class="ach-modal-card is-locked">
-            <span class="ach-modal-icon" aria-hidden="true">🎭</span>
-            <div class="ach-modal-info">
-              <strong>Crítico de Oro</strong>
-              <small>Recibe 500 likes en total</small>
-            </div>
-            <span class="ach-modal-lock">🔒</span>
-          </li>
-
-          <li class="ach-modal-card is-locked">
-            <span class="ach-modal-icon" aria-hidden="true">👑</span>
-            <div class="ach-modal-info">
-              <strong>Leyenda Homiewood</strong>
-              <small>Consigue 1000 homies</small>
-            </div>
-            <span class="ach-modal-lock">🔒</span>
-          </li>
-
-          <li class="ach-modal-card is-locked">
-            <span class="ach-modal-icon" aria-hidden="true">🎪</span>
-            <div class="ach-modal-info">
-              <strong>Maratonista</strong>
-              <small>Ve 5 películas en un día</small>
-            </div>
-            <span class="ach-modal-lock">🔒</span>
-          </li>
-        </ul>
-
-        <div class="modal-actions">
-          <button type="button" class="btn-cancel" data-bs-dismiss="modal">
-            Cerrar
-          </button>
+      <div class="ach-modal-header">
+        <div>
+          <h3 class="modal-title" id="achievementsModalLabel">🏆 MIS LOGROS</h3>
+          <p class="ach-modal-help">
+            Puedes destacar máximo 3 logros desbloqueados para mostrarlos en tu perfil.
+          </p>
         </div>
 
+        <span class="ach-selected-counter" id="achSelectedCounter">
+          0/3 destacados
+        </span>
       </div>
+
+      <p class="ach-modal-section-label">OBTENIDOS</p>
+      <ul class="ach-modal-grid" id="achObtained" role="list">
+        <li class="ach-modal-empty">Cargando logros...</li>
+      </ul>
+
+      <p class="ach-modal-section-label">FÁCILES POR DESBLOQUEAR</p>
+      <ul class="ach-modal-grid" id="achLockedEasy" role="list"></ul>
+
+      <p class="ach-modal-section-label">MEDIOS POR DESBLOQUEAR</p>
+      <ul class="ach-modal-grid" id="achLockedMedium" role="list"></ul>
+
+      <p class="ach-modal-section-label">DIFÍCILES POR DESBLOQUEAR</p>
+      <ul class="ach-modal-grid" id="achLockedHard" role="list"></ul>
+
+      <p class="ach-modal-section-label">OCULTOS</p>
+      <ul class="ach-modal-grid" id="achHidden" role="list"></ul>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" data-bs-dismiss="modal">
+          Cerrar
+        </button>
+      </div>
+
     </div>
   </div>
+</div>
   <!-- MODAL EDITAR PERFIL -->
   <div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel"
     aria-hidden="true">

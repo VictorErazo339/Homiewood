@@ -30,6 +30,9 @@ public class ComentarioCalificacionService {
     @Autowired
     private SimpMessagingTemplate messagingTemplate;
 
+    @Autowired
+    private LogroEvaluacionPublisher logroEvaluacionPublisher;
+
     public ComentarioCalificacionResponseDTO agregar(ComentarioCalificacionRequestDTO dto) {
         Calificacion calificacion = calificacionRepo.findById(dto.getIdCalificacion())
                 .orElseThrow(() -> new RuntimeException("Calificación no encontrada"));
@@ -45,13 +48,16 @@ public class ComentarioCalificacionService {
         ComentarioCalificacion guardado = comentarioRepo.save(comentario);
         ComentarioCalificacionResponseDTO response = toDTO(guardado);
 
-
+        // NO TOCAR: mantiene WebSocket funcionando para comentarios.
         messagingTemplate.convertAndSend(
                 "/topic/comentarios/" + guardado.getCalificacion().getIdCalificacion(),
-                response
-        );
+                response);
+        logroEvaluacionPublisher.solicitarEvaluacionVarios(
+                usuario.getIdUsuario(),
+                calificacion.getUsuario().getIdUsuario());
 
         return response;
+
     }
 
     public List<ComentarioCalificacionResponseDTO> listarPorCalificacion(Long idCalificacion) {
@@ -60,6 +66,38 @@ public class ComentarioCalificacionService {
                 .stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
+    }
+
+    // =========================================================
+    // MÉTODOS PARA LOGROS - PASO 4
+    // =========================================================
+
+    public long contarComentariosHechos(Long idUsuario) {
+        validarIdUsuario(idUsuario);
+        return comentarioRepo.countByUsuario_IdUsuario(idUsuario);
+    }
+
+    public long contarComentariosRecibidos(Long idUsuario) {
+        validarIdUsuario(idUsuario);
+        return comentarioRepo.contarComentariosRecibidosPorUsuario(idUsuario);
+    }
+
+    public boolean tienePrimerComentario(Long idUsuario) {
+        return contarComentariosHechos(idUsuario) >= 1;
+    }
+
+    public boolean esConversador(Long idUsuario) {
+        return contarComentariosHechos(idUsuario) >= 10;
+    }
+
+    public boolean esPopularEnComentarios(Long idUsuario) {
+        return contarComentariosRecibidos(idUsuario) >= 10;
+    }
+
+    private void validarIdUsuario(Long idUsuario) {
+        if (idUsuario == null) {
+            throw new RuntimeException("El idUsuario es obligatorio");
+        }
     }
 
     private ComentarioCalificacionResponseDTO toDTO(ComentarioCalificacion c) {

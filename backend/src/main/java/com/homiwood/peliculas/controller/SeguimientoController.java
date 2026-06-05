@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/usuarios")
@@ -68,5 +69,24 @@ public class SeguimientoController {
     ) {
         seguimientoService.dejarDeSeguir(idSeguidor, idSeguido);
         return ResponseEntity.ok("Dejaste de seguir al usuario correctamente");
+    }
+
+    // =========================================================
+    // ENDPOINT TEMPORAL PARA PROBAR LOGROS - PASO 4
+    // =========================================================
+
+    @GetMapping("/{idUsuario}/estadisticas-logros-social")
+    public Map<String, Object> obtenerEstadisticasLogrosSocial(
+            @PathVariable Long idUsuario
+    ) {
+        return Map.of(
+                "siguiendo", seguimientoService.contarUsuariosQueSigo(idUsuario),
+                "seguidores", seguimientoService.contarMisSeguidores(idUsuario),
+                "totalRelacionesSociales", seguimientoService.contarTotalRelacionesSociales(idUsuario),
+                "primerHomie", seguimientoService.tienePrimerHomie(idUsuario),
+                "sociable", seguimientoService.esSociable(idUsuario),
+                "comunidad", seguimientoService.tieneComunidad(idUsuario),
+                "leyendaHomiewood", seguimientoService.esLeyendaHomiewood(idUsuario)
+        );
     }
 }

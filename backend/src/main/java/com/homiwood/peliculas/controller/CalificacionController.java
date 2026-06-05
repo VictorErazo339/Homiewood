@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/calificaciones")
@@ -76,5 +77,19 @@ public class CalificacionController {
     public ResponseEntity<String> eliminarCalificacion(@PathVariable Long idCalificacion) {
         calificacionService.eliminarCalificacion(idCalificacion);
         return ResponseEntity.ok("Calificación eliminada correctamente");
+    }
+
+    // =========================================================
+    // ENDPOINT TEMPORAL PARA PROBAR LOGROS - PASO 1
+    // =========================================================
+
+    @GetMapping("/usuario/{idUsuario}/estadisticas-logros")
+    public Map<String, Object> obtenerEstadisticasLogros(@PathVariable Long idUsuario) {
+        return Map.of(
+                "totalCalificaciones", calificacionService.contarCalificacionesUsuario(idUsuario),
+                "totalResenasConComentario", calificacionService.contarResenasConComentario(idUsuario),
+                "totalCalificacionesMadrugada", calificacionService.contarCalificacionesMadrugada(idUsuario),
+                "rachaActual", calificacionService.calcularRachaActualUsuario(idUsuario)
+        );
     }
 }

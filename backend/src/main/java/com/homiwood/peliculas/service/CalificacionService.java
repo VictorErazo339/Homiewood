@@ -17,8 +17,10 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class CalificacionService {
@@ -29,6 +31,7 @@ public class CalificacionService {
     private final ListaRepository listaRepository;
     private final ListaContenidoRepository listaContenidoRepository;
     private final SimpMessagingTemplate messagingTemplate;
+    private final LogroEvaluacionPublisher logroEvaluacionPublisher;
 
     public CalificacionService(
             CalificacionRepository calificacionRepository,
@@ -36,14 +39,15 @@ public class CalificacionService {
             ContenidoRepository contenidoRepository,
             ListaRepository listaRepository,
             ListaContenidoRepository listaContenidoRepository,
-            SimpMessagingTemplate messagingTemplate
-    ) {
+            SimpMessagingTemplate messagingTemplate,
+            LogroEvaluacionPublisher logroEvaluacionPublisher) {
         this.calificacionRepository = calificacionRepository;
         this.usuarioRepository = usuarioRepository;
         this.contenidoRepository = contenidoRepository;
         this.listaRepository = listaRepository;
         this.listaContenidoRepository = listaContenidoRepository;
         this.messagingTemplate = messagingTemplate;
+        this.logroEvaluacionPublisher = logroEvaluacionPublisher;
     }
 
     public List<Calificacion> listarCalificaciones() {
@@ -73,8 +77,7 @@ public class CalificacionService {
         Calificacion calificacion = calificacionRepository
                 .findByUsuarioIdUsuarioAndContenidoIdContenido(
                         usuario.getIdUsuario(),
-                        contenido.getIdContenido()
-                )
+                        contenido.getIdContenido())
                 .orElseGet(() -> {
                     Calificacion nueva = new Calificacion();
                     nueva.setUsuario(usuario);
@@ -91,6 +94,7 @@ public class CalificacionService {
         asegurarContenidoEnVistas(usuario, contenido);
 
         messagingTemplate.convertAndSend("/topic/calificaciones", guardada);
+        logroEvaluacionPublisher.solicitarEvaluacion(usuario.getIdUsuario());
 
         return guardada;
     }
@@ -112,10 +116,11 @@ public class CalificacionService {
 
         asegurarContenidoEnVistas(
                 calificacion.getUsuario(),
-                calificacion.getContenido()
-        );
+                calificacion.getContenido());
 
         messagingTemplate.convertAndSend("/topic/calificaciones", guardada);
+        logroEvaluacionPublisher.solicitarEvaluacion(
+                calificacion.getUsuario().getIdUsuario());
 
         return guardada;
     }
@@ -127,11 +132,60 @@ public class CalificacionService {
 
     public void eliminarCalificacion(Long idCalificacion) {
 
-        if (!calificacionRepository.existsById(idCalificacion)) {
-            throw new NotFoundException("Calificación no encontrada");
+        Calificacion calificacion = calificacionRepository.findById(idCalificacion)
+                .orElseThrow(() -> new NotFoundException("Calificación no encontrada"));
+
+        Long idUsuario = calificacion.getUsuario().getIdUsuario();
+
+        calificacionRepository.delete(calificacion);
+
+        logroEvaluacionPublisher.solicitarEvaluacion(idUsuario);
+    }
+
+    // =========================================================
+    // MÉTODOS PARA LOGROS - PASO 1
+    // =========================================================
+
+    public long contarCalificacionesUsuario(Long idUsuario) {
+        return calificacionRepository.countByUsuarioIdUsuario(idUsuario);
+    }
+
+    public long contarResenasConComentario(Long idUsuario) {
+        return calificacionRepository.contarResenasConComentario(idUsuario);
+    }
+
+    public long contarCalificacionesMadrugada(Long idUsuario) {
+        return calificacionRepository.contarCalificacionesMadrugada(idUsuario);
+    }
+
+    public int calcularRachaActualUsuario(Long idUsuario) {
+        List<LocalDate> diasActividad = calificacionRepository
+                .listarFechasActividadPorUsuario(idUsuario)
+                .stream()
+                .filter(Objects::nonNull)
+                .map(LocalDateTime::toLocalDate)
+                .distinct()
+                .toList();
+
+        if (diasActividad.isEmpty()) {
+            return 0;
         }
 
-        calificacionRepository.deleteById(idCalificacion);
+        int racha = 1;
+        LocalDate diaEsperado = diasActividad.get(0).minusDays(1);
+
+        for (int i = 1; i < diasActividad.size(); i++) {
+            LocalDate diaActual = diasActividad.get(i);
+
+            if (diaActual.equals(diaEsperado)) {
+                racha++;
+                diaEsperado = diaEsperado.minusDays(1);
+            } else if (diaActual.isBefore(diaEsperado)) {
+                break;
+            }
+        }
+
+        return racha;
     }
 
     private void asegurarContenidoEnVistas(Usuario usuario, Contenido contenido) {
@@ -139,8 +193,7 @@ public class CalificacionService {
         Lista listaVistas = listaRepository
                 .findByUsuarioIdUsuarioAndTituloIgnoreCase(
                         usuario.getIdUsuario(),
-                        "Vistas"
-                )
+                        "Vistas")
                 .orElseGet(() -> {
                     Lista nueva = new Lista();
                     nueva.setUsuario(usuario);
@@ -153,8 +206,7 @@ public class CalificacionService {
         listaContenidoRepository
                 .findByListaIdListaAndContenidoIdContenido(
                         listaVistas.getIdLista(),
-                        contenido.getIdContenido()
-                )
+                        contenido.getIdContenido())
                 .map(existente -> {
                     existente.setEstado("VISTO");
                     existente.setPosicion(null);

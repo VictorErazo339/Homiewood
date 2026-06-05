@@ -9,6 +9,7 @@ import com.homiwood.peliculas.model.ContenidoGenero;
 import com.homiwood.peliculas.model.Genero;
 import com.homiwood.peliculas.repository.ContenidoGeneroRepository;
 import com.homiwood.peliculas.repository.ContenidoRepository;
+import com.homiwood.peliculas.repository.GeneroLogroProjection;
 import com.homiwood.peliculas.repository.GeneroRepository;
 import org.springframework.stereotype.Service;
 
@@ -39,7 +40,17 @@ public class ContenidoGeneroService {
         return contenidoGeneroRepository.findByGeneroIdGenero(idGenero);
     }
 
-    public ContenidoGenero agregarGeneroAContenido(Long idContenido, AgregarGeneroContenidoRequest request) {
+    public ContenidoGenero agregarGeneroAContenido(
+            Long idContenido,
+            AgregarGeneroContenidoRequest request
+    ) {
+        if (idContenido == null) {
+            throw new BadRequestException("El idContenido es obligatorio");
+        }
+
+        if (request == null) {
+            throw new BadRequestException("Los datos del género son obligatorios");
+        }
 
         if (request.getIdGenero() == null) {
             throw new BadRequestException("El idGenero es obligatorio");
@@ -68,11 +79,79 @@ public class ContenidoGeneroService {
     }
 
     public void eliminarRelacion(Long idContenidoGenero) {
+        if (idContenidoGenero == null) {
+            throw new BadRequestException("El idContenidoGenero es obligatorio");
+        }
 
         if (!contenidoGeneroRepository.existsById(idContenidoGenero)) {
             throw new NotFoundException("Relación contenido-género no encontrada");
         }
 
         contenidoGeneroRepository.deleteById(idContenidoGenero);
+    }
+
+    // =========================================================
+    // MÉTODOS PARA LOGROS - PASO 3
+    // =========================================================
+
+    public long contarGenerosDistintosVistosUsuario(Long idUsuario) {
+        validarIdUsuario(idUsuario);
+        return contenidoGeneroRepository.contarGenerosDistintosVistosUsuario(idUsuario);
+    }
+
+    public long contarVistosPorGeneroExacto(Long idUsuario, String nombreGenero) {
+        validarIdUsuario(idUsuario);
+        validarTextoGenero(nombreGenero);
+        return contenidoGeneroRepository.contarVistosPorGeneroExacto(idUsuario, nombreGenero.trim());
+    }
+
+    public long contarVistosPorGeneroSimilar(Long idUsuario, String textoGenero) {
+        validarIdUsuario(idUsuario);
+        validarTextoGenero(textoGenero);
+        return contenidoGeneroRepository.contarVistosPorGeneroSimilar(idUsuario, textoGenero.trim());
+    }
+
+    public List<GeneroLogroProjection> obtenerResumenGenerosUsuario(Long idUsuario) {
+        validarIdUsuario(idUsuario);
+        return contenidoGeneroRepository.obtenerResumenGenerosUsuario(idUsuario);
+    }
+
+    public boolean esExploradorGeneros(Long idUsuario) {
+        return contarGenerosDistintosVistosUsuario(idUsuario) >= 10;
+    }
+
+    public boolean esFanRomance(Long idUsuario) {
+        return contarVistosPorGeneroSimilar(idUsuario, "romance") >= 5;
+    }
+
+    public boolean esFanDrama(Long idUsuario) {
+        return contarVistosPorGeneroSimilar(idUsuario, "drama") >= 5;
+    }
+
+    public boolean esFanAccion(Long idUsuario) {
+        long accionEspanol = contarVistosPorGeneroSimilar(idUsuario, "acción");
+        long accionSinAcento = contarVistosPorGeneroSimilar(idUsuario, "accion");
+        long actionIngles = contarVistosPorGeneroSimilar(idUsuario, "action");
+
+        return (accionEspanol + accionSinAcento + actionIngles) >= 5;
+    }
+
+    public boolean esFanComedia(Long idUsuario) {
+        long comedia = contarVistosPorGeneroSimilar(idUsuario, "comedia");
+        long comedy = contarVistosPorGeneroSimilar(idUsuario, "comedy");
+
+        return (comedia + comedy) >= 5;
+    }
+
+    private void validarIdUsuario(Long idUsuario) {
+        if (idUsuario == null) {
+            throw new BadRequestException("El idUsuario es obligatorio");
+        }
+    }
+
+    private void validarTextoGenero(String textoGenero) {
+        if (textoGenero == null || textoGenero.isBlank()) {
+            throw new BadRequestException("El género es obligatorio");
+        }
     }
 }

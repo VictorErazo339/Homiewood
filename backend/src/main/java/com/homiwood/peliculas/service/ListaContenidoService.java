@@ -12,6 +12,8 @@ import com.homiwood.peliculas.repository.ListaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -20,15 +22,17 @@ public class ListaContenidoService {
     private final ListaContenidoRepository listaContenidoRepository;
     private final ListaRepository listaRepository;
     private final ContenidoRepository contenidoRepository;
+    private final LogroEvaluacionPublisher logroEvaluacionPublisher;
 
     public ListaContenidoService(
             ListaContenidoRepository listaContenidoRepository,
             ListaRepository listaRepository,
-            ContenidoRepository contenidoRepository
-    ) {
+            ContenidoRepository contenidoRepository,
+            LogroEvaluacionPublisher logroEvaluacionPublisher) {
         this.listaContenidoRepository = listaContenidoRepository;
         this.listaRepository = listaRepository;
         this.contenidoRepository = contenidoRepository;
+        this.logroEvaluacionPublisher = logroEvaluacionPublisher;
     }
 
     public List<ListaContenido> listarContenidoDeLista(Long idLista) {
@@ -42,8 +46,7 @@ public class ListaContenidoService {
     @Transactional
     public ListaContenido agregarContenidoALista(
             Long idLista,
-            AgregarContenidoListaRequest request
-    ) {
+            AgregarContenidoListaRequest request) {
         if (idLista == null) {
             throw new BadRequestException("El idLista es obligatorio");
         }
@@ -65,14 +68,12 @@ public class ListaContenidoService {
         if (request.getPosicion() != null) {
             listaContenidoRepository.deleteByListaIdListaAndPosicion(
                     idLista,
-                    request.getPosicion()
-            );
+                    request.getPosicion());
         }
 
         listaContenidoRepository.deleteByListaIdListaAndContenidoIdContenido(
                 idLista,
-                request.getIdContenido()
-        );
+                request.getIdContenido());
 
         ListaContenido listaContenido = new ListaContenido();
 
@@ -82,11 +83,15 @@ public class ListaContenidoService {
         listaContenido.setEstado(
                 request.getEstado() != null && !request.getEstado().isBlank()
                         ? request.getEstado().toUpperCase()
-                        : "POR_VER"
-        );
+                        : "POR_VER");
         listaContenido.setNotaUsuario(request.getNotaUsuario());
 
-        return listaContenidoRepository.save(listaContenido);
+        ListaContenido guardado = listaContenidoRepository.save(listaContenido);
+
+        logroEvaluacionPublisher.solicitarEvaluacion(
+                lista.getUsuario().getIdUsuario());
+
+        return guardado;
     }
 
     @Transactional
@@ -95,11 +100,14 @@ public class ListaContenidoService {
             throw new BadRequestException("El idListaContenido es obligatorio");
         }
 
-        if (!listaContenidoRepository.existsById(idListaContenido)) {
-            throw new NotFoundException("Contenido de lista no encontrado");
-        }
+        ListaContenido listaContenido = listaContenidoRepository.findById(idListaContenido)
+                .orElseThrow(() -> new NotFoundException("Contenido de lista no encontrado"));
 
-        listaContenidoRepository.deleteById(idListaContenido);
+        Long idUsuario = listaContenido.getLista().getUsuario().getIdUsuario();
+
+        listaContenidoRepository.delete(listaContenido);
+
+        logroEvaluacionPublisher.solicitarEvaluacion(idUsuario);
     }
 
     @Transactional
@@ -112,10 +120,15 @@ public class ListaContenidoService {
             throw new BadRequestException("El idContenido es obligatorio");
         }
 
+        Lista lista = listaRepository.findById(idLista)
+                .orElseThrow(() -> new NotFoundException("Lista no encontrada"));
+
         listaContenidoRepository.deleteByListaIdListaAndContenidoIdContenido(
                 idLista,
-                idContenido
-        );
+                idContenido);
+
+        logroEvaluacionPublisher.solicitarEvaluacion(
+                lista.getUsuario().getIdUsuario());
     }
 
     @Transactional
@@ -128,9 +141,72 @@ public class ListaContenidoService {
             throw new BadRequestException("La posición es obligatoria");
         }
 
+        Lista lista = listaRepository.findById(idLista)
+                .orElseThrow(() -> new NotFoundException("Lista no encontrada"));
+
         listaContenidoRepository.deleteByListaIdListaAndPosicion(
                 idLista,
-                posicion
-        );
+                posicion);
+
+        logroEvaluacionPublisher.solicitarEvaluacion(
+                lista.getUsuario().getIdUsuario());
+    }
+
+    // =========================================================
+    // MÉTODOS PARA LOGROS - PASO 2
+    // =========================================================
+
+    public long contarVistosUsuario(Long idUsuario) {
+        validarIdUsuario(idUsuario);
+        return listaContenidoRepository.contarPorUsuarioYEstado(idUsuario, "VISTO");
+    }
+
+    public long contarPorVerUsuario(Long idUsuario) {
+        validarIdUsuario(idUsuario);
+        return listaContenidoRepository.contarPorUsuarioYEstado(idUsuario, "POR_VER");
+    }
+
+    public long contarTop5Usuario(Long idUsuario) {
+        validarIdUsuario(idUsuario);
+        return listaContenidoRepository.contarTop5PorUsuario(idUsuario);
+    }
+
+    public boolean tieneTop5Completo(Long idUsuario) {
+        return contarTop5Usuario(idUsuario) >= 5;
+    }
+
+    public long contarVistosHoyUsuario(Long idUsuario) {
+        validarIdUsuario(idUsuario);
+
+        LocalDate hoy = LocalDate.now();
+        LocalDateTime inicio = hoy.atStartOfDay();
+        LocalDateTime fin = hoy.plusDays(1).atStartOfDay();
+
+        return listaContenidoRepository.contarVistosEnRango(idUsuario, inicio, fin);
+    }
+
+    public boolean esMaratonistaHoy(Long idUsuario) {
+        return contarVistosHoyUsuario(idUsuario) >= 5;
+    }
+
+    public long contarPeliculasVistas(Long idUsuario) {
+        validarIdUsuario(idUsuario);
+        return listaContenidoRepository.contarVistosPorTipoContenido(idUsuario, "PELICULA");
+    }
+
+    public long contarSeriesVistas(Long idUsuario) {
+        validarIdUsuario(idUsuario);
+        return listaContenidoRepository.contarVistosPorTipoContenido(idUsuario, "SERIE");
+    }
+
+    public long contarAnimesVistos(Long idUsuario) {
+        validarIdUsuario(idUsuario);
+        return listaContenidoRepository.contarVistosPorTipoContenido(idUsuario, "ANIME");
+    }
+
+    private void validarIdUsuario(Long idUsuario) {
+        if (idUsuario == null) {
+            throw new BadRequestException("El idUsuario es obligatorio");
+        }
     }
 }

@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/comentarios-calificacion")
@@ -27,5 +28,22 @@ public class ComentarioCalificacionController {
     public ResponseEntity<List<ComentarioCalificacionResponseDTO>> listar(
             @PathVariable Long idCalificacion) {
         return ResponseEntity.ok(service.listarPorCalificacion(idCalificacion));
+    }
+
+    // =========================================================
+    // ENDPOINT TEMPORAL PARA PROBAR LOGROS - PASO 4
+    // =========================================================
+
+    @GetMapping("/usuario/{idUsuario}/estadisticas-logros-comentarios")
+    public Map<String, Object> obtenerEstadisticasLogrosComentarios(
+            @PathVariable Long idUsuario
+    ) {
+        return Map.of(
+                "comentariosHechos", service.contarComentariosHechos(idUsuario),
+                "comentariosRecibidos", service.contarComentariosRecibidos(idUsuario),
+                "primerComentario", service.tienePrimerComentario(idUsuario),
+                "conversador", service.esConversador(idUsuario),
+                "popularEnComentarios", service.esPopularEnComentarios(idUsuario)
+        );
     }
 }
