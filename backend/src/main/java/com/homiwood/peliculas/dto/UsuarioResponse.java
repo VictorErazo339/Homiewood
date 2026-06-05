@@ -10,6 +10,7 @@ public class UsuarioResponse {
     private String email;
     private String descripcion;
     private LocalDateTime fechaCreacion;
+    private Integer iconoPerfil;
 
     public UsuarioResponse() {
     }
@@ -22,12 +23,13 @@ public class UsuarioResponse {
         this.fechaCreacion = fechaCreacion;
     }
 
-    public UsuarioResponse(Long idUsuario, String nombre, String username, String email, String descripcion, LocalDateTime fechaCreacion) {
+    public UsuarioResponse(Long idUsuario, String nombre, String username, String email, String descripcion,Integer iconoPerfil, LocalDateTime fechaCreacion) {
         this.idUsuario = idUsuario;
         this.nombre = nombre;
         this.username = username;
         this.email = email;
         this.descripcion = descripcion;
+        this.iconoPerfil = iconoPerfil;
         this.fechaCreacion = fechaCreacion;
     }
 
@@ -78,4 +80,9 @@ public class UsuarioResponse {
     public void setFechaCreacion(LocalDateTime fechaCreacion) {
         this.fechaCreacion = fechaCreacion;
     }
+
+    public Integer getIconoPerfil() { return iconoPerfil; }
+
+    public void setIconoPerfil(Integer iconoPerfil) { this.iconoPerfil = iconoPerfil; }
+
 }

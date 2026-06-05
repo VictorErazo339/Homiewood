@@ -47,7 +47,7 @@
 
         <div class="avatar-wrap">
           <div class="avatar-circle" aria-hidden="true">
-            <i class="bi bi-person"></i>
+            <img id="profileAvatar" src="../img/1.webp" alt="Avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
           </div>
           <div class="avatar-badge" aria-hidden="true">🎬</div>
         </div>
@@ -309,6 +309,18 @@
         <textarea id="editProfileDescripcion" class="form-control" maxlength="255" rows="4"
           placeholder="Escribe una descripción para tu perfil..."></textarea>
 
+          <label class="form-label mt-3">ELIGE TU ICONO</label>
+            <div class="icon-picker d-flex gap-3 justify-content-center my-2">
+                <button type="button" class="icon-option" data-icono="1">
+                    <img src="../img/1.webp" width="60px" alt="Icono 1">
+                </button>
+                <button type="button" class="icon-option" data-icono="2">
+                    <img src="../img/2.webp" width="60px" alt="Icono 2">
+                </button>
+                <button type="button" class="icon-option" data-icono="3">
+                    <img src="../img/3.webp" width="60px" alt="Icono 3">
+                </button>
+            </div>
         <small id="editProfileCounter" style="color: var(--muted); font-size: .75rem;">
           0/255
         </small>

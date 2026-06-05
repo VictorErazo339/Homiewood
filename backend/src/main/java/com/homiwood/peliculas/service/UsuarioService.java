@@ -8,6 +8,7 @@ import com.homiwood.peliculas.model.Usuario;
 import com.homiwood.peliculas.repository.UsuarioRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import com.homiwood.peliculas.exception.BadRequestException;
 
 import java.util.List;
 
@@ -77,4 +78,16 @@ public class UsuarioService {
 
         usuarioRepository.deleteById(id);
     }
+    public Usuario actualizarIconoPerfil(Long id, Integer iconoPerfil) {
+        if (iconoPerfil < 1 || iconoPerfil > 10) {
+            throw new BadRequestException("El icono debe ser un número entre 1 y 10");
+        }
+
+        Usuario usuario = buscarPorId(id);
+        usuario.setIconoPerfil(iconoPerfil);
+
+        return usuarioRepository.save(usuario);
+    }
+
+
 }

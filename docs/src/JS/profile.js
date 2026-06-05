@@ -104,6 +104,8 @@ function actualizarHeaderPerfil(usuario) {
     const usernameEl = document.getElementById("profileUsername");
     const bioEl = document.getElementById("profileBio");
 
+    const profileAvatar = document.getElementById("profileAvatar");
+
     if (nombreEl) {
         nombreEl.textContent =
             usuario?.nombre ||
@@ -118,6 +120,10 @@ function actualizarHeaderPerfil(usuario) {
 
     if (bioEl) {
         bioEl.textContent = obtenerDescripcionPerfil(usuario);
+    }
+
+    if (profileAvatar && usuario?.iconoPerfil) {
+        profileAvatar.src = `../img/${usuario.iconoPerfil}.webp`;
     }
 }
 
@@ -140,6 +146,22 @@ function inicializarEditarPerfil() {
     });
 
     descripcionInput.addEventListener("input", actualizarContadorDescripcion);
+
+    // Marcar icono actual al abrir modal
+    modalEl.addEventListener("show.bs.modal", function () {
+        const iconoActual = usuarioActual?.iconoPerfil;
+        document.querySelectorAll(".icon-option").forEach(btn => {
+            btn.classList.toggle("selected", Number(btn.dataset.icono) === iconoActual);
+        });
+    });
+
+    // Seleccionar icono al hacer click
+    document.querySelectorAll(".icon-option").forEach(btn => {
+        btn.addEventListener("click", () => {
+            document.querySelectorAll(".icon-option").forEach(b => b.classList.remove("selected"));
+            btn.classList.add("selected");
+        });
+    });
 
     guardarBtn.addEventListener("click", guardarPerfilEditado);
 
@@ -198,6 +220,21 @@ async function guardarPerfilEditado() {
         };
 
         localStorage.setItem("usuario", JSON.stringify(usuarioActual));
+
+        // Actualizar icono si se seleccionó uno
+        const iconoSeleccionado = document.querySelector(".icon-option.selected");
+        if (iconoSeleccionado) {
+            const icono = Number(iconoSeleccionado.dataset.icono);
+            await apiRequest(`/usuarios/${obtenerIdUsuario()}/icono?iconoPerfil=${icono}`, {
+                method: "PATCH"
+            });
+            usuarioActual.iconoPerfil = icono;
+            localStorage.setItem("usuario", JSON.stringify(usuarioActual));
+
+            // Actualizar avatar en navbar
+            const avatarImg = document.querySelector(".avatar img");
+            if (avatarImg) avatarImg.src = `../img/${icono}.webp`;
+        }
 
         actualizarHeaderPerfil(usuarioActual);
 
