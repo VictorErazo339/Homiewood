@@ -63,13 +63,14 @@
               <p class="profile-username" id="profileUsername">@usuario</p>
             </div>
 
-            <button class="edit-btn">
+            <button class="edit-btn js-edit-profile-btn" type="button" data-bs-toggle="modal"
+              data-bs-target="#editProfileModal" aria-label="Editar perfil">
               ✏️ Editar perfil
             </button>
           </div>
 
-          <p class="profile-bio-inline">
-            Cinéfilo 🎥 Fan del terror psicológico y el drama independiente.
+          <p class="profile-bio-inline" id="profileBio">
+            Cinéfilo 🎥 da tú mejor descripcion.
           </p>
 
           <div class="stats-tags-row">
@@ -289,6 +290,47 @@
     </div>
 
   </div>
+  <!-- MODAL EDITAR PERFIL -->
+  <div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content modal-box">
+
+        <h3 class="modal-title" id="editProfileModalLabel">
+          EDITAR PERFIL
+        </h3>
+
+        <label class="form-label" for="editProfileNombre">
+          NOMBRE
+        </label>
+
+        <input id="editProfileNombre" class="form-control" type="text" maxlength="100" placeholder="Tu nombre visible"
+          autocomplete="off">
+
+        <label class="form-label mt-2" for="editProfileDescripcion">
+          DESCRIPCIÓN
+        </label>
+
+        <textarea id="editProfileDescripcion" class="form-control" maxlength="255" rows="4"
+          placeholder="Escribe una descripción para tu perfil..."></textarea>
+
+        <small id="editProfileCounter" style="color: var(--muted); font-size: .75rem;">
+          0/255
+        </small>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" data-bs-dismiss="modal">
+            Cancelar
+          </button>
+
+          <button type="button" id="saveProfileBtn" class="btn-save">
+            Guardar cambios
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
 
   <!-- BOTTOM NAV -->
   <nav class="bottom-nav">
@@ -329,7 +371,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-<script type="module" src="../src/JS/vistas.js"></script>
+  <script type="module" src="../src/JS/vistas.js"></script>
 
 </body>
 

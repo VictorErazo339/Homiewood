@@ -8,7 +8,8 @@
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;700&display=swap"
+        rel="stylesheet">
 
     <link rel="stylesheet" href="../css/profile.css">
 </head>
@@ -61,13 +62,14 @@
                             <p class="profile-username" id="profileUsername">@usuario</p>
                         </div>
 
-                        <button class="edit-btn">
+                        <button class="edit-btn js-edit-profile-btn" type="button" data-bs-toggle="modal"
+                            data-bs-target="#editProfileModal" aria-label="Editar perfil">
                             ✏️ Editar perfil
                         </button>
                     </div>
 
-                    <p class="profile-bio-inline">
-                        Cinéfilo 🎥 Fan del terror psicológico y el drama independiente.
+                    <p class="profile-bio-inline" id="profileBio">
+                        Cinéfilo 🎥 da tú mejor descripcion.
                     </p>
 
                     <div class="stats-tags-row">
@@ -132,10 +134,7 @@
                     🎬 <span>MI TOP 5</span>
                 </h2>
 
-                <button
-                    class="edit-btn"
-                    data-bs-toggle="modal"
-                    data-bs-target="#top5Modal">
+                <button class="edit-btn" data-bs-toggle="modal" data-bs-target="#top5Modal">
                     + Agregar al Top 5
                 </button>
             </div>
@@ -155,11 +154,7 @@
             <div class="view-title-row">
                 <h2 class="view-title">Películas y series por ver</h2>
 
-                <button
-                    type="button"
-                    class="edit-btn"
-                    data-bs-toggle="modal"
-                    data-bs-target="#porverModal">
+                <button type="button" class="edit-btn" data-bs-toggle="modal" data-bs-target="#porverModal">
                     + Agregar por ver
                 </button>
             </div>
@@ -185,11 +180,7 @@
                     BUSCAR PELÍCULA O SERIE
                 </label>
 
-                <input
-                    id="top5SearchInput"
-                    class="form-control"
-                    type="text"
-                    placeholder="Busca por título..."
+                <input id="top5SearchInput" class="form-control" type="text" placeholder="Busca por título..."
                     autocomplete="off">
 
                 <div class="top5-picker-layout mt-3">
@@ -245,17 +236,11 @@
 
                 <div class="modal-actions">
 
-                    <button
-                        type="button"
-                        class="btn-cancel"
-                        data-bs-dismiss="modal">
+                    <button type="button" class="btn-cancel" data-bs-dismiss="modal">
                         Cancelar
                     </button>
 
-                    <button
-                        type="button"
-                        id="saveTop5Btn"
-                        class="btn-save">
+                    <button type="button" id="saveTop5Btn" class="btn-save">
                         Guardar en Top 5
                     </button>
 
@@ -282,11 +267,7 @@
                     BUSCAR PELÍCULA O SERIE
                 </label>
 
-                <input
-                    id="porverSearchInput"
-                    class="form-control"
-                    type="text"
-                    placeholder="Busca por título..."
+                <input id="porverSearchInput" class="form-control" type="text" placeholder="Busca por título..."
                     autocomplete="off">
 
                 <div id="porverResults" class="top5-results mt-3">
@@ -296,10 +277,7 @@
                 </div>
 
                 <div class="modal-actions">
-                    <button
-                        type="button"
-                        class="btn-cancel"
-                        data-bs-dismiss="modal">
+                    <button type="button" class="btn-cancel" data-bs-dismiss="modal">
                         Cancelar
                     </button>
                 </div>
@@ -309,7 +287,63 @@
         </div>
 
     </div>
+    <!-- MODAL EDITAR PERFIL -->
+<div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content modal-box">
 
+      <h3 class="modal-title" id="editProfileModalLabel">
+        EDITAR PERFIL
+      </h3>
+
+      <label class="form-label" for="editProfileNombre">
+        NOMBRE
+      </label>
+
+      <input
+        id="editProfileNombre"
+        class="form-control"
+        type="text"
+        maxlength="100"
+        placeholder="Tu nombre visible"
+        autocomplete="off"
+      >
+
+      <label class="form-label mt-2" for="editProfileDescripcion">
+        DESCRIPCIÓN
+      </label>
+
+      <textarea
+        id="editProfileDescripcion"
+        class="form-control"
+        maxlength="255"
+        rows="4"
+        placeholder="Escribe una descripción para tu perfil..."
+      ></textarea>
+
+      <small id="editProfileCounter" style="color: var(--muted); font-size: .75rem;">
+        0/255
+      </small>
+
+      <div class="modal-actions">
+        <button
+          type="button"
+          class="btn-cancel"
+          data-bs-dismiss="modal">
+          Cancelar
+        </button>
+
+        <button
+          type="button"
+          id="saveProfileBtn"
+          class="btn-save">
+          Guardar cambios
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
     <nav class="bottom-nav">
         <div class="bottom-nav-inner">
 

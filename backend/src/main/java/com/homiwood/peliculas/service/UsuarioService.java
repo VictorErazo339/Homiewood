@@ -1,5 +1,6 @@
 package com.homiwood.peliculas.service;
 
+import com.homiwood.peliculas.dto.ActualizarPerfilRequest;
 import com.homiwood.peliculas.dto.CrearUsuarioRequest;
 import com.homiwood.peliculas.exception.DuplicateResourceException;
 import com.homiwood.peliculas.exception.NotFoundException;
@@ -50,6 +51,22 @@ public class UsuarioService {
     public Usuario buscarPorId(Long id) {
         return usuarioRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Usuario no encontrado"));
+    }
+
+    public Usuario actualizarPerfil(Long id, ActualizarPerfilRequest request) {
+        Usuario usuario = buscarPorId(id);
+
+        usuario.setNombre(request.getNombre().trim());
+
+        String descripcion = request.getDescripcion();
+
+        if (descripcion == null) {
+            usuario.setDescripcion(null);
+        } else {
+            usuario.setDescripcion(descripcion.trim());
+        }
+
+        return usuarioRepository.save(usuario);
     }
 
     public void eliminarUsuario(Long id) {

@@ -23,6 +23,9 @@ public class Usuario {
     @Column(nullable = false)
     private String passwordHash;
 
+    @Column(length = 255)
+    private String descripcion;
+
     private LocalDateTime fechaCreacion = LocalDateTime.now();
 
     public Long getIdUsuario() {
@@ -63,6 +66,14 @@ public class Usuario {
 
     public void setPasswordHash(String passwordHash) {
         this.passwordHash = passwordHash;
+    }
+
+    public String getDescripcion() {
+        return descripcion;
+    }
+
+    public void setDescripcion(String descripcion) {
+        this.descripcion = descripcion;
     }
 
     public LocalDateTime getFechaCreacion() {

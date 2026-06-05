@@ -1,6 +1,7 @@
 package com.homiwood.peliculas.controller;
 
 import com.homiwood.peliculas.dto.RecomendacionResponse;
+import com.homiwood.peliculas.repository.GeneroPesoProjection;
 import com.homiwood.peliculas.service.RecomendacionService;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,6 +23,13 @@ public class RecomendacionController {
             @RequestParam(defaultValue = "10") int limite
     ) {
         return recomendacionService.recomendarParaUsuario(idUsuario, limite);
+    }
+
+    @GetMapping("/usuario/{idUsuario}/debug-generos")
+    public List<GeneroPesoProjection> debugGenerosUsuario(
+            @PathVariable Long idUsuario
+    ) {
+        return recomendacionService.obtenerDebugGenerosUsuario(idUsuario);
     }
 
     @GetMapping("/usuario/{idUsuario}/desde/{idOtroUsuario}")

@@ -6,12 +6,13 @@ import com.homiwood.peliculas.exception.NotFoundException;
 import com.homiwood.peliculas.model.Contenido;
 import com.homiwood.peliculas.repository.CalificacionRepository;
 import com.homiwood.peliculas.repository.ContenidoRepository;
+import com.homiwood.peliculas.repository.GeneroPesoProjection;
 import com.homiwood.peliculas.repository.UsuarioRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class RecomendacionService {
@@ -35,25 +36,36 @@ public class RecomendacionService {
         validarUsuario(idUsuario);
         validarLimite(limite);
 
-        List<Contenido> recomendaciones =
+        LinkedHashMap<String, RecomendacionResponse> resultado = new LinkedHashMap<>();
+
+        List<Contenido> porAfinidad =
                 contenidoRepository.recomendarPorAfinidadUsuario(idUsuario, limite);
 
-        if (!recomendaciones.isEmpty()) {
-            return mapearListaSinDuplicados(
-                    recomendaciones,
-                    limite,
-                    "Según tus gustos"
+        agregarSinDuplicados(
+                resultado,
+                porAfinidad,
+                "Según tus gustos",
+                limite
+        );
+
+        if (resultado.size() < limite) {
+            List<Contenido> populares =
+                    contenidoRepository.recomendarPopularesNoAgregados(idUsuario, limite * 2);
+
+            agregarSinDuplicados(
+                    resultado,
+                    populares,
+                    "Popular en Homiewood",
+                    limite
             );
         }
 
-        recomendaciones =
-                contenidoRepository.recomendarPopularesNoAgregados(idUsuario, limite);
+        return limitar(resultado, limite);
+    }
 
-        return mapearListaSinDuplicados(
-                recomendaciones,
-                limite,
-                "Popular en Homiewood"
-        );
+    public List<GeneroPesoProjection> obtenerDebugGenerosUsuario(Long idUsuario) {
+        validarUsuario(idUsuario);
+        return contenidoRepository.obtenerPesosGenerosUsuario(idUsuario);
     }
 
     public List<RecomendacionResponse> recomendarDesdeOtroUsuario(
@@ -76,53 +88,52 @@ public class RecomendacionService {
                         limite
                 );
 
-        return mapearListaSinDuplicados(
+        LinkedHashMap<String, RecomendacionResponse> resultado = new LinkedHashMap<>();
+
+        agregarSinDuplicados(
+                resultado,
                 recomendaciones,
-                limite,
-                "Recomendado desde las listas públicas de otro usuario"
+                "Recomendado desde las listas públicas de otro usuario",
+                limite
         );
+
+        return limitar(resultado, limite);
     }
 
-    private List<RecomendacionResponse> mapearListaSinDuplicados(
+    private void agregarSinDuplicados(
+            LinkedHashMap<String, RecomendacionResponse> resultado,
             List<Contenido> contenidos,
-            int limite,
-            String motivo
+            String motivo,
+            int limite
     ) {
-        return contenidos.stream()
-                .collect(Collectors.toMap(
-                        contenido -> normalizarTitulo(contenido.getTitulo()),
-                        contenido -> contenido,
-                        this::elegirMejorContenidoDuplicado,
-                        LinkedHashMap::new
-                ))
-                .values()
+        if (contenidos == null || contenidos.isEmpty()) {
+            return;
+        }
+
+        for (Contenido contenido : contenidos) {
+            if (resultado.size() >= limite) {
+                return;
+            }
+
+            String clave = normalizarTitulo(contenido.getTitulo());
+
+            if (!resultado.containsKey(clave)) {
+                resultado.put(
+                        clave,
+                        mapearRespuesta(contenido, motivo)
+                );
+            }
+        }
+    }
+
+    private List<RecomendacionResponse> limitar(
+            LinkedHashMap<String, RecomendacionResponse> resultado,
+            int limite
+    ) {
+        return new ArrayList<>(resultado.values())
                 .stream()
                 .limit(limite)
-                .map(contenido -> mapearRespuesta(contenido, motivo))
                 .toList();
-    }
-
-    private Contenido elegirMejorContenidoDuplicado(
-            Contenido contenido1,
-            Contenido contenido2
-    ) {
-        if (contenido1.getAnioEstreno() != null && contenido2.getAnioEstreno() == null) {
-            return contenido1;
-        }
-
-        if (contenido1.getAnioEstreno() == null && contenido2.getAnioEstreno() != null) {
-            return contenido2;
-        }
-
-        if (contenido1.getPosterUrl() != null && contenido2.getPosterUrl() == null) {
-            return contenido1;
-        }
-
-        if (contenido1.getPosterUrl() == null && contenido2.getPosterUrl() != null) {
-            return contenido2;
-        }
-
-        return contenido1;
     }
 
     private String normalizarTitulo(String titulo) {
@@ -148,6 +159,11 @@ public class RecomendacionService {
             promedio = 0.0;
         }
 
+        List<String> generos =
+                contenidoRepository.obtenerGenerosContenido(
+                        contenido.getIdContenido()
+                );
+
         return new RecomendacionResponse(
                 contenido.getIdContenido(),
                 contenido.getTitulo(),
@@ -155,7 +171,12 @@ public class RecomendacionService {
                 contenido.getAnioEstreno(),
                 contenido.getPosterUrl(),
                 promedio,
-                motivo
+                motivo,
+                generos,
+                contenido.getIdioma(),
+                contenido.getDescripcion(),
+                contenido.getApiProvider(),
+                contenido.getApiId()
         );
     }
 

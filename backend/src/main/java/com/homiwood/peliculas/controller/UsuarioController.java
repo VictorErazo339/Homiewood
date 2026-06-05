@@ -1,5 +1,6 @@
 package com.homiwood.peliculas.controller;
 
+import com.homiwood.peliculas.dto.ActualizarPerfilRequest;
 import com.homiwood.peliculas.dto.CrearUsuarioRequest;
 import com.homiwood.peliculas.dto.UsuarioResponse;
 import com.homiwood.peliculas.mapper.ResponseMapper;
@@ -42,9 +43,18 @@ public class UsuarioController {
         return responseMapper.toUsuarioResponse(usuarioService.buscarPorId(id));
     }
 
+    @PutMapping("/{id}/perfil")
+    public ResponseEntity<UsuarioResponse> actualizarPerfil(
+            @PathVariable Long id,
+            @Valid @RequestBody ActualizarPerfilRequest request
+    ) {
+        Usuario usuarioActualizado = usuarioService.actualizarPerfil(id, request);
+        return ResponseEntity.ok(responseMapper.toUsuarioResponse(usuarioActualizado));
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<String> eliminarUsuario(@PathVariable Long id) {
         usuarioService.eliminarUsuario(id);
         return ResponseEntity.ok("Usuario eliminado correctamente");
     }
-} 
+}

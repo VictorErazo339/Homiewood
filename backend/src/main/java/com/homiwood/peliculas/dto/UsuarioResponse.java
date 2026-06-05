@@ -8,6 +8,7 @@ public class UsuarioResponse {
     private String nombre;
     private String username;
     private String email;
+    private String descripcion;
     private LocalDateTime fechaCreacion;
 
     public UsuarioResponse() {
@@ -18,6 +19,15 @@ public class UsuarioResponse {
         this.nombre = nombre;
         this.username = username;
         this.email = email;
+        this.fechaCreacion = fechaCreacion;
+    }
+
+    public UsuarioResponse(Long idUsuario, String nombre, String username, String email, String descripcion, LocalDateTime fechaCreacion) {
+        this.idUsuario = idUsuario;
+        this.nombre = nombre;
+        this.username = username;
+        this.email = email;
+        this.descripcion = descripcion;
         this.fechaCreacion = fechaCreacion;
     }
 
@@ -51,6 +61,14 @@ public class UsuarioResponse {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getDescripcion() {
+        return descripcion;
+    }
+
+    public void setDescripcion(String descripcion) {
+        this.descripcion = descripcion;
     }
 
     public LocalDateTime getFechaCreacion() {
