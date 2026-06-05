@@ -7,6 +7,8 @@ let top5 = [null, null, null, null, null];
 let peliculaSeleccionada = null;
 let posicionSeleccionada = null;
 let peliculaPerfilSeleccionada = null;
+let logrosUsuario = [];
+let logrosDestacados = [];
 
 /* ===============================
    INIT
@@ -38,6 +40,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     await cargarPostsUsuario(idUsuario);
     await cargarTop5DesdeBackend();
     await sincronizarVistasParaTags(idUsuario);
+    await cargarLogrosPerfil(idUsuario);
 
     renderTop5();
     renderBioTags();
@@ -45,6 +48,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     inicializarTop5Modal();
     inicializarComposerPerfil();
     inicializarEditarPerfil();
+    inicializarLogrosModal();
 });
 
 function obtenerIdUsuario() {
@@ -84,6 +88,7 @@ async function cargarDatosUsuario(idUsuario) {
         actualizarHeaderPerfil(usuarioActual);
     }
 }
+
 function obtenerDescripcionPerfil(usuario) {
     const descripcion = usuario?.descripcion;
 
@@ -250,6 +255,7 @@ async function guardarPerfilEditado() {
         guardarBtn.textContent = "Guardar cambios";
     }
 }
+
 /* ===============================
    POSTS / RESEÑAS
 ================================ */
@@ -518,6 +524,7 @@ async function quitarDelTop5(index) {
         guardarTop5();
         renderTop5();
         renderBioTags();
+        await cargarLogrosPerfil(obtenerIdUsuario());
     } catch (error) {
         console.error("Error quitando del Top 5:", error);
         alert("No se pudo quitar del Top 5.");
@@ -593,6 +600,7 @@ function inicializarTop5Modal() {
             guardarTop5();
             renderTop5();
             renderBioTags();
+            await cargarLogrosPerfil(obtenerIdUsuario());
             limpiarModalTop5();
 
             const modalElement = document.getElementById("top5Modal");
@@ -887,6 +895,7 @@ async function publicarResenaPerfil() {
         await cargarPostsUsuario(obtenerIdUsuario());
         await sincronizarVistasParaTags(obtenerIdUsuario());
         renderBioTags();
+        await cargarLogrosPerfil(obtenerIdUsuario());
         limpiarComposerPerfil();
     } catch (error) {
         console.error("Error publicando reseña:", error);
@@ -1194,4 +1203,261 @@ function escapeHtml(texto) {
         .replaceAll(">", "&gt;")
         .replaceAll('"', "&quot;")
         .replaceAll("'", "&#039;");
+}
+
+/* ===============================
+   LOGROS / ACHIEVEMENTS
+================================ */
+
+async function cargarLogrosPerfil(idUsuario) {
+    try {
+        const [todos, destacados] = await Promise.all([
+            apiRequest(`/usuarios/${idUsuario}/logros`),
+            apiRequest(`/usuarios/${idUsuario}/logros/destacados`)
+        ]);
+
+        logrosUsuario = Array.isArray(todos) ? todos : [];
+        logrosDestacados = Array.isArray(destacados) ? destacados : [];
+
+        renderLogrosDestacadosHeader();
+        renderModalLogros();
+    } catch (error) {
+        console.error("Error cargando logros:", error);
+        renderLogrosHeaderError();
+    }
+}
+
+function inicializarLogrosModal() {
+    const modalEl = document.getElementById("achievementsModal");
+
+    if (!modalEl) return;
+
+    modalEl.addEventListener("show.bs.modal", async function () {
+        await cargarLogrosPerfil(obtenerIdUsuario());
+    });
+}
+
+function renderLogrosDestacadosHeader() {
+    const container = document.getElementById("profileAchievements");
+
+    if (!container) return;
+
+    const destacados = logrosDestacados
+        .filter(logro => logro.desbloqueado)
+        .slice(0, 3);
+
+    const boton = `
+        <button class="edit-btn" type="button" data-bs-toggle="modal" data-bs-target="#achievementsModal">
+            🏅 Ver todos
+        </button>
+    `;
+
+    if (destacados.length === 0) {
+        container.innerHTML = `
+            <div class="achievement-item achievement-empty">
+                <span class="ach-icon" aria-hidden="true">🏅</span>
+                <span class="ach-name">Elige logros</span>
+            </div>
+            ${boton}
+        `;
+        return;
+    }
+
+    container.innerHTML = destacados.map(logro => `
+        <div class="achievement-item" title="${escapeHtml(logro.descripcion)}">
+            <span class="ach-icon" aria-hidden="true">${escapeHtml(logro.icono || "🏅")}</span>
+            <span class="ach-name">${escapeHtml(logro.nombre)}</span>
+        </div>
+    `).join("") + boton;
+}
+
+function renderLogrosHeaderError() {
+    const container = document.getElementById("profileAchievements");
+
+    if (!container) return;
+
+    container.innerHTML = `
+        <div class="achievement-item achievement-empty">
+            <span class="ach-icon" aria-hidden="true">⚠️</span>
+            <span class="ach-name">Logros no disponibles</span>
+        </div>
+
+        <button class="edit-btn" type="button" data-bs-toggle="modal" data-bs-target="#achievementsModal">
+            🏅 Ver todos
+        </button>
+    `;
+}
+
+function renderModalLogros() {
+    const obtained = document.getElementById("achObtained");
+    const easy = document.getElementById("achLockedEasy");
+    const medium = document.getElementById("achLockedMedium");
+    const hard = document.getElementById("achLockedHard");
+    const hidden = document.getElementById("achHidden");
+    const counter = document.getElementById("achSelectedCounter");
+
+    if (!obtained || !easy || !medium || !hard || !hidden) return;
+
+    const destacadosIds = new Set(
+        logrosDestacados.map(logro => Number(logro.idLogro))
+    );
+
+    if (counter) {
+        counter.textContent = `${destacadosIds.size}/3 destacados`;
+    }
+
+    const desbloqueados = logrosUsuario.filter(logro => logro.desbloqueado);
+
+    const bloqueadosFaciles = logrosUsuario.filter(logro =>
+        !logro.desbloqueado && logro.dificultad === "FACIL" && !logro.oculto
+    );
+
+    const bloqueadosMedios = logrosUsuario.filter(logro =>
+        !logro.desbloqueado && logro.dificultad === "MEDIO" && !logro.oculto
+    );
+
+    const bloqueadosDificiles = logrosUsuario.filter(logro =>
+        !logro.desbloqueado && logro.dificultad === "DIFICIL" && !logro.oculto
+    );
+
+    const ocultos = logrosUsuario.filter(logro => logro.oculto);
+
+    obtained.innerHTML = renderListaLogros(
+        desbloqueados,
+        destacadosIds,
+        "No tienes logros desbloqueados todavía."
+    );
+
+    easy.innerHTML = renderListaLogros(
+        bloqueadosFaciles,
+        destacadosIds,
+        "No quedan logros fáciles bloqueados."
+    );
+
+    medium.innerHTML = renderListaLogros(
+        bloqueadosMedios,
+        destacadosIds,
+        "No quedan logros medios bloqueados."
+    );
+
+    hard.innerHTML = renderListaLogros(
+        bloqueadosDificiles,
+        destacadosIds,
+        "No quedan logros difíciles bloqueados."
+    );
+
+    hidden.innerHTML = renderListaLogros(
+        ocultos,
+        destacadosIds,
+        "No hay logros ocultos disponibles."
+    );
+
+    document.querySelectorAll(".ach-select-btn").forEach(btn => {
+        btn.addEventListener("click", async function () {
+            const idLogro = Number(btn.dataset.idLogro);
+            await toggleLogroDestacado(idLogro);
+        });
+    });
+}
+
+function renderListaLogros(lista, destacadosIds, mensajeVacio) {
+    if (!lista || lista.length === 0) {
+        return `<li class="ach-modal-empty">${escapeHtml(mensajeVacio)}</li>`;
+    }
+
+    return lista.map(logro => renderLogroCard(logro, destacadosIds)).join("");
+}
+
+function renderLogroCard(logro, destacadosIds) {
+    const desbloqueado = Boolean(logro.desbloqueado);
+    const destacado = destacadosIds.has(Number(logro.idLogro));
+    const ocultoBloqueado = Boolean(logro.oculto) && !desbloqueado;
+
+    const progresoActual = Number(logro.progresoActual || 0);
+    const valorObjetivo = Number(logro.valorObjetivo || 1);
+
+    const porcentaje = Math.max(
+        0,
+        Math.min(100, Math.round((progresoActual / valorObjetivo) * 100))
+    );
+
+    const claseEstado = desbloqueado ? "is-unlocked" : "is-locked";
+    const claseOculto = ocultoBloqueado ? "is-hidden-locked" : "";
+
+    const botonDestacar = desbloqueado
+        ? `
+            <button type="button"
+                    class="ach-select-btn ${destacado ? "is-selected" : ""}"
+                    data-id-logro="${logro.idLogro}"
+                    title="${destacado ? "Quitar de destacados" : "Destacar logro"}">
+                ${destacado ? "✓" : "+"}
+            </button>
+        `
+        : `<span class="ach-modal-lock">🔒</span>`;
+
+    return `
+        <li class="ach-modal-card ${claseEstado} ${claseOculto}">
+            <div class="ach-modal-main">
+                <span class="ach-modal-icon" aria-hidden="true">
+                    ${escapeHtml(logro.icono || "🏅")}
+                </span>
+
+                <div class="ach-modal-info">
+                    <strong>${escapeHtml(logro.nombre || "???")}</strong>
+                    <small>${escapeHtml(logro.descripcion || "")}</small>
+
+                    <div class="ach-modal-progress">
+                        <div class="ach-progress-bar" aria-hidden="true">
+                            <div class="ach-progress-fill" style="width:${porcentaje}%"></div>
+                        </div>
+
+                        <span class="ach-progress-text">
+                            ${progresoActual}/${valorObjetivo}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            ${botonDestacar}
+        </li>
+    `;
+}
+
+async function toggleLogroDestacado(idLogro) {
+    const logro = logrosUsuario.find(item => Number(item.idLogro) === Number(idLogro));
+
+    if (!logro || !logro.desbloqueado) {
+        alert("Solo puedes destacar logros desbloqueados.");
+        return;
+    }
+
+    const idsActuales = logrosDestacados.map(item => Number(item.idLogro));
+    const yaDestacado = idsActuales.includes(Number(idLogro));
+
+    let nuevosIds;
+
+    if (yaDestacado) {
+        nuevosIds = idsActuales.filter(id => id !== Number(idLogro));
+    } else {
+        if (idsActuales.length >= 3) {
+            alert("Solo puedes destacar máximo 3 logros.");
+            return;
+        }
+
+        nuevosIds = [...idsActuales, Number(idLogro)];
+    }
+
+    try {
+        logrosDestacados = await apiRequest(`/usuarios/${obtenerIdUsuario()}/logros/destacados`, {
+            method: "PUT",
+            body: JSON.stringify({
+                idsLogros: nuevosIds
+            })
+        });
+
+        await cargarLogrosPerfil(obtenerIdUsuario());
+    } catch (error) {
+        console.error("Error actualizando logros destacados:", error);
+        alert(error?.message || "No se pudieron actualizar los logros destacados.");
+    }
 }

@@ -17,79 +17,139 @@ import java.util.Optional;
 @Service
 public class LikeCalificacionService {
 
-    @Autowired
-    private LikeCalificacionRepository likeRepo;
+        @Autowired
+        private LikeCalificacionRepository likeRepo;
 
-    @Autowired
-    private CalificacionRepository calificacionRepo;
+        @Autowired
+        private CalificacionRepository calificacionRepo;
 
-    @Autowired
-    private UsuarioRepository usuarioRepo;
+        @Autowired
+        private UsuarioRepository usuarioRepo;
 
-    @Autowired
-    private SimpMessagingTemplate messagingTemplate;
+        @Autowired
+        private SimpMessagingTemplate messagingTemplate;
 
-    public LikeCalificacionResponseDTO toggleLike(LikeCalificacionRequestDTO dto) {
-        Calificacion calificacion = calificacionRepo.findById(dto.getIdCalificacion())
-                .orElseThrow(() -> new RuntimeException("Calificación no encontrada"));
+        @Autowired
+        private LogroEvaluacionPublisher logroEvaluacionPublisher;
 
-        Usuario usuario = usuarioRepo.findById(dto.getIdUsuario())
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        public LikeCalificacionResponseDTO toggleLike(LikeCalificacionRequestDTO dto) {
+                Calificacion calificacion = calificacionRepo.findById(dto.getIdCalificacion())
+                                .orElseThrow(() -> new RuntimeException("Calificación no encontrada"));
 
-        Optional<LikeCalificacion> existente = likeRepo
-                .findByCalificacion_IdCalificacionAndUsuario_IdUsuario(
-                        dto.getIdCalificacion(), dto.getIdUsuario()
-                );
+                Usuario usuario = usuarioRepo.findById(dto.getIdUsuario())
+                                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        if (existente.isPresent()) {
-            LikeCalificacion like = existente.get();
-            if (like.getTipo() == dto.getTipo()) {
-                // Mismo tipo → eliminar (toggle off)
-                likeRepo.delete(like);
-            } else {
-                // Tipo distinto → cambiar de like a dislike o viceversa
-                like.setTipo(dto.getTipo());
-                likeRepo.save(like);
-            }
-        } else {
-            // No existe → crear nuevo
-            LikeCalificacion nuevo = new LikeCalificacion();
-            nuevo.setCalificacion(calificacion);
-            nuevo.setUsuario(usuario);
-            nuevo.setTipo(dto.getTipo());
-            likeRepo.save(nuevo);
+                Optional<LikeCalificacion> existente = likeRepo
+                                .findByCalificacion_IdCalificacionAndUsuario_IdUsuario(
+                                                dto.getIdCalificacion(), dto.getIdUsuario());
+
+                if (existente.isPresent()) {
+                        LikeCalificacion like = existente.get();
+
+                        if (like.getTipo() == dto.getTipo()) {
+                                likeRepo.delete(like);
+                        } else {
+                                like.setTipo(dto.getTipo());
+                                likeRepo.save(like);
+                        }
+                } else {
+                        LikeCalificacion nuevo = new LikeCalificacion();
+                        nuevo.setCalificacion(calificacion);
+                        nuevo.setUsuario(usuario);
+                        nuevo.setTipo(dto.getTipo());
+                        likeRepo.save(nuevo);
+                }
+
+                LikeCalificacionResponseDTO response = buildResponse(
+                                dto.getIdCalificacion(), dto.getIdUsuario());
+
+                // NO TOCAR: mantiene WebSocket funcionando para likes.
+                messagingTemplate.convertAndSend(
+                                "/topic/likes/" + dto.getIdCalificacion(),
+                                response);
+                logroEvaluacionPublisher.solicitarEvaluacionVarios(
+                                usuario.getIdUsuario(),
+                                calificacion.getUsuario().getIdUsuario());
+                return response;
         }
 
-        LikeCalificacionResponseDTO response = buildResponse(
-                dto.getIdCalificacion(), dto.getIdUsuario()
-        );
+        public LikeCalificacionResponseDTO obtenerConteos(Long idCalificacion, Long idUsuario) {
+                return buildResponse(idCalificacion, idUsuario);
+        }
 
-        // Emitir por WebSocket
-        messagingTemplate.convertAndSend(
-                "/topic/likes/" + dto.getIdCalificacion(),
-                response
-        );
+        // =========================================================
+        // MÉTODOS PARA LOGROS - PASO 4
+        // =========================================================
 
-        return response;
-    }
+        public long contarLikesRecibidos(Long idUsuario) {
+                validarIdUsuario(idUsuario);
+                return likeRepo.contarReaccionesRecibidasPorUsuario(
+                                idUsuario,
+                                LikeCalificacion.TipoLike.LIKE);
+        }
 
-    public LikeCalificacionResponseDTO obtenerConteos(Long idCalificacion, Long idUsuario) {
-        return buildResponse(idCalificacion, idUsuario);
-    }
+        public long contarDislikesRecibidos(Long idUsuario) {
+                validarIdUsuario(idUsuario);
+                return likeRepo.contarReaccionesRecibidasPorUsuario(
+                                idUsuario,
+                                LikeCalificacion.TipoLike.DISLIKE);
+        }
 
-    private LikeCalificacionResponseDTO buildResponse(Long idCalificacion, Long idUsuario) {
-        LikeCalificacionResponseDTO response = new LikeCalificacionResponseDTO();
-        response.setIdCalificacion(idCalificacion);
-        response.setTotalLikes(likeRepo.countByCalificacion_IdCalificacionAndTipo(
-                idCalificacion, LikeCalificacion.TipoLike.LIKE
-        ));
-        response.setTotalDislikes(likeRepo.countByCalificacion_IdCalificacionAndTipo(
-                idCalificacion, LikeCalificacion.TipoLike.DISLIKE
-        ));
+        public long contarLikesHechos(Long idUsuario) {
+                validarIdUsuario(idUsuario);
+                return likeRepo.contarReaccionesHechasPorUsuario(
+                                idUsuario,
+                                LikeCalificacion.TipoLike.LIKE);
+        }
 
-        likeRepo.findByCalificacion_IdCalificacionAndUsuario_IdUsuario(idCalificacion, idUsuario)
-                .ifPresent(l -> response.setTipoUsuario(l.getTipo()));
+        public long contarDislikesHechos(Long idUsuario) {
+                validarIdUsuario(idUsuario);
+                return likeRepo.contarReaccionesHechasPorUsuario(
+                                idUsuario,
+                                LikeCalificacion.TipoLike.DISLIKE);
+        }
 
-        return response;
-    }
+        public long obtenerMaximoLikesEnUnaResena(Long idUsuario) {
+                validarIdUsuario(idUsuario);
+                return likeRepo.obtenerMaximoLikesEnUnaCalificacion(idUsuario);
+        }
+
+        public boolean esTopCritico(Long idUsuario) {
+                return contarLikesRecibidos(idUsuario) >= 50;
+        }
+
+        public boolean esCriticoDeOro(Long idUsuario) {
+                return contarLikesRecibidos(idUsuario) >= 500;
+        }
+
+        public boolean tieneResenaPopular(Long idUsuario) {
+                return obtenerMaximoLikesEnUnaResena(idUsuario) >= 10;
+        }
+
+        private LikeCalificacionResponseDTO buildResponse(Long idCalificacion, Long idUsuario) {
+                LikeCalificacionResponseDTO response = new LikeCalificacionResponseDTO();
+
+                response.setIdCalificacion(idCalificacion);
+
+                response.setTotalLikes(likeRepo.countByCalificacion_IdCalificacionAndTipo(
+                                idCalificacion,
+                                LikeCalificacion.TipoLike.LIKE));
+
+                response.setTotalDislikes(likeRepo.countByCalificacion_IdCalificacionAndTipo(
+                                idCalificacion,
+                                LikeCalificacion.TipoLike.DISLIKE));
+
+                likeRepo.findByCalificacion_IdCalificacionAndUsuario_IdUsuario(
+                                idCalificacion,
+                                idUsuario)
+                                .ifPresent(l -> response.setTipoUsuario(l.getTipo()));
+
+                return response;
+        }
+
+        private void validarIdUsuario(Long idUsuario) {
+                if (idUsuario == null) {
+                        throw new RuntimeException("El idUsuario es obligatorio");
+                }
+        }
 }

@@ -3,6 +3,7 @@ package com.homiwood.peliculas.config;
 import com.homiwood.peliculas.security.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -11,7 +12,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 
 @Configuration
 @EnableWebSecurity
@@ -32,11 +32,21 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
+
+                        // Preflight CORS
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                        // WebSocket / STOMP / SockJS
+                        // NO BORRAR: esto mantiene funcionando el WebSocket.
                         .requestMatchers(
                                 "/ws/**",
                                 "/ws/info/**",
                                 "/topic/**",
-                                "/app/**",
+                                "/app/**"
+                        ).permitAll()
+
+                        // Endpoints públicos del backend
+                        .requestMatchers(
                                 "/api/usuarios/**",
                                 "/api/auth/**",
                                 "/api/health",
@@ -44,8 +54,12 @@ public class SecurityConfig {
                                 "/api/recomendaciones/**",
                                 "/api/calificaciones/**",
                                 "/api/likes-calificacion/**",
-                                "/api/comentarios-calificacion/**"
+                                "/api/comentarios-calificacion/**",
+
+                                // Necesario para Vistas / Por ver / Top 5 / estadísticas de logros
+                                "/api/listas/**"
                         ).permitAll()
+
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(

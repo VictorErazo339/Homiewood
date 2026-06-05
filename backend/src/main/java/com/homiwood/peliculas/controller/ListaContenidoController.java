@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/listas")
@@ -73,5 +74,26 @@ public class ListaContenidoController {
     ) {
         listaContenidoService.quitarContenidoPorPosicion(idLista, posicion);
         return ResponseEntity.noContent().build();
+    }
+
+    // =========================================================
+    // ENDPOINT TEMPORAL PARA PROBAR LOGROS - PASO 2
+    // =========================================================
+
+    @GetMapping("/usuario/{idUsuario}/estadisticas-logros-listas")
+    public Map<String, Object> obtenerEstadisticasLogrosListas(
+            @PathVariable Long idUsuario
+    ) {
+        return Map.of(
+                "totalVistos", listaContenidoService.contarVistosUsuario(idUsuario),
+                "totalPorVer", listaContenidoService.contarPorVerUsuario(idUsuario),
+                "totalTop5", listaContenidoService.contarTop5Usuario(idUsuario),
+                "top5Completo", listaContenidoService.tieneTop5Completo(idUsuario),
+                "vistosHoy", listaContenidoService.contarVistosHoyUsuario(idUsuario),
+                "maratonistaHoy", listaContenidoService.esMaratonistaHoy(idUsuario),
+                "peliculasVistas", listaContenidoService.contarPeliculasVistas(idUsuario),
+                "seriesVistas", listaContenidoService.contarSeriesVistas(idUsuario),
+                "animesVistos", listaContenidoService.contarAnimesVistos(idUsuario)
+        );
     }
 }
