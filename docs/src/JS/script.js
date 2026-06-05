@@ -49,6 +49,12 @@ async function cargarUsuarioLogueado() {
 
         if (nombreUsuario) {
             nombreUsuario.textContent = `@${usuarioActual.username || usuarioActual.nombre || "Usuario"}`;
+
+            const avatarImg = document.querySelector(".avatar img");
+            if (avatarImg && usuarioActual.iconoPerfil) {
+                avatarImg.src = `../img/${usuarioActual.iconoPerfil}.webp`;
+            }
+
         }
 
         return;
@@ -62,6 +68,15 @@ async function cargarUsuarioLogueado() {
 
         if (nombreUsuario) {
             nombreUsuario.textContent = `@${usuario.username || usuario.nombre || "Usuario"}`;
+
+            const avatarImg = document.querySelector(".avatar img");
+            if (avatarImg && usuarioActual.iconoPerfil) {
+                avatarImg.src = `../img/${usuarioActual.iconoPerfil}.webp`;
+            }
+
+
+
+
         }
 
     } catch (error) {
