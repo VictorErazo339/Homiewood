@@ -1895,3 +1895,18 @@ body {
   color:     var(--muted);
   font-size: 0.82rem;
 }
+
+
+/* AQUI ESTUVO DIEGO */
+.icon-option {
+    background: transparent;
+    border: 3px solid transparent;
+    border-radius: 50%;
+    padding: 4px;
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+
+.icon-option.selected {
+    border-color: var(--accent, #a855f7);
+}

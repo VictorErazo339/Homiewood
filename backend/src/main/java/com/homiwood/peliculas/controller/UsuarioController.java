@@ -52,6 +52,16 @@ public class UsuarioController {
         return ResponseEntity.ok(responseMapper.toUsuarioResponse(usuarioActualizado));
     }
 
+    @PatchMapping("/{id}/icono")
+    public ResponseEntity<UsuarioResponse> actualizarIcono(
+            @PathVariable Long id,
+            @RequestParam Integer iconoPerfil
+    ) {
+        Usuario usuarioActualizado = usuarioService.actualizarIconoPerfil(id, iconoPerfil);
+        return ResponseEntity.ok(responseMapper.toUsuarioResponse(usuarioActualizado));
+    }
+
+
     @DeleteMapping("/{id}")
     public ResponseEntity<String> eliminarUsuario(@PathVariable Long id) {
         usuarioService.eliminarUsuario(id);
