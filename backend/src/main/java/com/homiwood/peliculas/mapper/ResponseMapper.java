@@ -18,6 +18,7 @@ public class ResponseMapper {
                 usuario.getUsername(),
                 usuario.getEmail(),
                 usuario.getDescripcion(),
+                usuario.getIconoPerfil(),
                 usuario.getFechaCreacion());
     }
 
