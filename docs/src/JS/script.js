@@ -124,7 +124,10 @@ async function cargarFeed() {
     try {
         const calificaciones = await apiRequest("/calificaciones");
 
-        feedTodos = [...calificaciones].reverse();
+        feedTodos = calificaciones
+            .filter(esPublicacion)
+            .reverse();
+
         feedPagina = 1;
 
         renderFeedPagina();
@@ -134,9 +137,25 @@ async function cargarFeed() {
     }
 }
 
+function esPublicacion(calificacion) {
+    return calificacion.comentario &&
+        String(calificacion.comentario).trim().length > 0;
+}
+
 function renderFeedPagina() {
     const feed = document.getElementById("feed");
     if (!feed) return;
+
+    if (feedTodos.length === 0) {
+        feed.innerHTML = `
+            <p style="color:#aaa; text-align:center; margin-top:2rem;">
+                Aún no hay publicaciones.
+            </p>
+        `;
+
+        renderPaginacion(0);
+        return;
+    }
 
     const totalPaginas = Math.ceil(feedTodos.length / POSTS_PER_PAGE);
     const inicio = (feedPagina - 1) * POSTS_PER_PAGE;

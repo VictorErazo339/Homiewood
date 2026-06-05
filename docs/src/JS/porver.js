@@ -28,6 +28,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     renderPorVer();
 
     inicializarBuscadorPorVer();
+    inicializarEditarPerfil();
 });
 
 function obtenerIdUsuario() {
@@ -51,38 +52,167 @@ function porverStorageKey() {
 ================================ */
 
 async function cargarDatosUsuario(idUsuario) {
-    const nombreEl = document.getElementById("profileName");
-    const usernameEl = document.getElementById("profileUsername");
-
-    if (usuarioActual) {
-        nombreEl.textContent = usuarioActual.nombre || usuarioActual.username || "Usuario";
-        usernameEl.textContent = `@${usuarioActual.username || "usuario"}`;
-    }
+    actualizarHeaderPerfil(usuarioActual);
 
     try {
         const usuario = await apiRequest(`/usuarios/${idUsuario}`);
 
-        nombreEl.textContent =
-            usuario.nombre ||
-            usuario.username ||
-            usuarioActual?.nombre ||
-            "Usuario";
+        usuarioActual = {
+            ...usuarioActual,
+            ...usuario
+        };
 
-        usernameEl.textContent =
-            `@${usuario.username || usuarioActual?.username || "usuario"}`;
+        localStorage.setItem("usuario", JSON.stringify(usuarioActual));
 
+        actualizarHeaderPerfil(usuarioActual);
     } catch (error) {
-        console.error("Error cargando usuario:", error);
+        console.error("Error cargando datos del usuario:", error);
+        actualizarHeaderPerfil(usuarioActual);
+    }
+}
+function obtenerDescripcionPerfil(usuario) {
+    const descripcion = usuario?.descripcion;
+
+    if (descripcion && String(descripcion).trim().length > 0) {
+        return descripcion;
+    }
+
+    return "Cinéfilo 🎥 Fan del terror psicológico y el drama independiente.";
+}
+
+function actualizarHeaderPerfil(usuario) {
+    const nombreEl = document.getElementById("profileName");
+    const usernameEl = document.getElementById("profileUsername");
+    const bioEl = document.getElementById("profileBio");
+
+    if (nombreEl) {
+        nombreEl.textContent =
+            usuario?.nombre ||
+            usuario?.username ||
+            "Usuario";
+    }
+
+    if (usernameEl) {
+        usernameEl.textContent =
+            `@${usuario?.username || "usuario"}`;
+    }
+
+    if (bioEl) {
+        bioEl.textContent = obtenerDescripcionPerfil(usuario);
+    }
+}
+
+function inicializarEditarPerfil() {
+    const modalEl = document.getElementById("editProfileModal");
+    const nombreInput = document.getElementById("editProfileNombre");
+    const descripcionInput = document.getElementById("editProfileDescripcion");
+    const contador = document.getElementById("editProfileCounter");
+    const guardarBtn = document.getElementById("saveProfileBtn");
+
+    if (!modalEl || !nombreInput || !descripcionInput || !guardarBtn) {
+        return;
+    }
+
+    modalEl.addEventListener("show.bs.modal", function () {
+        nombreInput.value = usuarioActual?.nombre || "";
+        descripcionInput.value = usuarioActual?.descripcion || "";
+        actualizarContadorDescripcion();
+        setTimeout(() => nombreInput.focus(), 150);
+    });
+
+    descripcionInput.addEventListener("input", actualizarContadorDescripcion);
+
+    guardarBtn.addEventListener("click", guardarPerfilEditado);
+
+    function actualizarContadorDescripcion() {
+        if (!contador) return;
+
+        contador.textContent = `${descripcionInput.value.length}/255`;
+    }
+}
+
+async function guardarPerfilEditado() {
+    const nombreInput = document.getElementById("editProfileNombre");
+    const descripcionInput = document.getElementById("editProfileDescripcion");
+    const guardarBtn = document.getElementById("saveProfileBtn");
+
+    if (!nombreInput || !descripcionInput || !guardarBtn) {
+        return;
+    }
+
+    const nombre = nombreInput.value.trim();
+    const descripcion = descripcionInput.value.trim();
+
+    if (!nombre) {
+        alert("El nombre no puede estar vacío.");
+        nombreInput.focus();
+        return;
+    }
+
+    if (nombre.length > 100) {
+        alert("El nombre no puede superar los 100 caracteres.");
+        nombreInput.focus();
+        return;
+    }
+
+    if (descripcion.length > 255) {
+        alert("La descripción no puede superar los 255 caracteres.");
+        descripcionInput.focus();
+        return;
+    }
+
+    guardarBtn.disabled = true;
+    guardarBtn.textContent = "Guardando...";
+
+    try {
+        const usuarioActualizado = await apiRequest(`/usuarios/${obtenerIdUsuario()}/perfil`, {
+            method: "PUT",
+            body: JSON.stringify({
+                nombre,
+                descripcion
+            })
+        });
+
+        usuarioActual = {
+            ...usuarioActual,
+            ...usuarioActualizado
+        };
+
+        localStorage.setItem("usuario", JSON.stringify(usuarioActual));
+
+        actualizarHeaderPerfil(usuarioActual);
+
+        const modalEl = document.getElementById("editProfileModal");
+
+        if (window.bootstrap && modalEl) {
+            const modal = bootstrap.Modal.getInstance(modalEl);
+
+            if (modal) {
+                modal.hide();
+            }
+        }
+    } catch (error) {
+        console.error("Error actualizando perfil:", error);
+        alert("No se pudo actualizar el perfil.");
+    } finally {
+        guardarBtn.disabled = false;
+        guardarBtn.textContent = "Guardar cambios";
     }
 }
 
 async function cargarCantidadPosts(idUsuario) {
     try {
         const calificaciones = await apiRequest(`/calificaciones/usuario/${idUsuario}`);
+
+        const publicaciones = calificaciones.filter(calificacion =>
+            calificacion.comentario &&
+            String(calificacion.comentario).trim().length > 0
+        );
+
         const statPosts = document.getElementById("statPosts");
 
         if (statPosts) {
-            statPosts.textContent = calificaciones.length;
+            statPosts.textContent = publicaciones.length;
         }
     } catch (error) {
         console.error("Error cargando cantidad de posts:", error);

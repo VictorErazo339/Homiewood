@@ -16,6 +16,7 @@ import com.homiwood.peliculas.repository.ListaContenidoRepository;
 import com.homiwood.peliculas.repository.ListaRepository;
 import com.homiwood.peliculas.repository.UsuarioRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -45,6 +46,7 @@ public class UsuarioListaSyncService {
         this.contenidoGeneroRepository = contenidoGeneroRepository;
     }
 
+    @Transactional
     public ListaContenido guardarContenidoUsuario(
             Long idUsuario,
             String tipoLista,
@@ -53,8 +55,9 @@ public class UsuarioListaSyncService {
         Usuario usuario = usuarioRepository.findById(idUsuario)
                 .orElseThrow(() -> new NotFoundException("Usuario no encontrado"));
 
-        String estado = resolverEstado(tipoLista);
-        String tituloLista = resolverTituloLista(tipoLista);
+        String tipoNormalizado = tipoLista.toLowerCase();
+        String estado = resolverEstado(tipoNormalizado);
+        String tituloLista = resolverTituloLista(tipoNormalizado);
 
         Lista lista = obtenerOCrearLista(usuario, tituloLista);
 
@@ -64,6 +67,64 @@ public class UsuarioListaSyncService {
 
         asociarGeneros(contenido, request.getGeneros());
 
+        if (tipoNormalizado.equals("top5")) {
+            return guardarEnTop5(lista, contenido, request);
+        }
+
+        return guardarEnListaNormal(lista, contenido, estado, request);
+    }
+
+    public List<ListaContenido> listarPorEstado(Long idUsuario, String estado) {
+        usuarioRepository.findById(idUsuario)
+                .orElseThrow(() -> new NotFoundException("Usuario no encontrado"));
+
+        return listaContenidoRepository.findByListaUsuarioIdUsuarioAndEstado(
+                idUsuario,
+                estado.toUpperCase()
+        );
+    }
+
+    private ListaContenido guardarEnTop5(
+            Lista lista,
+            Contenido contenido,
+            GuardarYAgregarContenidoRequest request
+    ) {
+        Integer posicion = request.getPosicion();
+
+        if (posicion == null) {
+            throw new BadRequestException("La posición es obligatoria para el Top 5");
+        }
+
+        if (posicion < 1 || posicion > 5) {
+            throw new BadRequestException("La posición del Top 5 debe estar entre 1 y 5");
+        }
+
+        listaContenidoRepository.deleteByListaIdListaAndContenidoIdContenido(
+                lista.getIdLista(),
+                contenido.getIdContenido()
+        );
+
+        listaContenidoRepository.deleteByListaIdListaAndPosicion(
+                lista.getIdLista(),
+                posicion
+        );
+
+        ListaContenido nuevo = new ListaContenido();
+        nuevo.setLista(lista);
+        nuevo.setContenido(contenido);
+        nuevo.setEstado("FAVORITO");
+        nuevo.setPosicion(posicion);
+        nuevo.setNotaUsuario(request.getNotaUsuario());
+
+        return listaContenidoRepository.save(nuevo);
+    }
+
+    private ListaContenido guardarEnListaNormal(
+            Lista lista,
+            Contenido contenido,
+            String estado,
+            GuardarYAgregarContenidoRequest request
+    ) {
         return listaContenidoRepository
                 .findByListaIdListaAndContenidoIdContenido(
                         lista.getIdLista(),
@@ -84,16 +145,6 @@ public class UsuarioListaSyncService {
                     nuevo.setNotaUsuario(request.getNotaUsuario());
                     return listaContenidoRepository.save(nuevo);
                 });
-    }
-
-    public List<ListaContenido> listarPorEstado(Long idUsuario, String estado) {
-        usuarioRepository.findById(idUsuario)
-                .orElseThrow(() -> new NotFoundException("Usuario no encontrado"));
-
-        return listaContenidoRepository.findByListaUsuarioIdUsuarioAndEstado(
-                idUsuario,
-                estado.toUpperCase()
-        );
     }
 
     private Lista obtenerOCrearLista(Usuario usuario, String titulo) {

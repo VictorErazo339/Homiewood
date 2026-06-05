@@ -2,20 +2,22 @@ package com.homiwood.peliculas.service;
 
 import com.homiwood.peliculas.dto.CrearCalificacionRequest;
 import com.homiwood.peliculas.exception.BadRequestException;
-import com.homiwood.peliculas.exception.DuplicateResourceException;
 import com.homiwood.peliculas.exception.NotFoundException;
 import com.homiwood.peliculas.model.Calificacion;
 import com.homiwood.peliculas.model.Contenido;
+import com.homiwood.peliculas.model.Lista;
+import com.homiwood.peliculas.model.ListaContenido;
 import com.homiwood.peliculas.model.Usuario;
 import com.homiwood.peliculas.repository.CalificacionRepository;
 import com.homiwood.peliculas.repository.ContenidoRepository;
+import com.homiwood.peliculas.repository.ListaContenidoRepository;
+import com.homiwood.peliculas.repository.ListaRepository;
 import com.homiwood.peliculas.repository.UsuarioRepository;
-import org.springframework.stereotype.Service;
-
-
-//WebSocket -> Diego
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -24,19 +26,23 @@ public class CalificacionService {
     private final CalificacionRepository calificacionRepository;
     private final UsuarioRepository usuarioRepository;
     private final ContenidoRepository contenidoRepository;
-
-    //WebSocket -> Diego
+    private final ListaRepository listaRepository;
+    private final ListaContenidoRepository listaContenidoRepository;
     private final SimpMessagingTemplate messagingTemplate;
 
     public CalificacionService(
             CalificacionRepository calificacionRepository,
             UsuarioRepository usuarioRepository,
             ContenidoRepository contenidoRepository,
+            ListaRepository listaRepository,
+            ListaContenidoRepository listaContenidoRepository,
             SimpMessagingTemplate messagingTemplate
     ) {
         this.calificacionRepository = calificacionRepository;
         this.usuarioRepository = usuarioRepository;
         this.contenidoRepository = contenidoRepository;
+        this.listaRepository = listaRepository;
+        this.listaContenidoRepository = listaContenidoRepository;
         this.messagingTemplate = messagingTemplate;
     }
 
@@ -52,8 +58,10 @@ public class CalificacionService {
         return calificacionRepository.findByContenidoIdContenido(idContenido);
     }
 
+    @Transactional
     public Calificacion crearCalificacion(CrearCalificacionRequest request) {
 
+        validarRequest(request);
         validarPuntaje(request.getPuntaje());
 
         Usuario usuario = usuarioRepository.findById(request.getIdUsuario())
@@ -62,30 +70,35 @@ public class CalificacionService {
         Contenido contenido = contenidoRepository.findById(request.getIdContenido())
                 .orElseThrow(() -> new NotFoundException("Contenido no encontrado"));
 
-        boolean yaExiste = calificacionRepository.existsByUsuarioIdUsuarioAndContenidoIdContenido(
-                request.getIdUsuario(),
-                request.getIdContenido()
-        );
+        Calificacion calificacion = calificacionRepository
+                .findByUsuarioIdUsuarioAndContenidoIdContenido(
+                        usuario.getIdUsuario(),
+                        contenido.getIdContenido()
+                )
+                .orElseGet(() -> {
+                    Calificacion nueva = new Calificacion();
+                    nueva.setUsuario(usuario);
+                    nueva.setContenido(contenido);
+                    return nueva;
+                });
 
-        if (yaExiste) {
-            throw new DuplicateResourceException("Este usuario ya calificó este contenido");
-        }
-
-        Calificacion calificacion = new Calificacion();
-        calificacion.setUsuario(usuario);
-        calificacion.setContenido(contenido);
         calificacion.setPuntaje(request.getPuntaje());
         calificacion.setComentario(request.getComentario());
+        calificacion.setFechaCalificacion(LocalDateTime.now());
 
-
-        // WebSocket -> Diego
         Calificacion guardada = calificacionRepository.save(calificacion);
+
+        asegurarContenidoEnVistas(usuario, contenido);
+
         messagingTemplate.convertAndSend("/topic/calificaciones", guardada);
+
         return guardada;
     }
 
+    @Transactional
     public Calificacion actualizarCalificacion(Long idCalificacion, CrearCalificacionRequest request) {
 
+        validarRequest(request);
         validarPuntaje(request.getPuntaje());
 
         Calificacion calificacion = calificacionRepository.findById(idCalificacion)
@@ -93,8 +106,18 @@ public class CalificacionService {
 
         calificacion.setPuntaje(request.getPuntaje());
         calificacion.setComentario(request.getComentario());
+        calificacion.setFechaCalificacion(LocalDateTime.now());
 
-        return calificacionRepository.save(calificacion);
+        Calificacion guardada = calificacionRepository.save(calificacion);
+
+        asegurarContenidoEnVistas(
+                calificacion.getUsuario(),
+                calificacion.getContenido()
+        );
+
+        messagingTemplate.convertAndSend("/topic/calificaciones", guardada);
+
+        return guardada;
     }
 
     public Double obtenerPromedioContenido(Long idContenido) {
@@ -109,6 +132,56 @@ public class CalificacionService {
         }
 
         calificacionRepository.deleteById(idCalificacion);
+    }
+
+    private void asegurarContenidoEnVistas(Usuario usuario, Contenido contenido) {
+
+        Lista listaVistas = listaRepository
+                .findByUsuarioIdUsuarioAndTituloIgnoreCase(
+                        usuario.getIdUsuario(),
+                        "Vistas"
+                )
+                .orElseGet(() -> {
+                    Lista nueva = new Lista();
+                    nueva.setUsuario(usuario);
+                    nueva.setTitulo("Vistas");
+                    nueva.setDescripcion("Lista automática de Vistas");
+                    nueva.setVisibilidad("PUBLICA");
+                    return listaRepository.save(nueva);
+                });
+
+        listaContenidoRepository
+                .findByListaIdListaAndContenidoIdContenido(
+                        listaVistas.getIdLista(),
+                        contenido.getIdContenido()
+                )
+                .map(existente -> {
+                    existente.setEstado("VISTO");
+                    existente.setPosicion(null);
+                    return listaContenidoRepository.save(existente);
+                })
+                .orElseGet(() -> {
+                    ListaContenido nuevo = new ListaContenido();
+                    nuevo.setLista(listaVistas);
+                    nuevo.setContenido(contenido);
+                    nuevo.setEstado("VISTO");
+                    nuevo.setPosicion(null);
+                    return listaContenidoRepository.save(nuevo);
+                });
+    }
+
+    private void validarRequest(CrearCalificacionRequest request) {
+        if (request == null) {
+            throw new BadRequestException("La calificación es obligatoria");
+        }
+
+        if (request.getIdUsuario() == null) {
+            throw new BadRequestException("El idUsuario es obligatorio");
+        }
+
+        if (request.getIdContenido() == null) {
+            throw new BadRequestException("El idContenido es obligatorio");
+        }
     }
 
     private void validarPuntaje(Integer puntaje) {

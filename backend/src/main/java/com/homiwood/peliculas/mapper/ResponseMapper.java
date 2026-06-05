@@ -8,13 +8,17 @@ import org.springframework.stereotype.Component;
 public class ResponseMapper {
 
     public UsuarioResponse toUsuarioResponse(Usuario usuario) {
+        if (usuario == null) {
+            return null;
+        }
+
         return new UsuarioResponse(
                 usuario.getIdUsuario(),
                 usuario.getNombre(),
                 usuario.getUsername(),
                 usuario.getEmail(),
-                usuario.getFechaCreacion()
-        );
+                usuario.getDescripcion(),
+                usuario.getFechaCreacion());
     }
 
     public ContenidoResponse toContenidoResponse(Contenido contenido) {
@@ -31,8 +35,7 @@ public class ResponseMapper {
                 contenido.getPais(),
                 contenido.getIdioma(),
                 contenido.getApiProvider(),
-                contenido.getApiId()
-        );
+                contenido.getApiId());
     }
 
     public ListaResponse toListaResponse(Lista lista) {
@@ -45,8 +48,7 @@ public class ResponseMapper {
                 lista.getFechaActualizacion(),
                 lista.getUsuario().getIdUsuario(),
                 lista.getUsuario().getNombre(),
-                lista.getUsuario().getUsername()
-        );
+                lista.getUsuario().getUsername());
     }
 
     public ListaContenidoResponse toListaContenidoResponse(ListaContenido listaContenido) {
@@ -62,15 +64,13 @@ public class ResponseMapper {
                 listaContenido.getPosicion(),
                 listaContenido.getEstado(),
                 listaContenido.getNotaUsuario(),
-                listaContenido.getFechaAgregado()
-        );
+                listaContenido.getFechaAgregado());
     }
 
     public GeneroResponse toGeneroResponse(Genero genero) {
         return new GeneroResponse(
                 genero.getIdGenero(),
-                genero.getNombre()
-        );
+                genero.getNombre());
     }
 
     public ContenidoGeneroResponse toContenidoGeneroResponse(ContenidoGenero contenidoGenero) {
@@ -79,8 +79,7 @@ public class ResponseMapper {
                 contenidoGenero.getContenido().getIdContenido(),
                 contenidoGenero.getContenido().getTitulo(),
                 contenidoGenero.getGenero().getIdGenero(),
-                contenidoGenero.getGenero().getNombre()
-        );
+                contenidoGenero.getGenero().getNombre());
     }
 
     public CalificacionResponse toCalificacionResponse(Calificacion calificacion) {
@@ -95,8 +94,7 @@ public class ResponseMapper {
                 calificacion.getContenido().getPosterUrl(),
                 calificacion.getPuntaje(),
                 calificacion.getComentario(),
-                calificacion.getFechaCalificacion()
-        );
+                calificacion.getFechaCalificacion());
     }
 
     public LikeListaResponse toLikeListaResponse(LikeLista likeLista) {
@@ -107,8 +105,7 @@ public class ResponseMapper {
                 likeLista.getUsuario().getUsername(),
                 likeLista.getLista().getIdLista(),
                 likeLista.getLista().getTitulo(),
-                likeLista.getFechaLike()
-        );
+                likeLista.getFechaLike());
     }
 
     public SeguimientoResponse toSeguimientoResponse(Seguimiento seguimiento) {
@@ -120,8 +117,7 @@ public class ResponseMapper {
                 seguimiento.getSeguido().getIdUsuario(),
                 seguimiento.getSeguido().getNombre(),
                 seguimiento.getSeguido().getUsername(),
-                seguimiento.getFechaSeguimiento()
-        );
+                seguimiento.getFechaSeguimiento());
     }
 
     public GrupoResponse toGrupoResponse(Grupo grupo) {
@@ -132,8 +128,7 @@ public class ResponseMapper {
                 grupo.getCreador().getIdUsuario(),
                 grupo.getCreador().getNombre(),
                 grupo.getCreador().getUsername(),
-                grupo.getFechaCreacion()
-        );
+                grupo.getFechaCreacion());
     }
 
     public GrupoMiembroResponse toGrupoMiembroResponse(GrupoMiembro grupoMiembro) {
@@ -145,9 +140,9 @@ public class ResponseMapper {
                 grupoMiembro.getUsuario().getNombre(),
                 grupoMiembro.getUsuario().getUsername(),
                 grupoMiembro.getRol(),
-                grupoMiembro.getFechaUnion()
-        );
+                grupoMiembro.getFechaUnion());
     }
+
     public ComentarioListaResponse toComentarioListaResponse(ComentarioLista comentarioLista) {
         return new ComentarioListaResponse(
                 comentarioLista.getIdComentario(),
@@ -158,7 +153,6 @@ public class ResponseMapper {
                 comentarioLista.getUsuario().getUsername(),
                 comentarioLista.getComentario(),
                 comentarioLista.getFechaComentario(),
-                comentarioLista.getFechaActualizacion()
-        );
+                comentarioLista.getFechaActualizacion());
     }
 }
