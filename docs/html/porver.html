@@ -44,86 +44,95 @@
 
     <main class="profile-container">
 
-        <section class="profile-header">
-            <div class="d-flex gap-4 align-items-start flex-wrap">
+        <section class="profile-header" aria-label="Información del perfil">
+            <div class="profile-hero-card">
 
-                <div class="avatar-wrap">
-                    <div class="avatar-circle">
-                        <i class="bi bi-person"></i>
+                <div class="profile-main-row">
+                    <div class="profile-identity">
+
+                        <div class="avatar-wrap">
+                            <div class="avatar-circle" aria-hidden="true">
+                                <img id="profileAvatar" src="../img/1.webp" alt="Avatar"
+                                    style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
+                            </div>
+                            <div class="avatar-badge" aria-hidden="true">🎬</div>
+                        </div>
+
+                        <div class="profile-info">
+                            <div class="profile-top-row">
+                                <div class="profile-name-block">
+                                    <h1 class="profile-name" id="profileName">Usuario</h1>
+                                    <p class="profile-username" id="profileUsername">@usuario</p>
+                                    <p class="profile-bio-inline" id="profileBio">
+                                        Cinéfilo 🎥 da tú mejor descripcion.
+                                    </p>
+                                </div>
+
+                                <button class="edit-btn js-edit-profile-btn" type="button" data-bs-toggle="modal"
+                                    data-bs-target="#editProfileModal" aria-label="Editar perfil">
+                                    ✏️ Editar perfil
+                                </button>
+                            </div>
+                        </div>
+
                     </div>
-                    <div class="avatar-badge">🎬</div>
                 </div>
 
-                <div class="profile-info">
+                <div class="profile-divider-line"></div>
 
-                    <div class="profile-top-row">
-                        <div>
-                            <h1 class="profile-name" id="profileName">Usuario</h1>
-                            <p class="profile-username" id="profileUsername">@usuario</p>
-                        </div>
+                <div class="profile-stats profile-stats-centered" role="list" aria-label="Estadísticas del perfil">
 
-                        <button class="edit-btn js-edit-profile-btn" type="button" data-bs-toggle="modal"
-                            data-bs-target="#editProfileModal" aria-label="Editar perfil">
-                            ✏️ Editar perfil
-                        </button>
+                    <div class="stat-item" role="listitem">
+                        <span class="stat-number" id="statPosts">0</span>
+                        <span class="stat-label">Posts</span>
                     </div>
 
-                    <p class="profile-bio-inline" id="profileBio">
-                        Cinéfilo 🎥 da tú mejor descripcion.
-                    </p>
+                    <div class="stat-divider" aria-hidden="true"></div>
 
-                    <div class="stats-tags-row">
+                    <div class="stat-item" role="listitem">
+                        <span class="stat-number">342</span>
+                        <span class="stat-label">Homies</span>
+                    </div>
 
-                        <div class="profile-stats">
-                            <div class="stat-item">
-                                <span class="stat-number" id="statPosts">0</span>
-                                <span class="stat-label">Posts</span>
-                            </div>
+                    <div class="stat-divider" aria-hidden="true"></div>
 
-                            <div class="stat-divider"></div>
+                    <div class="stat-item" role="listitem">
+                        <span class="stat-number">519</span>
+                        <span class="stat-label">Siguiendo</span>
+                    </div>
+                </div>
 
-                            <div class="stat-item">
-                                <span class="stat-number">342</span>
-                                <span class="stat-label">Homies</span>
-                            </div>
+                <div class="profile-divider-line profile-divider-soft"></div>
 
-                            <div class="stat-divider"></div>
+                <div class="profile-extra-sections">
 
-                            <div class="stat-item">
-                                <span class="stat-number">519</span>
-                                <span class="stat-label">Siguiendo</span>
-                            </div>
-                        </div>
-
-                        <div class="vertical-divider"></div>
+                    <div class="profile-section-block">
+                        <p class="profile-block-label">GÉNEROS FAVORITOS</p>
 
                         <ul id="bioTags" class="bio-tags list-unstyled mb-0" aria-label="Géneros favoritos" role="list">
                             <li>
                                 <span class="bio-tag">🎬 Sin preferencias aún</span>
                             </li>
                         </ul>
+                    </div>
 
+                    <div class="profile-section-block">
+                        <p class="profile-block-label">LOGROS</p>
+
+                        <div class="profile-achievements" id="profileAchievements">
+                            <div class="achievement-item achievement-empty">
+                                <span class="ach-icon" aria-hidden="true">🏅</span>
+                                <span class="ach-name">Sin logros destacados</span>
+                            </div>
+
+                            <button class="edit-btn" type="button" data-bs-toggle="modal"
+                                data-bs-target="#achievementsModal">
+                                🏅 Ver todos
+                            </button>
+                        </div>
                     </div>
 
                 </div>
-
-                <div class="profile-achievements ms-auto">
-                    <div class="achievement-item">
-                        <span class="ach-icon">🏆</span>
-                        <span class="ach-name">Top Crítico</span>
-                    </div>
-
-                    <div class="achievement-item">
-                        <span class="ach-icon">🎬</span>
-                        <span class="ach-name">100 Reseñas</span>
-                    </div>
-
-                    <div class="achievement-item">
-                        <span class="ach-icon">🔥</span>
-                        <span class="ach-name">Racha 30 días</span>
-                    </div>
-                </div>
-
             </div>
         </section>
 
@@ -131,7 +140,8 @@
 
             <div class="top5-title-row">
                 <h2 class="section-title">
-                    🎬 <span>MI TOP 5</span>
+                    <img src="../img/TOP5LIST(noglow).webp" alt="Top 5" class="section-title-icon">
+                    <span>MI TOP 5</span>
                 </h2>
 
                 <button class="edit-btn" data-bs-toggle="modal" data-bs-target="#top5Modal">
@@ -167,89 +177,75 @@
 
     <!-- MODAL TOP 5 -->
     <div class="modal fade" id="top5Modal" tabindex="-1" aria-labelledby="top5ModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content modal-box top5-modal-box">
 
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-
-            <div class="modal-content modal-box">
-
-                <h3 class="modal-title" id="top5ModalLabel">
-                    AGREGAR AL TOP 5
-                </h3>
-
-                <label class="form-label" for="top5SearchInput">
-                    BUSCAR PELÍCULA O SERIE
-                </label>
-
-                <input id="top5SearchInput" class="form-control" type="text" placeholder="Busca por título..."
-                    autocomplete="off">
-
-                <div class="top5-picker-layout mt-3">
-
-                    <div id="top5Results" class="top5-results">
-                        <p class="top5-empty">
-                            Escribe para buscar.
+                <div class="top5-modal-header">
+                    <div>
+                        <h3 class="modal-title" id="top5ModalLabel">EDITAR MI TOP 5</h3>
+                        <p class="top5-modal-subtitle">
+                            Elige una posición, busca una película o serie y arma tu ranking completo antes de guardar.
                         </p>
                     </div>
 
-                    <div class="top5-editor-panel">
+                    <span class="top5-modal-pill">
+                        🎬 Ranking personal
+                    </span>
+                </div>
 
-                        <div id="top5Preview" class="top5-preview">
-                            Elige una película o serie
+                <section class="top5-draft-section" aria-label="Vista previa del Top 5">
+                    <div class="top5-draft-toolbar">
+                        <div>
+                            <p class="top5-draft-title">TU TOP 5</p>
+                            <small>Haz click en una posición para editarla.</small>
                         </div>
-
-                        <label class="form-label">
-                            ELEGIR POSICIÓN
-                        </label>
-
-                        <div class="top5-slot-options">
-
-                            <button type="button" class="top5-slot-btn" data-pos="0">
-                                <strong>#1</strong>
-                                <span>Vacío</span>
-                            </button>
-
-                            <button type="button" class="top5-slot-btn" data-pos="1">
-                                <strong>#2</strong>
-                                <span>Vacío</span>
-                            </button>
-
-                            <button type="button" class="top5-slot-btn" data-pos="2">
-                                <strong>#3</strong>
-                                <span>Vacío</span>
-                            </button>
-
-                            <button type="button" class="top5-slot-btn" data-pos="3">
-                                <strong>#4</strong>
-                                <span>Vacío</span>
-                            </button>
-
-                            <button type="button" class="top5-slot-btn" data-pos="4">
-                                <strong>#5</strong>
-                                <span>Vacío</span>
-                            </button>
-
-                        </div>
-
                     </div>
+
+                    <div id="top5DraftSlots" class="top5-draft-slots"></div>
+                </section>
+
+                <label class="form-label" for="top5SearchInput">BUSCAR PELÍCULA O SERIE</label>
+
+                <input id="top5SearchInput" class="form-control" type="text" placeholder="Busca por título..."
+                    autocomplete="off" aria-autocomplete="list" aria-controls="top5Results">
+
+                <div class="top5-picker-layout top5-picker-layout-v2 mt-3">
+
+                    <div class="top5-results-wrap">
+                        <p class="top5-panel-label">RESULTADOS</p>
+
+                        <div id="top5Results" class="top5-results" role="listbox">
+                            <p class="top5-empty">Escribe para buscar.</p>
+                        </div>
+                    </div>
+
+                    <aside class="top5-editor-panel top5-editor-panel-v2">
+                        <p class="top5-panel-label">SELECCIÓN</p>
+
+                        <div id="top5Preview" class="top5-preview" aria-live="polite">
+                            Elige una posición y busca una película o serie.
+                        </div>
+
+                        <button type="button" class="btn-cancel top5-clear-slot-btn" id="clearTop5SlotBtn">
+                            Vaciar posición seleccionada
+                        </button>
+                    </aside>
 
                 </div>
 
-                <div class="modal-actions">
-
+                <div class="modal-actions top5-modal-actions">
                     <button type="button" class="btn-cancel" data-bs-dismiss="modal">
                         Cancelar
                     </button>
 
-                    <button type="button" id="saveTop5Btn" class="btn-save">
-                        Guardar en Top 5
+                    <button type="button" class="btn-save" id="saveTop5Btn" disabled>
+                        Sin cambios
                     </button>
-
                 </div>
 
             </div>
-
         </div>
-
+    </div>
     </div>
 
     <!-- MODAL POR VER -->
@@ -287,63 +283,108 @@
         </div>
 
     </div>
-    <!-- MODAL EDITAR PERFIL -->
-<div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content modal-box">
+    <!-- MODAL LOGROS -->
+    <div class="modal fade" id="achievementsModal" tabindex="-1" aria-labelledby="achievementsModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content modal-box">
 
-      <h3 class="modal-title" id="editProfileModalLabel">
-        EDITAR PERFIL
-      </h3>
+                <div class="ach-modal-header">
+                    <div>
+                        <h3 class="modal-title" id="achievementsModalLabel">🏆 MIS LOGROS</h3>
+                        <p class="ach-modal-help">
+                            Puedes destacar máximo 3 logros desbloqueados para mostrarlos en tu perfil.
+                        </p>
+                    </div>
 
-      <label class="form-label" for="editProfileNombre">
-        NOMBRE
-      </label>
+                    <span class="ach-selected-counter" id="achSelectedCounter">
+                        0/3 destacados
+                    </span>
+                </div>
 
-      <input
-        id="editProfileNombre"
-        class="form-control"
-        type="text"
-        maxlength="100"
-        placeholder="Tu nombre visible"
-        autocomplete="off"
-      >
+                <p class="ach-modal-section-label">OBTENIDOS</p>
+                <ul class="ach-modal-grid" id="achObtained" role="list">
+                    <li class="ach-modal-empty">Cargando logros...</li>
+                </ul>
 
-      <label class="form-label mt-2" for="editProfileDescripcion">
-        DESCRIPCIÓN
-      </label>
+                <p class="ach-modal-section-label">FÁCILES POR DESBLOQUEAR</p>
+                <ul class="ach-modal-grid" id="achLockedEasy" role="list"></ul>
 
-      <textarea
-        id="editProfileDescripcion"
-        class="form-control"
-        maxlength="255"
-        rows="4"
-        placeholder="Escribe una descripción para tu perfil..."
-      ></textarea>
+                <p class="ach-modal-section-label">MEDIOS POR DESBLOQUEAR</p>
+                <ul class="ach-modal-grid" id="achLockedMedium" role="list"></ul>
 
-      <small id="editProfileCounter" style="color: var(--muted); font-size: .75rem;">
-        0/255
-      </small>
+                <p class="ach-modal-section-label">DIFÍCILES POR DESBLOQUEAR</p>
+                <ul class="ach-modal-grid" id="achLockedHard" role="list"></ul>
 
-      <div class="modal-actions">
-        <button
-          type="button"
-          class="btn-cancel"
-          data-bs-dismiss="modal">
-          Cancelar
-        </button>
+                <p class="ach-modal-section-label">OCULTOS</p>
+                <ul class="ach-modal-grid" id="achHidden" role="list"></ul>
 
-        <button
-          type="button"
-          id="saveProfileBtn"
-          class="btn-save">
-          Guardar cambios
-        </button>
-      </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" data-bs-dismiss="modal">
+                        Cerrar
+                    </button>
+                </div>
 
+            </div>
+        </div>
     </div>
-  </div>
-</div>
+    <!-- MODAL EDITAR PERFIL -->
+    <div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content modal-box">
+
+                <h3 class="modal-title" id="editProfileModalLabel">
+                    EDITAR PERFIL
+                </h3>
+
+                <label class="form-label" for="editProfileNombre">
+                    NOMBRE
+                </label>
+
+                <input id="editProfileNombre" class="form-control" type="text" maxlength="100"
+                    placeholder="Tu nombre visible" autocomplete="off">
+
+                <label class="form-label mt-2" for="editProfileDescripcion">
+                    DESCRIPCIÓN
+                </label>
+
+                <textarea id="editProfileDescripcion" class="form-control" maxlength="255" rows="4"
+                    placeholder="Escribe una descripción para tu perfil..."></textarea>
+
+                <label class="form-label mt-3">ELIGE TU ICONO</label>
+
+                <div class="icon-picker d-flex gap-3 justify-content-center my-2">
+                    <button type="button" class="icon-option" data-icono="1">
+                        <img src="../img/1.webp" width="60px" alt="Icono 1">
+                    </button>
+
+                    <button type="button" class="icon-option" data-icono="2">
+                        <img src="../img/2.webp" width="60px" alt="Icono 2">
+                    </button>
+
+                    <button type="button" class="icon-option" data-icono="3">
+                        <img src="../img/3.webp" width="60px" alt="Icono 3">
+                    </button>
+                </div>
+
+                <small id="editProfileCounter" style="color: var(--muted); font-size: .75rem;">
+                    0/255
+                </small>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+
+                    <button type="button" id="saveProfileBtn" class="btn-save">
+                        Guardar cambios
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
     <nav class="bottom-nav">
         <div class="bottom-nav-inner">
 

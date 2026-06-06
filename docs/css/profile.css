@@ -2085,7 +2085,7 @@ body {
   padding-top: 0.8rem;
   padding-bottom: 0.2rem;
 
-
+}
 
 /* AQUI ESTUVO DIEGO */
 .icon-option {
@@ -2099,4 +2099,1083 @@ body {
 
 .icon-option.selected {
     border-color: var(--accent, #a855f7);
+}
+
+/* ============================================================
+   PROFILE HEADER — VERSIÓN FINAL ESTILO RED SOCIAL
+   Layout: avatar grande + stats a la derecha + burbujas abajo
+   ============================================================ */
+
+.profile-container {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 1.5rem 2rem;
+}
+
+.profile-header {
+  position: relative;
+  z-index: 2;
+  margin-top: -35px;
+  padding: 2.7rem 0 1.45rem;
+  border-bottom: 1px solid rgba(232, 185, 79, 0.18);
+  min-height: auto;
+}
+
+/* Quitamos cualquier card/fondo grande */
+.profile-hero-card {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 470px;
+  grid-template-areas:
+    "identity stats"
+    "extras extras";
+  column-gap: 2.2rem;
+  row-gap: 1.7rem;
+}
+
+/* Parte superior izquierda: avatar + nombre */
+.profile-main-row {
+  grid-area: identity;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.profile-identity {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  width: 100%;
+  min-width: 0;
+}
+
+/* Avatar grande */
+.avatar-circle {
+  width: 152px;
+  height: 152px;
+  border: 3px solid var(--gold);
+  background: var(--card);
+  box-shadow:
+    0 0 36px rgba(232, 185, 79, 0.24),
+    0 14px 34px rgba(0, 0, 0, 0.72);
+}
+
+.avatar-badge {
+  width: 30px;
+  height: 30px;
+  right: 7px;
+  bottom: 7px;
+  font-size: 0.72rem;
+}
+
+/* Info usuario */
+.profile-info {
+  flex: 1;
+  min-width: 0;
+  padding-right: 0 !important;
+}
+
+.profile-top-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 1.3rem;
+  width: 100%;
+  margin: 0;
+}
+
+.profile-name-block {
+  min-width: 0;
+}
+
+.profile-name {
+  font-family: var(--font-title);
+  font-size: 3.35rem;
+  line-height: 0.95;
+  letter-spacing: 0.07em;
+  margin-bottom: 0.45rem;
+  color: var(--text);
+  text-shadow: 0 0 18px rgba(232, 185, 79, 0.12);
+}
+
+.profile-username {
+  color: var(--gold-dim);
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.85rem;
+}
+
+.profile-bio-inline {
+  color: #8f95a3;
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+/* Botón editar visible, no aplastado */
+.js-edit-profile-btn {
+  width: auto !important;
+  min-width: 132px;
+  height: 34px;
+  margin-top: 0.5rem;
+  padding: 0.38rem 1rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  justify-content: center;
+  overflow: visible;
+}
+
+/* Quitamos líneas antiguas */
+.profile-divider-line,
+.profile-divider-soft {
+  display: none !important;
+}
+
+/* Stats a la derecha, más pequeños */
+.profile-stats-centered {
+  grid-area: stats;
+  align-self: center;
+
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 1.25rem;
+}
+
+.profile-stats-centered .stat-item {
+  min-width: 74px;
+  align-items: center;
+  text-align: center;
+}
+
+.profile-stats-centered .stat-number {
+  font-size: 1.65rem;
+  line-height: 1;
+  color: var(--gold);
+}
+
+.profile-stats-centered .stat-label {
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+}
+
+.profile-stats-centered .stat-divider {
+  width: 1px;
+  height: 32px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* Panel inferior: géneros + logros */
+.profile-extra-sections {
+  grid-area: extras;
+  position: relative;
+
+  display: grid;
+  grid-template-columns: 360px minmax(0, 1fr);
+  gap: 2.2rem;
+
+  margin-top: 0.2rem;
+  padding: 2rem 1.2rem 1.2rem;
+
+  background:
+    radial-gradient(circle at 50% 0%, rgba(232, 185, 79, 0.12), transparent 35%),
+    linear-gradient(to right, rgba(232, 185, 79, 0.03), rgba(255,255,255,0.015), rgba(232, 185, 79, 0.03));
+
+  border-top: 1px solid rgba(232, 185, 79, 0.2);
+}
+
+/* Brillito del centro de la línea */
+.profile-extra-sections::before {
+  content: "";
+  position: absolute;
+  top: -2px;
+  left: 50%;
+  width: 90px;
+  height: 1px;
+  transform: translateX(-50%);
+  background: linear-gradient(to right, transparent, var(--gold), transparent);
+  box-shadow: 0 0 16px rgba(232, 185, 79, 0.55);
+}
+
+/* Separador vertical entre géneros y logros */
+.profile-extra-sections .profile-section-block:first-child {
+  padding-right: 2rem;
+  border-right: 1px solid rgba(232, 185, 79, 0.16);
+}
+
+/* Títulos GÉNEROS FAVORITOS / LOGROS */
+.profile-block-label,
+.profile-section-block > .profile-block-label {
+  display: block !important;
+  margin: 0 0 1rem;
+  color: #858894;
+  font-size: 0.73rem;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+/* Burbujas de géneros */
+.bio-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+  align-items: center;
+}
+
+.bio-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 44px;
+  padding: 0.52rem 1.05rem;
+
+  border-radius: 999px;
+  background: rgba(232, 185, 79, 0.08);
+  border: 1px solid rgba(232, 185, 79, 0.28);
+
+  color: var(--gold);
+  font-size: 0.82rem;
+  font-weight: 800;
+  white-space: nowrap;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 8px 18px rgba(0, 0, 0, 0.24);
+
+  transition: transform 0.2s, border-color 0.2s, background 0.2s;
+}
+
+.bio-tag:hover {
+  transform: translateY(-1px);
+  background: rgba(232, 185, 79, 0.14);
+  border-color: rgba(232, 185, 79, 0.55);
+}
+
+/* Logros: importante, ya no absolute */
+#profileAchievements {
+  position: static !important;
+  top: auto !important;
+  right: auto !important;
+
+  width: 100% !important;
+  min-height: auto !important;
+
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.85rem;
+
+  margin: 0 !important;
+  z-index: auto;
+}
+
+/* Burbujas de logros */
+#profileAchievements .achievement-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+
+  min-height: 48px;
+  max-width: 185px;
+  padding: 0.58rem 1rem;
+
+  border-radius: 16px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.01));
+  border: 1px solid rgba(255, 255, 255, 0.11);
+
+  overflow: hidden;
+  white-space: nowrap;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.035),
+    0 8px 20px rgba(0, 0, 0, 0.22);
+
+  transition: transform 0.2s, border-color 0.2s, background 0.2s;
+}
+
+#profileAchievements .achievement-item:hover {
+  transform: translateY(-1px);
+  border-color: rgba(232, 185, 79, 0.45);
+  background: rgba(232, 185, 79, 0.08);
+}
+
+#profileAchievements .ach-icon {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+  background: rgba(232, 185, 79, 0.14);
+  font-size: 1rem;
+}
+
+#profileAchievements .ach-name {
+  color: var(--text);
+  font-size: 0.8rem;
+  font-weight: 800;
+  line-height: 1.15;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal;
+}
+
+/* Botón Ver todos */
+#profileAchievements .edit-btn {
+  min-height: 48px;
+  padding: 0.58rem 1.2rem;
+  border-radius: 16px;
+
+  color: var(--gold);
+  border-color: rgba(232, 185, 79, 0.55);
+  background: rgba(232, 185, 79, 0.035);
+
+  font-size: 0.86rem;
+  font-weight: 900;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.035),
+    0 8px 20px rgba(0, 0, 0, 0.22);
+}
+
+#profileAchievements .edit-btn:hover {
+  background: rgba(232, 185, 79, 0.12);
+  border-color: var(--gold);
+  box-shadow: 0 0 18px rgba(232, 185, 79, 0.16);
+}
+
+/* Responsive */
+@media (max-width: 1050px) {
+  .profile-hero-card {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "identity"
+      "stats"
+      "extras";
+  }
+
+  .profile-stats-centered {
+    justify-content: flex-start;
+  }
+
+  .profile-extra-sections {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-extra-sections .profile-section-block:first-child {
+    padding-right: 0;
+    padding-bottom: 1.4rem;
+    border-right: none;
+    border-bottom: 1px solid rgba(232, 185, 79, 0.14);
+  }
+}
+
+@media (max-width: 640px) {
+  .profile-header {
+    margin-top: -20px;
+    padding-top: 1.4rem;
+  }
+
+  .profile-identity {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .avatar-circle {
+    width: 100px;
+    height: 100px;
+  }
+
+  .profile-name {
+    font-size: 2.35rem;
+  }
+
+  .profile-top-row {
+    flex-direction: column;
+    gap: 0.7rem;
+  }
+
+  .profile-stats-centered {
+    justify-content: space-between;
+    gap: 0.7rem;
+  }
+
+  .profile-stats-centered .stat-item {
+    min-width: auto;
+    flex: 1;
+  }
+
+  .profile-stats-centered .stat-divider {
+    height: 28px;
+  }
+
+  .profile-extra-sections {
+    padding: 1.5rem 0.2rem 1rem;
+  }
+
+  #profileAchievements .achievement-item,
+  #profileAchievements .edit-btn {
+    max-width: 100%;
+  }
+}
+
+/* ============================================================
+   AJUSTE FINAL — STATS CENTRADAS Y MÁS ABAJO EN PERFIL
+   Objetivo: mover 7 POSTS / 342 HOMIES / 519 SIGUIENDO
+   debajo del bloque de usuario y centrarlas como en el mockup.
+   ============================================================ */
+
+@media (min-width: 1051px) {
+  .profile-hero-card {
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-areas:
+      "identity"
+      "stats"
+      "extras" !important;
+    column-gap: 0 !important;
+    row-gap: 1rem;
+  }
+
+  .profile-main-row {
+    grid-area: identity;
+    justify-content: flex-start;
+  }
+
+  .profile-stats-centered {
+    grid-area: stats;
+
+    width: min(430px, 100%);
+    justify-self: center;
+    align-self: auto;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.35rem;
+
+    /* Control fino de posición */
+    margin-top: -3.9rem;
+    margin-bottom: 1.05rem;
+    transform: translateX(clamp(55px, 6vw, 115px));
+  }
+
+  .profile-stats-centered .stat-item {
+    min-width: 78px;
+    align-items: center;
+    text-align: center;
+  }
+
+  .profile-stats-centered .stat-number {
+    font-size: 1.7rem;
+    line-height: 1;
+  }
+
+  .profile-stats-centered .stat-label {
+    font-size: 0.68rem;
+    letter-spacing: 0.13em;
+  }
+
+  .profile-stats-centered .stat-divider {
+    height: 34px;
+    background: rgba(255, 255, 255, 0.13);
+  }
+
+  .profile-extra-sections {
+    margin-top: 0 !important;
+  }
+}
+
+/* En pantallas medianas, se mantiene abajo pero sin correrse tanto */
+@media (min-width: 641px) and (max-width: 1050px) {
+  .profile-stats-centered {
+    justify-content: center;
+    margin-top: 0.2rem;
+    margin-bottom: 0.8rem;
+    transform: none;
+  }
+}
+
+/* En móvil queda ordenado y sin desplazamiento horizontal */
+@media (max-width: 640px) {
+  .profile-stats-centered {
+    justify-content: space-between;
+    transform: none;
+    margin-top: 0.3rem;
+    margin-bottom: 0.8rem;
+  }
+}
+.section-title {
+  font-family: var(--font-title);
+  font-size: 1.8rem;
+  letter-spacing: 0.06em;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.section-title span {
+  color: var(--gold);
+}
+
+.section-title-icon {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+  display: block;
+  flex-shrink: 0;
+}
+
+/* ============================================================
+   TOP 5 MODAL V2 — EDITOR COMPLETO
+   ============================================================ */
+
+#top5Modal .modal-dialog {
+  max-width: 1040px;
+}
+
+#top5Modal .modal-content {
+  max-height: calc(100dvh - 2rem);
+}
+
+.top5-modal-box {
+  overflow-y: auto;
+  padding: 2rem;
+}
+
+.top5-modal-box::-webkit-scrollbar {
+  width: 8px;
+}
+
+.top5-modal-box::-webkit-scrollbar-track {
+  background: var(--surface-deep);
+  border-radius: 999px;
+}
+
+.top5-modal-box::-webkit-scrollbar-thumb {
+  background: var(--gold-dim);
+  border-radius: 999px;
+}
+
+.top5-modal-box::-webkit-scrollbar-thumb:hover {
+  background: var(--gold);
+}
+
+.top5-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 0.4rem;
+}
+
+.top5-modal-subtitle {
+  margin: 0.3rem 0 0;
+  color: var(--muted);
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.top5-modal-pill {
+  flex-shrink: 0;
+  padding: 0.35rem 0.85rem;
+  border: 1px solid rgba(232, 185, 79, 0.35);
+  border-radius: 999px;
+  background: var(--gold-tint);
+  color: var(--gold);
+  font-size: 0.75rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.top5-draft-section {
+  margin: 0.7rem 0 1rem;
+  padding: 1rem;
+  border: 1px solid rgba(232, 185, 79, 0.16);
+  border-radius: 14px;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(232, 185, 79, 0.1), transparent 38%),
+    rgba(10, 10, 10, 0.22);
+}
+
+.top5-draft-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 0.85rem;
+}
+
+.top5-draft-title,
+.top5-panel-label {
+  margin: 0;
+  color: var(--gold-dim);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.top5-draft-toolbar small {
+  color: var(--muted);
+  font-size: 0.76rem;
+}
+
+.top5-draft-slots {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.top5-draft-slot {
+  position: relative;
+  min-width: 0;
+  min-height: 210px;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface-deep);
+  overflow: hidden;
+  cursor: pointer;
+  transition:
+    transform 0.2s,
+    border-color 0.2s,
+    box-shadow 0.2s,
+    background 0.2s;
+}
+
+.top5-draft-slot:hover {
+  transform: translateY(-2px);
+  border-color: rgba(232, 185, 79, 0.45);
+  background: var(--surface-mid);
+}
+
+.top5-draft-slot.is-active {
+  border-color: var(--gold);
+  box-shadow:
+    0 0 0 1px rgba(232, 185, 79, 0.25),
+    0 0 24px rgba(232, 185, 79, 0.14);
+}
+
+.top5-draft-rank {
+  position: absolute;
+  top: 0.45rem;
+  left: 0.45rem;
+  z-index: 3;
+  min-width: 34px;
+  padding: 0.17rem 0.45rem;
+  border: 1px solid rgba(232, 185, 79, 0.55);
+  border-radius: 999px;
+  background: rgba(10, 10, 10, 0.78);
+  color: var(--gold);
+  font-size: 0.74rem;
+  font-weight: 900;
+  text-align: center;
+}
+
+.top5-draft-remove {
+  position: absolute;
+  top: 0.45rem;
+  right: 0.45rem;
+  z-index: 4;
+  width: 28px;
+  height: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 50%;
+  background: rgba(10, 10, 10, 0.76);
+  color: var(--text);
+  font-size: 1rem;
+  font-weight: 900;
+  line-height: 1;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
+}
+
+.top5-draft-remove:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+  background: rgba(255, 112, 112, 0.12);
+}
+
+.top5-draft-poster {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  background:
+    linear-gradient(135deg, rgba(232, 185, 79, 0.08), transparent),
+    var(--surface-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-family: var(--font-title);
+  font-size: 1.2rem;
+  letter-spacing: 0.06em;
+}
+
+.top5-draft-poster img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.top5-draft-info {
+  padding: 0.6rem 0.65rem 0.7rem;
+  min-width: 0;
+}
+
+.top5-draft-info strong {
+  display: block;
+  color: var(--text);
+  font-size: 0.8rem;
+  font-weight: 900;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.top5-draft-info small {
+  display: block;
+  margin-top: 0.15rem;
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+.top5-draft-slot.is-empty .top5-draft-info strong {
+  color: var(--muted);
+}
+
+.top5-picker-layout-v2 {
+  grid-template-columns: minmax(0, 1fr) 260px;
+  align-items: start;
+}
+
+.top5-results-wrap {
+  min-width: 0;
+}
+
+.top5-results-wrap .top5-panel-label,
+.top5-editor-panel-v2 .top5-panel-label {
+  margin-bottom: 0.55rem;
+}
+
+.top5-editor-panel-v2 {
+  position: sticky;
+  top: 0;
+}
+
+.top5-preview {
+  min-height: 340px;
+}
+
+.top5-preview-empty {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  align-items: center;
+  justify-content: center;
+  min-height: 100%;
+  color: var(--muted);
+}
+
+.top5-preview-rank {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 46px;
+  height: 32px;
+  padding: 0 0.7rem;
+  border: 1px solid rgba(232, 185, 79, 0.5);
+  border-radius: 999px;
+  color: var(--gold);
+  background: var(--gold-tint);
+  font-weight: 900;
+  margin-bottom: 0.5rem;
+}
+
+.top5-preview-hint {
+  color: var(--muted);
+  font-size: 0.76rem;
+  margin-top: 0.45rem;
+}
+
+.top5-clear-slot-btn {
+  width: 100%;
+  margin-top: 0.2rem;
+}
+
+.top5-modal-actions {
+  position: sticky;
+  bottom: -2rem;
+  z-index: 8;
+  background: var(--card);
+  padding-top: 0.9rem;
+  padding-bottom: 0.2rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+@media (max-width: 900px) {
+  .top5-draft-slots {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .top5-picker-layout-v2 {
+    grid-template-columns: 1fr;
+  }
+
+  .top5-editor-panel-v2 {
+    position: static;
+  }
+
+  .top5-preview {
+    min-height: 250px;
+  }
+}
+
+@media (max-width: 640px) {
+  #top5Modal .modal-dialog {
+    margin: 0.5rem;
+  }
+
+  .top5-modal-box {
+    padding: 1.2rem;
+  }
+
+  .top5-modal-header {
+    flex-direction: column;
+  }
+
+  .top5-modal-pill {
+    align-self: flex-start;
+  }
+
+  .top5-draft-section {
+    padding: 0.8rem;
+  }
+
+  .top5-draft-slots {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .top5-draft-slot {
+    min-height: 190px;
+  }
+
+  .top5-results {
+    grid-template-columns: 1fr;
+    max-height: 300px;
+  }
+}
+/* ============================================================
+   FIX MODAL TOP 5 — TAMAÑO GRANDE + SCROLL INTERNO
+   ============================================================ */
+
+#top5Modal .modal-dialog {
+  width: min(96vw, 1180px);
+  max-width: min(96vw, 1180px);
+  height: 92dvh;
+  margin: 1rem auto;
+}
+
+#top5Modal .modal-content {
+  height: 100%;
+  max-height: 92dvh;
+  overflow: hidden;
+}
+
+#top5Modal .top5-modal-box {
+  height: 100%;
+  max-height: 92dvh;
+  overflow-y: auto;
+  padding: 1.7rem 1.9rem;
+}
+
+/* Scroll bonito */
+#top5Modal .top5-modal-box::-webkit-scrollbar {
+  width: 8px;
+}
+
+#top5Modal .top5-modal-box::-webkit-scrollbar-track {
+  background: var(--surface-deep);
+  border-radius: 999px;
+}
+
+#top5Modal .top5-modal-box::-webkit-scrollbar-thumb {
+  background: var(--gold-dim);
+  border-radius: 999px;
+}
+
+#top5Modal .top5-modal-box::-webkit-scrollbar-thumb:hover {
+  background: var(--gold);
+}
+
+/* Compactar la zona del Top 5 para que no coma toda la pantalla */
+#top5Modal .top5-draft-section {
+  padding: 0.85rem 1rem;
+  margin-bottom: 1rem;
+}
+
+#top5Modal .top5-draft-slots {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+#top5Modal .top5-draft-slot {
+  min-height: 0;
+}
+
+#top5Modal .top5-draft-poster {
+  height: 175px;
+  aspect-ratio: auto;
+}
+
+#top5Modal .top5-draft-poster img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+#top5Modal .top5-draft-info {
+  padding: 0.55rem 0.6rem 0.65rem;
+}
+
+#top5Modal .top5-draft-info strong {
+  font-size: 0.76rem;
+}
+
+#top5Modal .top5-draft-info small {
+  font-size: 0.68rem;
+}
+
+/* Que resultados y preview no hagan crecer demasiado el modal */
+#top5Modal .top5-results {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+#top5Modal .top5-preview {
+  min-height: 260px;
+  max-height: 330px;
+  overflow: hidden;
+}
+
+#top5Modal .top5-preview img {
+  width: min(120px, 100%);
+}
+
+/* Footer siempre accesible */
+#top5Modal .top5-modal-actions {
+  position: sticky;
+  bottom: -1.7rem;
+  z-index: 20;
+  background: var(--card);
+  padding-top: 0.9rem;
+  padding-bottom: 0.2rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Pantallas medianas */
+@media (max-width: 900px) {
+  #top5Modal .modal-dialog {
+    width: 96vw;
+    max-width: 96vw;
+    height: 94dvh;
+    margin: 0.7rem auto;
+  }
+
+  #top5Modal .modal-content,
+  #top5Modal .top5-modal-box {
+    max-height: 94dvh;
+  }
+
+  #top5Modal .top5-draft-slots {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  #top5Modal .top5-draft-poster {
+    height: 165px;
+  }
+
+  #top5Modal .top5-picker-layout-v2 {
+    grid-template-columns: 1fr;
+  }
+
+  #top5Modal .top5-editor-panel-v2 {
+    position: static;
+  }
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+  #top5Modal .modal-dialog {
+    width: calc(100vw - 1rem);
+    max-width: calc(100vw - 1rem);
+    height: calc(100dvh - 1rem);
+    margin: 0.5rem auto;
+  }
+
+  #top5Modal .modal-content,
+  #top5Modal .top5-modal-box {
+    max-height: calc(100dvh - 1rem);
+  }
+
+  #top5Modal .top5-modal-box {
+    padding: 1.1rem;
+  }
+
+  #top5Modal .top5-draft-slots {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  #top5Modal .top5-draft-poster {
+    height: 155px;
+  }
+
+  #top5Modal .top5-preview {
+    min-height: 220px;
+  }
+}
+/* ============================================================
+   FIX TOP 5 MODAL — POSTERS COMPLETOS SIN CORTAR
+   ============================================================ */
+
+#top5Modal .top5-draft-slot {
+  min-height: auto;
+}
+
+#top5Modal .top5-draft-poster {
+  width: 100%;
+  height: auto !important;
+  aspect-ratio: 2 / 3;
+  background: var(--surface-dark);
+  overflow: hidden;
+}
+
+#top5Modal .top5-draft-poster img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain !important;
+  background: #050505;
+}
+
+/* Para que la card no quede demasiado alta */
+#top5Modal .top5-draft-info {
+  min-height: 58px;
 }

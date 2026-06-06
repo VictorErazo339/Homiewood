@@ -1,259 +1,68 @@
 import { apiRequest } from "../api/api.js";
+import * as profileCommon from "./profileCommon.js";
 
 console.log("profile.js cargado correctamente");
 
 let usuarioActual = null;
-let top5 = [null, null, null, null, null];
-let peliculaSeleccionada = null;
-let posicionSeleccionada = null;
 let peliculaPerfilSeleccionada = null;
-let logrosUsuario = [];
-let logrosDestacados = [];
+
+const escapeHtml = profileCommon.escapeHtml;
+const normalizarContenidoApi = profileCommon.normalizarContenidoApi;
 
 /* ===============================
    INIT
 ================================ */
 
 document.addEventListener("DOMContentLoaded", async function () {
-    console.log("DOMContentLoaded profile");
+    console.log("DOMContentLoaded profile optimizado y limpio");
 
-    const usuarioGuardado = localStorage.getItem("usuario");
+    const contexto = profileCommon.iniciarPerfilComun();
 
-    if (!usuarioGuardado) {
-        window.location.href = "./login.html";
-        return;
-    }
+    if (!contexto) return;
 
-    try {
-        usuarioActual = JSON.parse(usuarioGuardado);
-    } catch (error) {
-        console.error("Usuario inválido en localStorage:", error);
-        localStorage.removeItem("usuario");
-        localStorage.removeItem("token");
-        window.location.href = "./login.html";
-        return;
-    }
+    usuarioActual = contexto.usuarioActual;
 
-    const idUsuario = obtenerIdUsuario();
+    const idUsuario = contexto.idUsuario;
 
-    await cargarDatosUsuario(idUsuario);
-    await cargarPostsUsuario(idUsuario);
-    await cargarTop5DesdeBackend();
-    await sincronizarVistasParaTags(idUsuario);
-    await cargarLogrosPerfil(idUsuario);
+    profileCommon.inicializarEditarPerfil();
+    profileCommon.inicializarTop5Modal();
+    profileCommon.inicializarLogrosModal();
 
-    renderTop5();
-    renderBioTags();
-
-    inicializarTop5Modal();
     inicializarComposerPerfil();
-    inicializarEditarPerfil();
-    inicializarLogrosModal();
+
+    profileCommon.cargarTop5Local();
+    profileCommon.renderTop5();
+    profileCommon.renderBioTags();
+
+    mostrarEstadoFeed("Cargando posts...");
+
+    const resultados = await Promise.allSettled([
+        profileCommon.cargarDatosUsuario(idUsuario).then(usuarioActualizado => {
+            usuarioActual = usuarioActualizado;
+        }),
+
+        cargarPostsUsuario(idUsuario),
+
+        profileCommon.cargarTop5DesdeBackend().then(() => {
+            profileCommon.renderBioTags();
+        }),
+
+        profileCommon.sincronizarVistasParaTags(idUsuario).then(() => {
+            profileCommon.renderBioTags();
+        }),
+
+        profileCommon.cargarLogrosDestacadosHeaderRapido(idUsuario)
+    ]);
+
+    resultados.forEach((resultado, index) => {
+        if (resultado.status === "rejected") {
+            console.warn(`Carga parcial falló en profile.js tarea ${index}:`, resultado.reason);
+        }
+    });
 });
 
 function obtenerIdUsuario() {
-    const idUsuario = usuarioActual?.idUsuario || usuarioActual?.id;
-
-    if (!idUsuario) {
-        console.error("Usuario inválido en localStorage:", usuarioActual);
-        localStorage.removeItem("usuario");
-        localStorage.removeItem("token");
-        window.location.href = "./login.html";
-        throw new Error("No se encontró idUsuario en localStorage");
-    }
-
-    return idUsuario;
-}
-
-/* ===============================
-   USUARIO
-================================ */
-
-async function cargarDatosUsuario(idUsuario) {
-    actualizarHeaderPerfil(usuarioActual);
-
-    try {
-        const usuario = await apiRequest(`/usuarios/${idUsuario}`);
-
-        usuarioActual = {
-            ...usuarioActual,
-            ...usuario
-        };
-
-        localStorage.setItem("usuario", JSON.stringify(usuarioActual));
-
-        actualizarHeaderPerfil(usuarioActual);
-    } catch (error) {
-        console.error("Error cargando datos del usuario:", error);
-        actualizarHeaderPerfil(usuarioActual);
-    }
-}
-
-function obtenerDescripcionPerfil(usuario) {
-    const descripcion = usuario?.descripcion;
-
-    if (descripcion && String(descripcion).trim().length > 0) {
-        return descripcion;
-    }
-
-    return "Cinéfilo 🎥 Fan del terror psicológico y el drama independiente.";
-}
-
-function actualizarHeaderPerfil(usuario) {
-    const nombreEl = document.getElementById("profileName");
-    const usernameEl = document.getElementById("profileUsername");
-    const bioEl = document.getElementById("profileBio");
-
-    const profileAvatar = document.getElementById("profileAvatar");
-
-    if (nombreEl) {
-        nombreEl.textContent =
-            usuario?.nombre ||
-            usuario?.username ||
-            "Usuario";
-    }
-
-    if (usernameEl) {
-        usernameEl.textContent =
-            `@${usuario?.username || "usuario"}`;
-    }
-
-    if (bioEl) {
-        bioEl.textContent = obtenerDescripcionPerfil(usuario);
-    }
-
-    if (profileAvatar && usuario?.iconoPerfil) {
-        profileAvatar.src = `../img/${usuario.iconoPerfil}.webp`;
-    }
-}
-
-function inicializarEditarPerfil() {
-    const modalEl = document.getElementById("editProfileModal");
-    const nombreInput = document.getElementById("editProfileNombre");
-    const descripcionInput = document.getElementById("editProfileDescripcion");
-    const contador = document.getElementById("editProfileCounter");
-    const guardarBtn = document.getElementById("saveProfileBtn");
-
-    if (!modalEl || !nombreInput || !descripcionInput || !guardarBtn) {
-        return;
-    }
-
-    modalEl.addEventListener("show.bs.modal", function () {
-        nombreInput.value = usuarioActual?.nombre || "";
-        descripcionInput.value = usuarioActual?.descripcion || "";
-        actualizarContadorDescripcion();
-        setTimeout(() => nombreInput.focus(), 150);
-    });
-
-    descripcionInput.addEventListener("input", actualizarContadorDescripcion);
-
-    // Marcar icono actual al abrir modal
-    modalEl.addEventListener("show.bs.modal", function () {
-        const iconoActual = usuarioActual?.iconoPerfil;
-        document.querySelectorAll(".icon-option").forEach(btn => {
-            btn.classList.toggle("selected", Number(btn.dataset.icono) === iconoActual);
-        });
-    });
-
-    // Seleccionar icono al hacer click
-    document.querySelectorAll(".icon-option").forEach(btn => {
-        btn.addEventListener("click", () => {
-            document.querySelectorAll(".icon-option").forEach(b => b.classList.remove("selected"));
-            btn.classList.add("selected");
-        });
-    });
-
-    guardarBtn.addEventListener("click", guardarPerfilEditado);
-
-    function actualizarContadorDescripcion() {
-        if (!contador) return;
-
-        contador.textContent = `${descripcionInput.value.length}/255`;
-    }
-}
-
-async function guardarPerfilEditado() {
-    const nombreInput = document.getElementById("editProfileNombre");
-    const descripcionInput = document.getElementById("editProfileDescripcion");
-    const guardarBtn = document.getElementById("saveProfileBtn");
-
-    if (!nombreInput || !descripcionInput || !guardarBtn) {
-        return;
-    }
-
-    const nombre = nombreInput.value.trim();
-    const descripcion = descripcionInput.value.trim();
-
-    if (!nombre) {
-        alert("El nombre no puede estar vacío.");
-        nombreInput.focus();
-        return;
-    }
-
-    if (nombre.length > 100) {
-        alert("El nombre no puede superar los 100 caracteres.");
-        nombreInput.focus();
-        return;
-    }
-
-    if (descripcion.length > 255) {
-        alert("La descripción no puede superar los 255 caracteres.");
-        descripcionInput.focus();
-        return;
-    }
-
-    guardarBtn.disabled = true;
-    guardarBtn.textContent = "Guardando...";
-
-    try {
-        const usuarioActualizado = await apiRequest(`/usuarios/${obtenerIdUsuario()}/perfil`, {
-            method: "PUT",
-            body: JSON.stringify({
-                nombre,
-                descripcion
-            })
-        });
-
-        usuarioActual = {
-            ...usuarioActual,
-            ...usuarioActualizado
-        };
-
-        localStorage.setItem("usuario", JSON.stringify(usuarioActual));
-
-        // Actualizar icono si se seleccionó uno
-        const iconoSeleccionado = document.querySelector(".icon-option.selected");
-        if (iconoSeleccionado) {
-            const icono = Number(iconoSeleccionado.dataset.icono);
-            await apiRequest(`/usuarios/${obtenerIdUsuario()}/icono?iconoPerfil=${icono}`, {
-                method: "PATCH"
-            });
-            usuarioActual.iconoPerfil = icono;
-            localStorage.setItem("usuario", JSON.stringify(usuarioActual));
-
-            // Actualizar avatar en navbar
-            const avatarImg = document.querySelector(".avatar img");
-            if (avatarImg) avatarImg.src = `../img/${icono}.webp`;
-        }
-
-        actualizarHeaderPerfil(usuarioActual);
-
-        const modalEl = document.getElementById("editProfileModal");
-
-        if (window.bootstrap && modalEl) {
-            const modal = bootstrap.Modal.getInstance(modalEl);
-
-            if (modal) {
-                modal.hide();
-            }
-        }
-    } catch (error) {
-        console.error("Error actualizando perfil:", error);
-        alert("No se pudo actualizar el perfil.");
-    } finally {
-        guardarBtn.disabled = false;
-        guardarBtn.textContent = "Guardar cambios";
-    }
+    return profileCommon.obtenerIdUsuario();
 }
 
 /* ===============================
@@ -265,32 +74,42 @@ async function cargarPostsUsuario(idUsuario) {
         const calificaciones = await apiRequest(`/calificaciones/usuario/${idUsuario}`);
         const publicaciones = calificaciones.filter(esPublicacion);
 
-        const feed = document.getElementById("feed");
         const statPosts = document.getElementById("statPosts");
 
         if (statPosts) {
             statPosts.textContent = publicaciones.length;
         }
 
+        const feed = document.getElementById("feed");
+
         if (!feed) return;
 
         if (publicaciones.length === 0) {
-            feed.innerHTML = `
-                <p style="color:#aaa; text-align:center; margin-top:2rem;">
-                    Aún no has publicado nada.
-                </p>
-            `;
+            mostrarEstadoFeed("Aún no has publicado nada.");
             return;
         }
 
         feed.innerHTML = publicaciones
             .slice()
             .reverse()
-            .map(c => renderPost(c))
+            .map(renderPost)
             .join("");
     } catch (error) {
         console.error("Error cargando posts:", error);
+        mostrarEstadoFeed("No se pudieron cargar los posts.");
     }
+}
+
+function mostrarEstadoFeed(mensaje) {
+    const feed = document.getElementById("feed");
+
+    if (!feed) return;
+
+    feed.innerHTML = `
+        <p style="color:#aaa; text-align:center; margin-top:2rem;">
+            ${escapeHtml(mensaje)}
+        </p>
+    `;
 }
 
 function esPublicacion(calificacion) {
@@ -298,34 +117,35 @@ function esPublicacion(calificacion) {
         String(calificacion.comentario).trim().length > 0;
 }
 
-function renderPost(c) {
-    const fecha = c.fechaCalificacion
-        ? String(c.fechaCalificacion).split("T")[0]
+function renderPost(calificacion) {
+    const fecha = calificacion.fechaCalificacion
+        ? String(calificacion.fechaCalificacion).split("T")[0]
         : "";
 
     const titulo =
-        c.tituloContenido ||
-        c.contenidoTitulo ||
-        c.titulo ||
+        calificacion.tituloContenido ||
+        calificacion.contenidoTitulo ||
+        calificacion.titulo ||
         "Contenido";
 
     const tipo =
-        c.tipoContenido ||
-        c.contenidoTipo ||
+        calificacion.tipoContenido ||
+        calificacion.contenidoTipo ||
         "Contenido";
 
     const poster =
-        c.posterUrl ||
-        c.contenidoPosterUrl ||
+        calificacion.posterUrl ||
+        calificacion.contenidoPosterUrl ||
         "";
 
-    const puntaje = Number(c.puntaje || 0);
+    const puntaje = Number(calificacion.puntaje || 0);
 
     return `
-        <article class="post-card" id="post-${c.idCalificacion || ""}">
-            <div class="post-cover" style="${poster
-                ? `background-image:url('${poster}')`
-                : "background:linear-gradient(135deg,#2a1a4a,#5a2a8a)"
+        <article class="post-card" id="post-${calificacion.idCalificacion || ""}">
+            <div class="post-cover" style="${
+                poster
+                    ? `background-image:url('${poster}')`
+                    : "background:linear-gradient(135deg,#2a1a4a,#5a2a8a)"
             }"></div>
 
             <div class="post-body">
@@ -336,7 +156,7 @@ function renderPost(c) {
 
                 ${puntaje > 0 ? `<div class="post-rating">${renderEstrellas(puntaje)}</div>` : ""}
 
-                <p class="post-text">${escapeHtml(c.comentario || "")}</p>
+                <p class="post-text">${escapeHtml(calificacion.comentario || "")}</p>
 
                 <div class="post-footer">
                     <span class="post-date">${escapeHtml(fecha)}</span>
@@ -358,390 +178,6 @@ function renderEstrellas(puntaje) {
 }
 
 /* ===============================
-   TOP 5 DESDE BACKEND
-================================ */
-
-async function cargarTop5DesdeBackend() {
-    try {
-        const idUsuario = obtenerIdUsuario();
-
-        const data = await apiRequest(
-            `/usuarios/${idUsuario}/listas/contenidos?estado=FAVORITO`
-        );
-
-        top5 = [null, null, null, null, null];
-
-        data.forEach(item => {
-            const posicion = item.posicion ? item.posicion - 1 : null;
-
-            const normalizado = {
-                idListaContenido: item.idListaContenido,
-                idLista: item.idLista,
-                idContenido: item.idContenido,
-                titulo: item.tituloContenido,
-                tipoVisual: item.tipoContenido === "PELICULA" ? "Película" : "Serie",
-                tipoBackend: item.tipoContenido,
-                posterUrl: item.posterUrl,
-                anioEstreno: item.anioEstreno,
-                apiId: String(item.apiId || item.idContenido),
-                proveedor: item.apiProvider || "BD",
-                generos: item.generos || []
-            };
-
-            if (posicion !== null && posicion >= 0 && posicion < 5) {
-                top5[posicion] = normalizado;
-            }
-        });
-
-        guardarTop5();
-    } catch (error) {
-        console.error("Error cargando Top 5 desde backend:", error);
-        cargarTop5();
-    }
-}
-
-function top5StorageKey() {
-    return `homiwood_top5_${obtenerIdUsuario()}`;
-}
-
-function vistasStorageKey() {
-    return `homiwood_vistas_${obtenerIdUsuario()}`;
-}
-
-function cargarTop5() {
-    const guardado = localStorage.getItem(top5StorageKey());
-
-    if (guardado) {
-        top5 = JSON.parse(guardado);
-    }
-}
-
-function guardarTop5() {
-    localStorage.setItem(top5StorageKey(), JSON.stringify(top5));
-}
-
-function renderTop5() {
-    const grid = document.getElementById("top5Grid");
-
-    if (!grid) return;
-
-    const seleccionadas = top5.filter(Boolean);
-
-    if (seleccionadas.length === 0) {
-        grid.innerHTML = `
-            <div class="top5-empty-state">
-                <p>Tu Top 5 está vacío.</p>
-                <small>Agrega tus películas o series favoritas.</small>
-            </div>
-        `;
-        actualizarSlotLabels();
-        return;
-    }
-
-    grid.innerHTML = top5.map((item, index) => {
-        if (!item) {
-            return `
-                <article class="movie-card movie-card-empty">
-                    <span class="top5-rank">#${index + 1}</span>
-                    <div class="movie-poster movie-poster-empty">Vacío</div>
-                </article>
-            `;
-        }
-
-        return `
-            <article class="movie-card top5-card-wrap" style="position:relative;">
-                <span class="top5-rank">#${index + 1}</span>
-
-                <button type="button"
-                        class="top5-remove-btn"
-                        data-index="${index}"
-                        title="Quitar del Top 5"
-                        aria-label="Quitar ${escapeHtml(item.titulo)} del Top 5"
-                        style="
-                            position:absolute;
-                            top:8px;
-                            right:8px;
-                            z-index:5;
-                            width:28px;
-                            height:28px;
-                            border-radius:50%;
-                            border:1px solid rgba(255,255,255,.35);
-                            background:rgba(0,0,0,.78);
-                            color:#fff;
-                            font-size:18px;
-                            line-height:1;
-                            cursor:pointer;
-                        ">
-                    ×
-                </button>
-
-                ${item.posterUrl
-                    ? `<img class="movie-poster" src="${item.posterUrl}" alt="${escapeHtml(item.titulo)}">`
-                    : `<div class="movie-poster movie-poster-empty">${escapeHtml(item.titulo)}</div>`
-                }
-            </article>
-        `;
-    }).join("");
-
-    document.querySelectorAll(".top5-remove-btn").forEach(btn => {
-        btn.addEventListener("click", async event => {
-            event.stopPropagation();
-
-            const index = Number(btn.dataset.index);
-            await quitarDelTop5(index);
-        });
-    });
-
-    actualizarSlotLabels();
-}
-
-async function quitarDelTop5(index) {
-    const item = top5[index];
-
-    if (!item) return;
-
-    const confirmar = confirm(`¿Quitar "${item.titulo}" de tu Top 5?`);
-
-    if (!confirmar) return;
-
-    try {
-        if (item.idListaContenido) {
-            await apiRequest(`/listas/contenidos/${item.idListaContenido}`, {
-                method: "DELETE"
-            });
-        } else if (item.idLista && item.idContenido) {
-            await apiRequest(`/listas/${item.idLista}/contenidos/${item.idContenido}`, {
-                method: "DELETE"
-            });
-        } else if (item.idLista) {
-            await apiRequest(`/listas/${item.idLista}/posiciones/${index + 1}`, {
-                method: "DELETE"
-            });
-        }
-
-        top5[index] = null;
-
-        guardarTop5();
-        renderTop5();
-        renderBioTags();
-        await cargarLogrosPerfil(obtenerIdUsuario());
-    } catch (error) {
-        console.error("Error quitando del Top 5:", error);
-        alert("No se pudo quitar del Top 5.");
-    }
-}
-
-/* ===============================
-   MODAL TOP 5
-================================ */
-
-function inicializarTop5Modal() {
-    const input = document.getElementById("top5SearchInput");
-    const saveBtn = document.getElementById("saveTop5Btn");
-    const results = document.getElementById("top5Results");
-    const slots = document.querySelectorAll(".top5-slot-btn");
-
-    if (!input || !saveBtn || !results) return;
-
-    let timeoutBusqueda = null;
-
-    input.addEventListener("input", function () {
-        clearTimeout(timeoutBusqueda);
-
-        const query = input.value.trim();
-
-        if (query.length < 2) {
-            results.innerHTML = `<p class="top5-empty">Escribe al menos 2 letras para buscar.</p>`;
-            return;
-        }
-
-        results.innerHTML = `<p class="top5-empty">Buscando...</p>`;
-
-        timeoutBusqueda = setTimeout(async function () {
-            await buscarPeliculasTop5(query);
-        }, 450);
-    });
-
-    slots.forEach(slot => {
-        slot.addEventListener("click", function () {
-            posicionSeleccionada = Number(slot.dataset.pos);
-
-            slots.forEach(s => s.classList.remove("is-selected"));
-            slot.classList.add("is-selected");
-        });
-    });
-
-    saveBtn.addEventListener("click", async function () {
-        if (!peliculaSeleccionada) {
-            alert("Primero elige una película o serie.");
-            return;
-        }
-
-        if (posicionSeleccionada === null) {
-            alert("Elige una posición del 1 al 5.");
-            return;
-        }
-
-        try {
-            const guardado = await guardarTop5EnBackend(
-                peliculaSeleccionada,
-                posicionSeleccionada + 1
-            );
-
-            top5[posicionSeleccionada] = {
-                ...peliculaSeleccionada,
-                idListaContenido: guardado.idListaContenido,
-                idLista: guardado.idLista,
-                idContenido: guardado.idContenido || peliculaSeleccionada.idContenido
-            };
-
-            await cargarTop5DesdeBackend();
-
-            guardarTop5();
-            renderTop5();
-            renderBioTags();
-            await cargarLogrosPerfil(obtenerIdUsuario());
-            limpiarModalTop5();
-
-            const modalElement = document.getElementById("top5Modal");
-
-            if (window.bootstrap && modalElement) {
-                const modal = bootstrap.Modal.getInstance(modalElement);
-                if (modal) modal.hide();
-            }
-        } catch (error) {
-            console.error("Error guardando Top 5:", error);
-            alert("No se pudo guardar en Top 5.");
-        }
-    });
-}
-
-async function guardarTop5EnBackend(item, posicion) {
-    const idUsuario = obtenerIdUsuario();
-
-    return await apiRequest(`/usuarios/${idUsuario}/listas/top5/contenidos/externo`, {
-        method: "POST",
-        body: JSON.stringify({
-            proveedor: item.proveedor,
-            apiId: String(item.apiId),
-            titulo: item.titulo,
-            tipoContenido: item.tipoBackend || convertirTipoBackend(item.tipoVisual),
-            descripcion: item.descripcion || "",
-            fechaEstreno: item.fechaEstreno || null,
-            anioEstreno: item.anioEstreno || null,
-            posterUrl: item.posterUrl || "",
-            idiomaOriginal: item.idioma || "",
-            puntajeExterno: item.puntajeExterno || 0,
-            posicion,
-            estado: "FAVORITO",
-            generos: item.generos || []
-        })
-    });
-}
-
-async function buscarPeliculasTop5(query) {
-    const results = document.getElementById("top5Results");
-
-    if (!results) return;
-
-    try {
-        const data = await apiRequest(`/catalogo/buscar?query=${encodeURIComponent(query)}`);
-
-        if (!data || data.length === 0) {
-            results.innerHTML = `<p class="top5-empty">No se encontraron resultados.</p>`;
-            return;
-        }
-
-        const normalizadas = data.map(normalizarContenidoApi);
-        renderResultadosBusqueda(normalizadas);
-    } catch (error) {
-        console.error("Error buscando en catálogo:", error);
-        results.innerHTML = `<p class="top5-empty">No se pudo conectar con la API.</p>`;
-    }
-}
-
-function renderResultadosBusqueda(items) {
-    const results = document.getElementById("top5Results");
-
-    if (!results) return;
-
-    if (!items || items.length === 0) {
-        results.innerHTML = `<p class="top5-empty">Sin resultados.</p>`;
-        return;
-    }
-
-    results.innerHTML = items.map((item, index) => `
-        <button type="button" class="top5-result-btn" data-index="${index}">
-            ${item.posterUrl
-                ? `<img src="${item.posterUrl}" alt="${escapeHtml(item.titulo)}">`
-                : `<div class="top5-result-placeholder"></div>`
-            }
-
-            <span>
-                <strong>${escapeHtml(item.titulo)}</strong>
-                <small>${escapeHtml(item.tipoVisual)} ${item.anioEstreno ? "· " + item.anioEstreno : ""}</small>
-            </span>
-        </button>
-    `).join("");
-
-    document.querySelectorAll(".top5-result-btn").forEach(btn => {
-        btn.addEventListener("click", function () {
-            const index = Number(btn.dataset.index);
-
-            peliculaSeleccionada = items[index];
-
-            document.querySelectorAll(".top5-result-btn").forEach(b => b.classList.remove("is-selected"));
-            btn.classList.add("is-selected");
-
-            renderPreviewTop5(peliculaSeleccionada);
-        });
-    });
-}
-
-function renderPreviewTop5(item) {
-    const preview = document.getElementById("top5Preview");
-
-    if (!preview) return;
-
-    preview.innerHTML = `
-        ${item.posterUrl
-            ? `<img src="${item.posterUrl}" alt="${escapeHtml(item.titulo)}">`
-            : ""
-        }
-
-        <strong>${escapeHtml(item.titulo)}</strong>
-        <small>${escapeHtml(item.tipoVisual)} ${item.anioEstreno ? "· " + item.anioEstreno : ""}</small>
-    `;
-}
-
-function actualizarSlotLabels() {
-    document.querySelectorAll(".top5-slot-btn").forEach(slot => {
-        const pos = Number(slot.dataset.pos);
-        const span = slot.querySelector("span");
-
-        if (!span) return;
-
-        span.textContent = top5[pos]?.titulo || "Vacío";
-    });
-}
-
-function limpiarModalTop5() {
-    const input = document.getElementById("top5SearchInput");
-    const results = document.getElementById("top5Results");
-    const preview = document.getElementById("top5Preview");
-
-    if (input) input.value = "";
-    if (results) results.innerHTML = `<p class="top5-empty">Escribe para buscar.</p>`;
-    if (preview) preview.textContent = "Elige una película o serie";
-
-    peliculaSeleccionada = null;
-    posicionSeleccionada = null;
-
-    document.querySelectorAll(".top5-result-btn, .top5-slot-btn")
-        .forEach(el => el.classList.remove("is-selected"));
-}
-
-/* ===============================
    COMPOSER PERFIL
 ================================ */
 
@@ -756,6 +192,9 @@ function inicializarComposerPerfil() {
     const removeBtn = document.getElementById("removeProfileFilm");
 
     if (!trigger || !body || !input || !results || !textarea || !publishBtn) return;
+
+    if (body.dataset.composerInitialized === "true") return;
+    body.dataset.composerInitialized = "true";
 
     let timeoutBusqueda = null;
 
@@ -802,6 +241,8 @@ function inicializarComposerPerfil() {
 async function buscarContenidoPerfil(query) {
     const results = document.getElementById("profileFilmResults");
 
+    if (!results) return;
+
     try {
         const data = await apiRequest(`/catalogo/buscar?query=${encodeURIComponent(query)}`);
 
@@ -813,19 +254,20 @@ async function buscarContenidoPerfil(query) {
         const items = data.map(normalizarContenidoApi);
 
         results.innerHTML = items.map((item, index) => `
-            <div class="film-dropdown-item" data-index="${index}">
-                ${item.posterUrl
-                    ? `<img class="dropdown-poster" src="${item.posterUrl}" alt="${escapeHtml(item.titulo)}">`
-                    : `<div class="dropdown-poster"></div>`
+            <button type="button" class="film-dropdown-item" data-index="${index}">
+                ${
+                    item.posterUrl
+                        ? `<img class="dropdown-poster" src="${item.posterUrl}" alt="${escapeHtml(item.titulo)}">`
+                        : `<div class="dropdown-poster"></div>`
                 }
 
-                <div>
-                    <div class="dropdown-title">${escapeHtml(item.titulo)}</div>
-                    <div class="dropdown-meta">
+                <span>
+                    <span class="dropdown-title">${escapeHtml(item.titulo)}</span>
+                    <small class="dropdown-meta">
                         ${escapeHtml(item.tipoVisual)} ${item.anioEstreno ? "· " + item.anioEstreno : ""}
-                    </div>
-                </div>
-            </div>
+                    </small>
+                </span>
+            </button>
         `).join("");
 
         document.querySelectorAll(".film-dropdown-item").forEach(btn => {
@@ -857,7 +299,10 @@ function seleccionarPeliculaPerfil(item) {
     }
 
     if (title) title.textContent = item.titulo;
-    if (meta) meta.textContent = `${item.tipoVisual} ${item.anioEstreno ? "· " + item.anioEstreno : ""}`;
+
+    if (meta) {
+        meta.textContent = `${item.tipoVisual} ${item.anioEstreno ? "· " + item.anioEstreno : ""}`;
+    }
 
     selected?.classList.add("is-visible");
 
@@ -875,9 +320,16 @@ function validarPostPerfil() {
 
 async function publicarResenaPerfil() {
     const textarea = document.getElementById("profilePostText");
+    const publishBtn = document.getElementById("publishProfilePost");
+
+    if (!textarea || !publishBtn) return;
+
     const comentario = textarea.value.trim();
 
     if (!peliculaPerfilSeleccionada || !comentario) return;
+
+    publishBtn.disabled = true;
+    publishBtn.textContent = "Posteando...";
 
     try {
         const contenidoGuardado = await guardarContenidoExterno(peliculaPerfilSeleccionada);
@@ -892,14 +344,21 @@ async function publicarResenaPerfil() {
             })
         });
 
-        await cargarPostsUsuario(obtenerIdUsuario());
-        await sincronizarVistasParaTags(obtenerIdUsuario());
-        renderBioTags();
-        await cargarLogrosPerfil(obtenerIdUsuario());
+        await Promise.allSettled([
+            cargarPostsUsuario(obtenerIdUsuario()),
+            profileCommon.sincronizarVistasParaTags(obtenerIdUsuario()).then(() => {
+                profileCommon.renderBioTags();
+            }),
+            profileCommon.cargarLogrosDestacadosHeaderRapido(obtenerIdUsuario())
+        ]);
+
         limpiarComposerPerfil();
     } catch (error) {
         console.error("Error publicando reseña:", error);
         alert("No se pudo publicar la reseña.");
+    } finally {
+        publishBtn.textContent = "Postear";
+        validarPostPerfil();
     }
 }
 
@@ -910,7 +369,7 @@ async function guardarContenidoExterno(item) {
             proveedor: item.proveedor,
             apiId: String(item.apiId),
             titulo: item.titulo,
-            tipoContenido: item.tipoBackend,
+            tipoContenido: item.tipoBackend || profileCommon.convertirTipoBackend(item.tipoVisual),
             descripcion: item.descripcion || "",
             fechaEstreno: item.fechaEstreno || null,
             anioEstreno: item.anioEstreno || null,
@@ -936,528 +395,15 @@ function limpiarComposerPerfil() {
     if (textarea) textarea.value = "";
     if (results) results.innerHTML = "";
     if (selected) selected.classList.remove("is-visible");
+
     if (body) {
         body.classList.remove("open");
         body.setAttribute("aria-hidden", "true");
     }
-    if (trigger) trigger.setAttribute("aria-expanded", "false");
+
+    if (trigger) {
+        trigger.setAttribute("aria-expanded", "false");
+    }
 
     validarPostPerfil();
-}
-
-/* ===============================
-   TAGS / PINES
-================================ */
-
-async function sincronizarVistasParaTags(idUsuario) {
-    try {
-        const data = await apiRequest(`/usuarios/${idUsuario}/listas/contenidos?estado=VISTO`);
-
-        const vistas = data.map(item => ({
-            idListaContenido: item.idListaContenido,
-            idLista: item.idLista,
-            idContenido: item.idContenido,
-            titulo: item.tituloContenido,
-            tipoVisual: item.tipoContenido === "PELICULA" ? "Película" : "Serie",
-            tipoBackend: item.tipoContenido,
-            posterUrl: item.posterUrl,
-            anioEstreno: item.anioEstreno,
-            apiId: String(item.apiId || item.idContenido),
-            proveedor: item.apiProvider || "BD",
-            generos: item.generos || []
-        }));
-
-        localStorage.setItem(vistasStorageKey(), JSON.stringify(vistas));
-    } catch (error) {
-        console.error("Error sincronizando vistas para tags:", error);
-    }
-}
-
-function renderBioTags() {
-    const container = document.getElementById("bioTags");
-    if (!container) return;
-
-    const vistasGuardadas = JSON.parse(localStorage.getItem(vistasStorageKey())) || [];
-    const top5Guardado = JSON.parse(localStorage.getItem(top5StorageKey())) || [];
-
-    const base = [...top5Guardado.filter(Boolean), ...vistasGuardadas];
-
-    if (base.length === 0) {
-        container.innerHTML = `<li><span class="bio-tag">🎬 Sin preferencias aún</span></li>`;
-        return;
-    }
-
-    const conteo = {};
-
-    base.forEach(item => {
-        const peso = item.puntaje || 1;
-
-        obtenerTagsDelItem(item).forEach(tag => {
-            conteo[tag] = (conteo[tag] || 0) + peso;
-        });
-    });
-
-    const tagsFinales = Object.entries(conteo)
-        .sort((a, b) => b[1] - a[1])
-        .map(([tag]) => tag)
-        .slice(0, 5);
-
-    if (tagsFinales.length === 0) {
-        container.innerHTML = `<li><span class="bio-tag">🎬 Sin preferencias aún</span></li>`;
-        return;
-    }
-
-    container.innerHTML = tagsFinales.map(tag => `
-        <li>
-            <span class="bio-tag">${iconoTag(tag)} ${escapeHtml(tag)}</span>
-        </li>
-    `).join("");
-}
-
-function obtenerTagsDelItem(item) {
-    const tags = [
-        ...(item.generos || []),
-        item.genero,
-        item.tipoVisual,
-        item.tipoContenido,
-        ...inferirGeneros(item)
-    ];
-
-    return tags
-        .filter(Boolean)
-        .map(normalizarNombreTag)
-        .filter(tag => !["Contenido", "TMDB", "JIKAN", "API", "BD"].includes(tag))
-        .filter((tag, index, array) => array.indexOf(tag) === index);
-}
-
-/* ===============================
-   NORMALIZAR CONTENIDO
-================================ */
-
-function normalizarContenidoApi(item) {
-    const proveedor = item.apiProvider || item.proveedor || inferirProveedor(item);
-    const tipoVisual = convertirTipoVisual(item.tipoContenido || item.tipo || "", proveedor);
-    const tipoBackend = convertirTipoBackend(tipoVisual);
-
-    const generosApi = extraerGenerosApi(item);
-    const generosInferidos = inferirGeneros(item);
-
-    const generosFinales = [
-        ...generosApi,
-        ...generosInferidos
-    ]
-        .filter(Boolean)
-        .map(g => normalizarNombreTag(g))
-        .filter((g, index, arr) => arr.indexOf(g) === index);
-
-    return {
-        idContenido: item.idContenido || null,
-        apiId: item.apiId || item.id || item.mal_id || "",
-        proveedor,
-        titulo: item.titulo || item.title || item.name || item.title_english || "Sin título",
-        tipoVisual,
-        tipoBackend,
-        tipoContenido: tipoVisual,
-        posterUrl: item.posterUrl || item.imageUrl || item.coverUrl || item.images?.jpg?.image_url || "",
-        anioEstreno:
-            item.anioEstreno ||
-            item.year ||
-            obtenerAnioDesdeFecha(item.fechaEstreno || item.release_date || item.aired?.from),
-        fechaEstreno: item.fechaEstreno || item.release_date || item.aired?.from || null,
-        idioma: item.idioma || item.idiomaOriginal || item.original_language || "",
-        puntajeExterno: item.puntajeExterno || item.vote_average || item.score || 0,
-        genero: generosFinales[0] || "",
-        generos: generosFinales,
-        descripcion: item.descripcion || item.overview || item.synopsis || ""
-    };
-}
-
-function inferirProveedor(item) {
-    if (item.mal_id || item.images?.jpg?.image_url) return "JIKAN";
-    return "TMDB";
-}
-
-function convertirTipoVisual(tipo, proveedor) {
-    const t = String(tipo || "").toUpperCase();
-    const p = String(proveedor || "").toUpperCase();
-
-    if (p === "JIKAN") return "Anime";
-    if (t === "PELICULA" || t === "PELÍCULA" || t === "MOVIE") return "Película";
-    if (t === "SERIE" || t === "TV" || t === "TV SHOW") return "Serie";
-
-    return tipo || "Contenido";
-}
-
-function convertirTipoBackend(tipoVisual) {
-    if (tipoVisual === "Película") return "PELICULA";
-    return "SERIE";
-}
-
-function extraerGenerosApi(item) {
-    const generos = [];
-
-    if (Array.isArray(item.generos)) generos.push(...item.generos);
-
-    if (Array.isArray(item.genres)) {
-        item.genres.forEach(g => {
-            if (typeof g === "string") generos.push(g);
-            else if (g?.name) generos.push(g.name);
-        });
-    }
-
-    if (item.genero) generos.push(item.genero);
-
-    return generos
-        .filter(Boolean)
-        .map(g => normalizarNombreTag(g))
-        .filter((g, index, arr) => arr.indexOf(g) === index);
-}
-
-function inferirGeneros(item) {
-    const texto = `
-        ${item.titulo || ""}
-        ${item.title || ""}
-        ${item.name || ""}
-        ${item.descripcion || ""}
-        ${item.overview || ""}
-        ${item.synopsis || ""}
-    `.toLowerCase();
-
-    const generos = [];
-
-    if (texto.includes("romance") || texto.includes("amor") || texto.includes("love")) generos.push("Romance");
-    if (texto.includes("terror") || texto.includes("horror")) generos.push("Terror");
-    if (texto.includes("drama")) generos.push("Drama");
-    if (texto.includes("action") || texto.includes("acción") || texto.includes("batalla")) generos.push("Acción");
-    if (texto.includes("comedy") || texto.includes("comedia")) generos.push("Comedia");
-    if (texto.includes("fantasy") || texto.includes("fantasía")) generos.push("Fantasía");
-    if (texto.includes("sci-fi") || texto.includes("science fiction")) generos.push("Sci-Fi");
-
-    if (String(item.apiProvider || item.proveedor || "").toUpperCase() === "JIKAN") {
-        generos.push("Anime");
-    }
-
-    return generos;
-}
-
-function normalizarNombreTag(tag) {
-    if (!tag) return "";
-
-    const limpio = String(tag).trim();
-
-    const mapa = {
-        "PELICULA": "Película",
-        "PELÍCULA": "Película",
-        "Pelicula": "Película",
-        "Movie": "Película",
-        "TV Show": "Serie",
-        "SERIE": "Serie",
-        "Series": "Serie",
-        "Anime": "Anime",
-        "Animation": "Animación",
-        "Romance": "Romance",
-        "Drama": "Drama",
-        "Horror": "Terror",
-        "Terror": "Terror",
-        "Action": "Acción",
-        "Adventure": "Aventura",
-        "Comedy": "Comedia",
-        "Fantasy": "Fantasía",
-        "Mystery": "Misterio",
-        "Science Fiction": "Sci-Fi",
-        "Thriller": "Suspenso",
-        "Crime": "Crimen",
-        "Family": "Familia",
-        "Music": "Música"
-    };
-
-    return mapa[limpio] || limpio;
-}
-
-function iconoTag(tag) {
-    const t = String(tag).toLowerCase();
-
-    if (t.includes("romance")) return "❤️";
-    if (t.includes("anime")) return "🌸";
-    if (t.includes("terror")) return "👻";
-    if (t.includes("drama")) return "🎭";
-    if (t.includes("serie")) return "📺";
-    if (t.includes("película") || t.includes("pelicula")) return "🎬";
-    if (t.includes("acción") || t.includes("accion")) return "💥";
-    if (t.includes("comedia")) return "😂";
-    if (t.includes("fantas")) return "✨";
-    if (t.includes("sci")) return "🚀";
-
-    return "🎞️";
-}
-
-function obtenerAnioDesdeFecha(fecha) {
-    if (!fecha) return null;
-    return Number(String(fecha).slice(0, 4)) || null;
-}
-
-function escapeHtml(texto) {
-    return String(texto ?? "")
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-}
-
-/* ===============================
-   LOGROS / ACHIEVEMENTS
-================================ */
-
-async function cargarLogrosPerfil(idUsuario) {
-    try {
-        const [todos, destacados] = await Promise.all([
-            apiRequest(`/usuarios/${idUsuario}/logros`),
-            apiRequest(`/usuarios/${idUsuario}/logros/destacados`)
-        ]);
-
-        logrosUsuario = Array.isArray(todos) ? todos : [];
-        logrosDestacados = Array.isArray(destacados) ? destacados : [];
-
-        renderLogrosDestacadosHeader();
-        renderModalLogros();
-    } catch (error) {
-        console.error("Error cargando logros:", error);
-        renderLogrosHeaderError();
-    }
-}
-
-function inicializarLogrosModal() {
-    const modalEl = document.getElementById("achievementsModal");
-
-    if (!modalEl) return;
-
-    modalEl.addEventListener("show.bs.modal", async function () {
-        await cargarLogrosPerfil(obtenerIdUsuario());
-    });
-}
-
-function renderLogrosDestacadosHeader() {
-    const container = document.getElementById("profileAchievements");
-
-    if (!container) return;
-
-    const destacados = logrosDestacados
-        .filter(logro => logro.desbloqueado)
-        .slice(0, 3);
-
-    const boton = `
-        <button class="edit-btn" type="button" data-bs-toggle="modal" data-bs-target="#achievementsModal">
-            🏅 Ver todos
-        </button>
-    `;
-
-    if (destacados.length === 0) {
-        container.innerHTML = `
-            <div class="achievement-item achievement-empty">
-                <span class="ach-icon" aria-hidden="true">🏅</span>
-                <span class="ach-name">Elige logros</span>
-            </div>
-            ${boton}
-        `;
-        return;
-    }
-
-    container.innerHTML = destacados.map(logro => `
-        <div class="achievement-item" title="${escapeHtml(logro.descripcion)}">
-            <span class="ach-icon" aria-hidden="true">${escapeHtml(logro.icono || "🏅")}</span>
-            <span class="ach-name">${escapeHtml(logro.nombre)}</span>
-        </div>
-    `).join("") + boton;
-}
-
-function renderLogrosHeaderError() {
-    const container = document.getElementById("profileAchievements");
-
-    if (!container) return;
-
-    container.innerHTML = `
-        <div class="achievement-item achievement-empty">
-            <span class="ach-icon" aria-hidden="true">⚠️</span>
-            <span class="ach-name">Logros no disponibles</span>
-        </div>
-
-        <button class="edit-btn" type="button" data-bs-toggle="modal" data-bs-target="#achievementsModal">
-            🏅 Ver todos
-        </button>
-    `;
-}
-
-function renderModalLogros() {
-    const obtained = document.getElementById("achObtained");
-    const easy = document.getElementById("achLockedEasy");
-    const medium = document.getElementById("achLockedMedium");
-    const hard = document.getElementById("achLockedHard");
-    const hidden = document.getElementById("achHidden");
-    const counter = document.getElementById("achSelectedCounter");
-
-    if (!obtained || !easy || !medium || !hard || !hidden) return;
-
-    const destacadosIds = new Set(
-        logrosDestacados.map(logro => Number(logro.idLogro))
-    );
-
-    if (counter) {
-        counter.textContent = `${destacadosIds.size}/3 destacados`;
-    }
-
-    const desbloqueados = logrosUsuario.filter(logro => logro.desbloqueado);
-
-    const bloqueadosFaciles = logrosUsuario.filter(logro =>
-        !logro.desbloqueado && logro.dificultad === "FACIL" && !logro.oculto
-    );
-
-    const bloqueadosMedios = logrosUsuario.filter(logro =>
-        !logro.desbloqueado && logro.dificultad === "MEDIO" && !logro.oculto
-    );
-
-    const bloqueadosDificiles = logrosUsuario.filter(logro =>
-        !logro.desbloqueado && logro.dificultad === "DIFICIL" && !logro.oculto
-    );
-
-    const ocultos = logrosUsuario.filter(logro => logro.oculto);
-
-    obtained.innerHTML = renderListaLogros(
-        desbloqueados,
-        destacadosIds,
-        "No tienes logros desbloqueados todavía."
-    );
-
-    easy.innerHTML = renderListaLogros(
-        bloqueadosFaciles,
-        destacadosIds,
-        "No quedan logros fáciles bloqueados."
-    );
-
-    medium.innerHTML = renderListaLogros(
-        bloqueadosMedios,
-        destacadosIds,
-        "No quedan logros medios bloqueados."
-    );
-
-    hard.innerHTML = renderListaLogros(
-        bloqueadosDificiles,
-        destacadosIds,
-        "No quedan logros difíciles bloqueados."
-    );
-
-    hidden.innerHTML = renderListaLogros(
-        ocultos,
-        destacadosIds,
-        "No hay logros ocultos disponibles."
-    );
-
-    document.querySelectorAll(".ach-select-btn").forEach(btn => {
-        btn.addEventListener("click", async function () {
-            const idLogro = Number(btn.dataset.idLogro);
-            await toggleLogroDestacado(idLogro);
-        });
-    });
-}
-
-function renderListaLogros(lista, destacadosIds, mensajeVacio) {
-    if (!lista || lista.length === 0) {
-        return `<li class="ach-modal-empty">${escapeHtml(mensajeVacio)}</li>`;
-    }
-
-    return lista.map(logro => renderLogroCard(logro, destacadosIds)).join("");
-}
-
-function renderLogroCard(logro, destacadosIds) {
-    const desbloqueado = Boolean(logro.desbloqueado);
-    const destacado = destacadosIds.has(Number(logro.idLogro));
-    const ocultoBloqueado = Boolean(logro.oculto) && !desbloqueado;
-
-    const progresoActual = Number(logro.progresoActual || 0);
-    const valorObjetivo = Number(logro.valorObjetivo || 1);
-
-    const porcentaje = Math.max(
-        0,
-        Math.min(100, Math.round((progresoActual / valorObjetivo) * 100))
-    );
-
-    const claseEstado = desbloqueado ? "is-unlocked" : "is-locked";
-    const claseOculto = ocultoBloqueado ? "is-hidden-locked" : "";
-
-    const botonDestacar = desbloqueado
-        ? `
-            <button type="button"
-                    class="ach-select-btn ${destacado ? "is-selected" : ""}"
-                    data-id-logro="${logro.idLogro}"
-                    title="${destacado ? "Quitar de destacados" : "Destacar logro"}">
-                ${destacado ? "✓" : "+"}
-            </button>
-        `
-        : `<span class="ach-modal-lock">🔒</span>`;
-
-    return `
-        <li class="ach-modal-card ${claseEstado} ${claseOculto}">
-            <div class="ach-modal-main">
-                <span class="ach-modal-icon" aria-hidden="true">
-                    ${escapeHtml(logro.icono || "🏅")}
-                </span>
-
-                <div class="ach-modal-info">
-                    <strong>${escapeHtml(logro.nombre || "???")}</strong>
-                    <small>${escapeHtml(logro.descripcion || "")}</small>
-
-                    <div class="ach-modal-progress">
-                        <div class="ach-progress-bar" aria-hidden="true">
-                            <div class="ach-progress-fill" style="width:${porcentaje}%"></div>
-                        </div>
-
-                        <span class="ach-progress-text">
-                            ${progresoActual}/${valorObjetivo}
-                        </span>
-                    </div>
-                </div>
-            </div>
-
-            ${botonDestacar}
-        </li>
-    `;
-}
-
-async function toggleLogroDestacado(idLogro) {
-    const logro = logrosUsuario.find(item => Number(item.idLogro) === Number(idLogro));
-
-    if (!logro || !logro.desbloqueado) {
-        alert("Solo puedes destacar logros desbloqueados.");
-        return;
-    }
-
-    const idsActuales = logrosDestacados.map(item => Number(item.idLogro));
-    const yaDestacado = idsActuales.includes(Number(idLogro));
-
-    let nuevosIds;
-
-    if (yaDestacado) {
-        nuevosIds = idsActuales.filter(id => id !== Number(idLogro));
-    } else {
-        if (idsActuales.length >= 3) {
-            alert("Solo puedes destacar máximo 3 logros.");
-            return;
-        }
-
-        nuevosIds = [...idsActuales, Number(idLogro)];
-    }
-
-    try {
-        logrosDestacados = await apiRequest(`/usuarios/${obtenerIdUsuario()}/logros/destacados`, {
-            method: "PUT",
-            body: JSON.stringify({
-                idsLogros: nuevosIds
-            })
-        });
-
-        await cargarLogrosPerfil(obtenerIdUsuario());
-    } catch (error) {
-        console.error("Error actualizando logros destacados:", error);
-        alert(error?.message || "No se pudieron actualizar los logros destacados.");
-    }
 }

@@ -1,46 +1,71 @@
 import { apiRequest } from "../api/api.js";
+import * as profileCommon from "./profileCommon.js";
 
 let usuarioActual = null;
 let porver = [];
-let top5 = [null, null, null, null, null];
+
+const escapeHtml = profileCommon.escapeHtml;
+const normalizarContenidoApi = profileCommon.normalizarContenidoApi;
+
+/* ===============================
+   INIT
+================================ */
 
 document.addEventListener("DOMContentLoaded", async function () {
-    const usuarioGuardado = localStorage.getItem("usuario");
+    console.log("DOMContentLoaded porver optimizado y limpio");
 
-    if (!usuarioGuardado) {
-        window.location.href = "./login.html";
-        return;
-    }
+    const contexto = profileCommon.iniciarPerfilComun();
 
-    usuarioActual = JSON.parse(usuarioGuardado);
+    if (!contexto) return;
 
-    const idUsuario = obtenerIdUsuario();
+    usuarioActual = contexto.usuarioActual;
 
-    await cargarDatosUsuario(idUsuario);
-    await cargarCantidadPosts(idUsuario);
+    const idUsuario = contexto.idUsuario;
 
-    cargarTop5();
-    renderTop5();
+    profileCommon.inicializarEditarPerfil();
+    profileCommon.inicializarTop5Modal();
+    profileCommon.inicializarLogrosModal();
 
-    renderBioTags();
+    profileCommon.cargarTop5Local();
+    profileCommon.renderTop5();
+    profileCommon.renderBioTags();
 
-    cargarPorVer();
+    cargarPorVerLocal();
     renderPorVer();
 
     inicializarBuscadorPorVer();
-    inicializarEditarPerfil();
+
+    const resultados = await Promise.allSettled([
+        profileCommon.cargarDatosUsuario(idUsuario).then(usuarioActualizado => {
+            usuarioActual = usuarioActualizado;
+        }),
+
+        profileCommon.cargarCantidadPosts(idUsuario),
+
+        profileCommon.cargarTop5DesdeBackend().then(() => {
+            profileCommon.renderBioTags();
+        }),
+
+        profileCommon.sincronizarVistasParaTags(idUsuario).then(() => {
+            profileCommon.renderBioTags();
+        }),
+
+        cargarPorVerDesdeBackend().then(() => {
+            renderPorVer();
+        }),
+
+        profileCommon.cargarLogrosDestacadosHeaderRapido(idUsuario)
+    ]);
+
+    resultados.forEach((resultado, index) => {
+        if (resultado.status === "rejected") {
+            console.warn(`Carga parcial falló en porver.js tarea ${index}:`, resultado.reason);
+        }
+    });
 });
 
 function obtenerIdUsuario() {
-    return usuarioActual.idUsuario || usuarioActual.id;
-}
-
-function top5StorageKey() {
-    return `homiwood_top5_${obtenerIdUsuario()}`;
-}
-
-function vistasStorageKey() {
-    return `homiwood_vistas_${obtenerIdUsuario()}`;
+    return profileCommon.obtenerIdUsuario();
 }
 
 function porverStorageKey() {
@@ -48,239 +73,71 @@ function porverStorageKey() {
 }
 
 /* ===============================
-   USUARIO
-================================ */
-
-async function cargarDatosUsuario(idUsuario) {
-    actualizarHeaderPerfil(usuarioActual);
-
-    try {
-        const usuario = await apiRequest(`/usuarios/${idUsuario}`);
-
-        usuarioActual = {
-            ...usuarioActual,
-            ...usuario
-        };
-
-        localStorage.setItem("usuario", JSON.stringify(usuarioActual));
-
-        actualizarHeaderPerfil(usuarioActual);
-    } catch (error) {
-        console.error("Error cargando datos del usuario:", error);
-        actualizarHeaderPerfil(usuarioActual);
-    }
-}
-function obtenerDescripcionPerfil(usuario) {
-    const descripcion = usuario?.descripcion;
-
-    if (descripcion && String(descripcion).trim().length > 0) {
-        return descripcion;
-    }
-
-    return "Cinéfilo 🎥 Fan del terror psicológico y el drama independiente.";
-}
-
-function actualizarHeaderPerfil(usuario) {
-    const nombreEl = document.getElementById("profileName");
-    const usernameEl = document.getElementById("profileUsername");
-    const bioEl = document.getElementById("profileBio");
-
-    if (nombreEl) {
-        nombreEl.textContent =
-            usuario?.nombre ||
-            usuario?.username ||
-            "Usuario";
-    }
-
-    if (usernameEl) {
-        usernameEl.textContent =
-            `@${usuario?.username || "usuario"}`;
-    }
-
-    if (bioEl) {
-        bioEl.textContent = obtenerDescripcionPerfil(usuario);
-    }
-}
-
-function inicializarEditarPerfil() {
-    const modalEl = document.getElementById("editProfileModal");
-    const nombreInput = document.getElementById("editProfileNombre");
-    const descripcionInput = document.getElementById("editProfileDescripcion");
-    const contador = document.getElementById("editProfileCounter");
-    const guardarBtn = document.getElementById("saveProfileBtn");
-
-    if (!modalEl || !nombreInput || !descripcionInput || !guardarBtn) {
-        return;
-    }
-
-    modalEl.addEventListener("show.bs.modal", function () {
-        nombreInput.value = usuarioActual?.nombre || "";
-        descripcionInput.value = usuarioActual?.descripcion || "";
-        actualizarContadorDescripcion();
-        setTimeout(() => nombreInput.focus(), 150);
-    });
-
-    descripcionInput.addEventListener("input", actualizarContadorDescripcion);
-
-    guardarBtn.addEventListener("click", guardarPerfilEditado);
-
-    function actualizarContadorDescripcion() {
-        if (!contador) return;
-
-        contador.textContent = `${descripcionInput.value.length}/255`;
-    }
-}
-
-async function guardarPerfilEditado() {
-    const nombreInput = document.getElementById("editProfileNombre");
-    const descripcionInput = document.getElementById("editProfileDescripcion");
-    const guardarBtn = document.getElementById("saveProfileBtn");
-
-    if (!nombreInput || !descripcionInput || !guardarBtn) {
-        return;
-    }
-
-    const nombre = nombreInput.value.trim();
-    const descripcion = descripcionInput.value.trim();
-
-    if (!nombre) {
-        alert("El nombre no puede estar vacío.");
-        nombreInput.focus();
-        return;
-    }
-
-    if (nombre.length > 100) {
-        alert("El nombre no puede superar los 100 caracteres.");
-        nombreInput.focus();
-        return;
-    }
-
-    if (descripcion.length > 255) {
-        alert("La descripción no puede superar los 255 caracteres.");
-        descripcionInput.focus();
-        return;
-    }
-
-    guardarBtn.disabled = true;
-    guardarBtn.textContent = "Guardando...";
-
-    try {
-        const usuarioActualizado = await apiRequest(`/usuarios/${obtenerIdUsuario()}/perfil`, {
-            method: "PUT",
-            body: JSON.stringify({
-                nombre,
-                descripcion
-            })
-        });
-
-        usuarioActual = {
-            ...usuarioActual,
-            ...usuarioActualizado
-        };
-
-        localStorage.setItem("usuario", JSON.stringify(usuarioActual));
-
-        actualizarHeaderPerfil(usuarioActual);
-
-        const modalEl = document.getElementById("editProfileModal");
-
-        if (window.bootstrap && modalEl) {
-            const modal = bootstrap.Modal.getInstance(modalEl);
-
-            if (modal) {
-                modal.hide();
-            }
-        }
-    } catch (error) {
-        console.error("Error actualizando perfil:", error);
-        alert("No se pudo actualizar el perfil.");
-    } finally {
-        guardarBtn.disabled = false;
-        guardarBtn.textContent = "Guardar cambios";
-    }
-}
-
-async function cargarCantidadPosts(idUsuario) {
-    try {
-        const calificaciones = await apiRequest(`/calificaciones/usuario/${idUsuario}`);
-
-        const publicaciones = calificaciones.filter(calificacion =>
-            calificacion.comentario &&
-            String(calificacion.comentario).trim().length > 0
-        );
-
-        const statPosts = document.getElementById("statPosts");
-
-        if (statPosts) {
-            statPosts.textContent = publicaciones.length;
-        }
-    } catch (error) {
-        console.error("Error cargando cantidad de posts:", error);
-    }
-}
-
-/* ===============================
-   TOP 5 COMPARTIDO
-================================ */
-
-function cargarTop5() {
-    const guardado = localStorage.getItem(top5StorageKey());
-
-    if (guardado) {
-        top5 = JSON.parse(guardado);
-    }
-}
-
-function renderTop5() {
-    const grid = document.getElementById("top5Grid");
-
-    if (!grid) return;
-
-    const seleccionadas = top5.filter(Boolean);
-
-    if (seleccionadas.length === 0) {
-        grid.innerHTML = `
-            <div class="top5-empty-state">
-                <p>Tu Top 5 está vacío.</p>
-                <small>Agrega tus películas o series favoritas.</small>
-            </div>
-        `;
-        return;
-    }
-
-    grid.innerHTML = top5.map((item, index) => {
-        if (!item) {
-            return `
-                <article class="movie-card movie-card-empty">
-                    <span class="top5-rank">#${index + 1}</span>
-                    <div class="movie-poster movie-poster-empty">Vacío</div>
-                </article>
-            `;
-        }
-
-        return `
-            <article class="movie-card">
-                <span class="top5-rank">#${index + 1}</span>
-                ${
-                    item.posterUrl
-                        ? `<img class="movie-poster" src="${item.posterUrl}" alt="${escapeHtml(item.titulo)}">`
-                        : `<div class="movie-poster movie-poster-empty">${escapeHtml(item.titulo)}</div>`
-                }
-            </article>
-        `;
-    }).join("");
-}
-
-/* ===============================
    POR VER
 ================================ */
 
-function cargarPorVer() {
-    porver = JSON.parse(localStorage.getItem(porverStorageKey())) || [];
+function cargarPorVerLocal() {
+    try {
+        porver = JSON.parse(localStorage.getItem(porverStorageKey())) || [];
+    } catch (error) {
+        console.error("Error leyendo Por Ver desde localStorage:", error);
+        porver = [];
+    }
 }
 
-function guardarPorVer() {
+async function cargarPorVerDesdeBackend() {
+    try {
+        const idUsuario = obtenerIdUsuario();
+
+        const data = await apiRequest(`/usuarios/${idUsuario}/listas/contenidos?estado=POR_VER`);
+
+        porver = eliminarDuplicadosPorContenido(
+            data.map(item => ({
+                idListaContenido: item.idListaContenido,
+                idLista: item.idLista,
+                idContenido: item.idContenido,
+                titulo: item.tituloContenido,
+                tipoVisual: convertirTipoVisualDesdeBackend(item.tipoContenido),
+                tipoBackend: item.tipoContenido,
+                posterUrl: item.posterUrl,
+                anioEstreno: item.anioEstreno,
+                apiId: String(item.apiId || item.idContenido),
+                proveedor: item.apiProvider || "BD",
+                generos: item.generos || []
+            }))
+        );
+
+        guardarPorVerLocal();
+
+        return porver;
+    } catch (error) {
+        console.error("Error cargando Por Ver desde backend:", error);
+        cargarPorVerLocal();
+
+        return porver;
+    }
+}
+
+function guardarPorVerLocal() {
     localStorage.setItem(porverStorageKey(), JSON.stringify(porver));
+}
+
+function eliminarDuplicadosPorContenido(items) {
+    return items.filter((item, index, array) =>
+        index === array.findIndex(i =>
+            String(i.idContenido || i.apiId) === String(item.idContenido || item.apiId) &&
+            String(i.proveedor || "BD") === String(item.proveedor || "BD")
+        )
+    );
+}
+
+function convertirTipoVisualDesdeBackend(tipoBackend) {
+    const tipo = String(tipoBackend || "").toUpperCase();
+
+    if (tipo === "PELICULA") return "Película";
+    if (tipo === "ANIME") return "Anime";
+
+    return "Serie";
 }
 
 function renderPorVer() {
@@ -308,20 +165,30 @@ function renderPorVer() {
 
             <div class="library-card-body">
                 <h3 class="library-card-title">${escapeHtml(item.titulo)}</h3>
+
                 <p class="library-card-meta">
-                    ${escapeHtml(item.tipoVisual)} ${item.anioEstreno ? "· " + item.anioEstreno : ""}
+                    ${escapeHtml(item.tipoVisual)}
+                    ${item.anioEstreno ? " · " + item.anioEstreno : ""}
                 </p>
+
                 <span class="library-status">Por ver</span>
             </div>
         </article>
     `).join("");
 }
 
+/* ===============================
+   BUSCADOR POR VER
+================================ */
+
 function inicializarBuscadorPorVer() {
     const input = document.getElementById("porverSearchInput");
     const results = document.getElementById("porverResults");
 
     if (!input || !results) return;
+
+    if (input.dataset.searchInitialized === "true") return;
+    input.dataset.searchInitialized = "true";
 
     let timeout = null;
 
@@ -344,6 +211,8 @@ function inicializarBuscadorPorVer() {
 async function buscarContenidoPorVer(query) {
     const results = document.getElementById("porverResults");
 
+    if (!results) return;
+
     try {
         const data = await apiRequest(`/catalogo/buscar?query=${encodeURIComponent(query)}`);
 
@@ -364,45 +233,48 @@ async function buscarContenidoPorVer(query) {
 
                 <span>
                     <strong>${escapeHtml(item.titulo)}</strong>
-                    <small>${escapeHtml(item.tipoVisual)} ${item.anioEstreno ? "· " + item.anioEstreno : ""}</small>
+                    <small>
+                        ${escapeHtml(item.tipoVisual)}
+                        ${item.anioEstreno ? " · " + item.anioEstreno : ""}
+                    </small>
                 </span>
             </button>
         `).join("");
 
-        document.querySelectorAll(".top5-result-btn").forEach(btn => {
+        document.querySelectorAll("#porverResults .top5-result-btn").forEach(btn => {
             btn.addEventListener("click", function () {
                 const index = Number(btn.dataset.index);
                 agregarPorVer(items[index]);
             });
         });
-
     } catch (error) {
-        console.error("Error buscando por ver:", error);
+        console.error("Error buscando Por Ver:", error);
         results.innerHTML = `<p class="top5-empty">Error buscando contenido.</p>`;
     }
 }
 
 async function agregarPorVer(item) {
     const existe = porver.some(p =>
-        p.apiId === item.apiId &&
-        p.proveedor === item.proveedor
+        String(p.idContenido || p.apiId) === String(item.idContenido || item.apiId) &&
+        String(p.proveedor || "BD") === String(item.proveedor || "BD")
     );
 
     if (!existe) {
         porver.unshift(item);
-        guardarPorVer();
+        porver = eliminarDuplicadosPorContenido(porver);
+
+        guardarPorVerLocal();
         renderPorVer();
 
         try {
             await guardarPorVerEnBackend(item);
+            await profileCommon.cargarLogrosDestacadosHeaderRapido(obtenerIdUsuario());
         } catch (error) {
-            console.error("Error guardando por ver en backend:", error);
+            console.error("Error guardando Por Ver en backend:", error);
         }
     }
 
-    document.getElementById("porverSearchInput").value = "";
-    document.getElementById("porverResults").innerHTML =
-        `<p class="top5-empty">Agregado correctamente.</p>`;
+    limpiarBuscadorPorVer("Agregado correctamente.");
 }
 
 async function guardarPorVerEnBackend(item) {
@@ -414,7 +286,7 @@ async function guardarPorVerEnBackend(item) {
             proveedor: item.proveedor,
             apiId: String(item.apiId),
             titulo: item.titulo,
-            tipoContenido: convertirTipoBackend(item.tipoVisual),
+            tipoContenido: item.tipoBackend || profileCommon.convertirTipoBackend(item.tipoVisual),
             descripcion: item.descripcion || "",
             fechaEstreno: item.fechaEstreno || null,
             anioEstreno: item.anioEstreno || null,
@@ -426,200 +298,16 @@ async function guardarPorVerEnBackend(item) {
         })
     });
 }
-function convertirTipoBackend(tipoVisual) {
-    if (tipoVisual === "Película") return "PELICULA";
-    return "SERIE";
-}
-/* ===============================
-   PINES
-   IMPORTANTE:
-   Por ver NO modifica los pines.
-   Solo usa Top 5 + Vistas.
-================================ */
 
-function renderBioTags() {
-    const container = document.getElementById("bioTags");
-    if (!container) return;
+function limpiarBuscadorPorVer(mensaje = "") {
+    const input = document.getElementById("porverSearchInput");
+    const results = document.getElementById("porverResults");
 
-    const top5Guardado = JSON.parse(localStorage.getItem(top5StorageKey())) || [];
-    const vistasGuardadas = JSON.parse(localStorage.getItem(vistasStorageKey())) || [];
+    if (input) input.value = "";
 
-    const base = [...top5Guardado.filter(Boolean), ...vistasGuardadas];
-
-    if (base.length === 0) {
-        container.innerHTML = `<li><span class="bio-tag">🎬 Sin preferencias aún</span></li>`;
-        return;
+    if (results) {
+        results.innerHTML = mensaje
+            ? `<p class="top5-empty">${escapeHtml(mensaje)}</p>`
+            : "";
     }
-
-    const conteo = {};
-
-    base.forEach(item => {
-        obtenerTagsDelItem(item).forEach(tag => {
-            conteo[tag] = (conteo[tag] || 0) + 1;
-        });
-    });
-
-    const tagsFinales = Object.entries(conteo)
-        .sort((a, b) => b[1] - a[1])
-        .map(([tag]) => tag)
-        .slice(0, 5);
-
-    container.innerHTML = tagsFinales.map(tag => `
-        <li>
-            <span class="bio-tag">${iconoTag(tag)} ${escapeHtml(tag)}</span>
-        </li>
-    `).join("");
-}
-
-/* ===============================
-   NORMALIZAR
-================================ */
-
-function normalizarContenidoApi(item) {
-    const proveedor = item.apiProvider || item.proveedor || inferirProveedor(item);
-    const tipoVisual = convertirTipoVisual(item.tipoContenido || item.tipo || "", proveedor);
-
-    return {
-        apiId: item.apiId || item.id || item.mal_id || "",
-        proveedor,
-        titulo: item.titulo || item.title || item.name || item.title_english || "Sin título",
-        tipoVisual,
-        tipoContenido: tipoVisual,
-        posterUrl: item.posterUrl || item.imageUrl || item.coverUrl || item.images?.jpg?.image_url || "",
-        anioEstreno:
-            item.anioEstreno ||
-            item.year ||
-            obtenerAnioDesdeFecha(item.fechaEstreno || item.release_date || item.aired?.from),
-        genero: item.genero || "",
-        generos: item.generos || extraerGenerosApi(item),
-        descripcion: item.descripcion || item.overview || item.synopsis || ""
-    };
-}
-
-function obtenerTagsDelItem(item) {
-    const tags = [
-        ...(item.generos || []),
-        item.genero,
-        item.tipoVisual,
-        item.tipoContenido,
-        ...inferirGeneros(item)
-    ];
-
-    return tags
-        .filter(Boolean)
-        .map(normalizarNombreTag)
-        .filter(tag => !["Contenido", "TMDB", "JIKAN", "API"].includes(tag))
-        .filter((tag, index, array) => array.indexOf(tag) === index);
-}
-
-function inferirGeneros(item) {
-    const texto = `
-        ${item.titulo || ""}
-        ${item.title || ""}
-        ${item.name || ""}
-        ${item.descripcion || ""}
-        ${item.overview || ""}
-        ${item.synopsis || ""}
-    `.toLowerCase();
-
-    const generos = [];
-
-    if (texto.includes("romance") || texto.includes("amor") || texto.includes("love")) generos.push("Romance");
-    if (texto.includes("terror") || texto.includes("horror")) generos.push("Terror");
-    if (texto.includes("drama")) generos.push("Drama");
-    if (texto.includes("action") || texto.includes("acción") || texto.includes("batalla")) generos.push("Acción");
-    if (texto.includes("comedy") || texto.includes("comedia")) generos.push("Comedia");
-    if (texto.includes("fantasy") || texto.includes("fantasía")) generos.push("Fantasía");
-    if (texto.includes("sci-fi") || texto.includes("science fiction")) generos.push("Sci-Fi");
-
-    if (String(item.proveedor || item.apiProvider || "").toUpperCase() === "JIKAN") {
-        generos.push("Anime");
-    }
-
-    return generos;
-}
-
-function inferirProveedor(item) {
-    if (item.mal_id || item.images?.jpg?.image_url) return "JIKAN";
-    return "TMDB";
-}
-
-function convertirTipoVisual(tipo, proveedor) {
-    const t = String(tipo || "").toUpperCase();
-    const p = String(proveedor || "").toUpperCase();
-
-    if (p === "JIKAN") return "Anime";
-    if (t === "PELICULA" || t === "MOVIE") return "Película";
-    if (t === "SERIE" || t === "TV") return "Serie";
-
-    return tipo || "Contenido";
-}
-
-function extraerGenerosApi(item) {
-    const generos = [];
-
-    if (Array.isArray(item.generos)) generos.push(...item.generos);
-
-    if (Array.isArray(item.genres)) {
-        item.genres.forEach(g => {
-            if (typeof g === "string") generos.push(g);
-            else if (g?.name) generos.push(g.name);
-        });
-    }
-
-    if (item.genero) generos.push(item.genero);
-
-    return generos.map(normalizarNombreTag);
-}
-
-function normalizarNombreTag(tag) {
-    if (!tag) return "";
-
-    const mapa = {
-        PELICULA: "Película",
-        Pelicula: "Película",
-        Movie: "Película",
-        SERIE: "Serie",
-        Series: "Serie",
-        Anime: "Anime",
-        Romance: "Romance",
-        Drama: "Drama",
-        Horror: "Terror",
-        Terror: "Terror",
-        Action: "Acción",
-        Comedy: "Comedia",
-        Fantasy: "Fantasía",
-        "Science Fiction": "Sci-Fi"
-    };
-
-    return mapa[tag] || tag;
-}
-
-function iconoTag(tag) {
-    const t = String(tag).toLowerCase();
-
-    if (t.includes("romance")) return "❤️";
-    if (t.includes("anime")) return "🌸";
-    if (t.includes("terror")) return "👻";
-    if (t.includes("drama")) return "🎭";
-    if (t.includes("serie")) return "📺";
-    if (t.includes("película") || t.includes("pelicula")) return "🎬";
-    if (t.includes("acción") || t.includes("accion")) return "💥";
-    if (t.includes("fantas")) return "✨";
-
-    return "🎞️";
-}
-
-function obtenerAnioDesdeFecha(fecha) {
-    if (!fecha) return null;
-    return Number(String(fecha).slice(0, 4)) || null;
-}
-
-function escapeHtml(texto) {
-    return String(texto ?? "")
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
 }
