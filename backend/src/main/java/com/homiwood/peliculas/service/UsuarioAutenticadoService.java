@@ -33,7 +33,7 @@ public class UsuarioAutenticadoService {
             throw new BadRequestException("No se pudo obtener el username del token");
         }
 
-        return usuarioRepository.findByUsername(username)
+        return usuarioRepository.findByUsernameIgnoreCase(username)
                 .orElseThrow(() -> new NotFoundException("Usuario autenticado no encontrado"));
     }
 

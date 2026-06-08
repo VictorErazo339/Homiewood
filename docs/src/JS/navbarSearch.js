@@ -11,10 +11,16 @@ let input = null;
 let results = null;
 let searchTimeout = null;
 let initialized = false;
+let lastSearchButton = null;
 
 document.addEventListener("DOMContentLoaded", () => {
     inicializarNavbarSearch();
+    marcarNavbarActiva();
 });
+
+/* ============================================================
+   NAVBAR SEARCH COMO DROPDOWN
+============================================================ */
 
 function inicializarNavbarSearch() {
     if (initialized) return;
@@ -26,7 +32,7 @@ function inicializarNavbarSearch() {
         return;
     }
 
-    crearOverlayBusqueda();
+    crearDropdownBusqueda();
 
     searchButtons.forEach(button => {
         button.addEventListener("click", event => {
@@ -34,9 +40,29 @@ function inicializarNavbarSearch() {
             event.stopPropagation();
             event.stopImmediatePropagation();
 
+            lastSearchButton = button;
+
             cerrarBuscadorViejoSiExiste();
-            abrirBuscadorUsuarios();
+            cerrarMenuPerfilSiExiste();
+
+            if (overlay?.classList.contains("is-open")) {
+                cerrarBuscadorUsuarios();
+                return;
+            }
+
+            abrirBuscadorUsuarios(button);
         }, true);
+    });
+
+    document.addEventListener("click", event => {
+        if (!overlay?.classList.contains("is-open")) return;
+
+        const clickDentroDropdown = overlay.contains(event.target);
+        const clickEnBotonBusqueda = event.target.closest(SELECTOR_SEARCH_BUTTONS);
+
+        if (!clickDentroDropdown && !clickEnBotonBusqueda) {
+            cerrarBuscadorUsuarios();
+        }
     });
 
     document.addEventListener("keydown", event => {
@@ -46,17 +72,32 @@ function inicializarNavbarSearch() {
 
         if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
             event.preventDefault();
-            abrirBuscadorUsuarios();
+
+            const button = lastSearchButton || document.querySelector(SELECTOR_SEARCH_BUTTONS);
+
+            cerrarMenuPerfilSiExiste();
+            abrirBuscadorUsuarios(button);
         }
     });
+
+    window.addEventListener("resize", () => {
+        if (overlay?.classList.contains("is-open")) {
+            posicionarDropdown(lastSearchButton || document.querySelector(SELECTOR_SEARCH_BUTTONS));
+        }
+    });
+
+    window.addEventListener("scroll", () => {
+        if (overlay?.classList.contains("is-open")) {
+            posicionarDropdown(lastSearchButton || document.querySelector(SELECTOR_SEARCH_BUTTONS));
+        }
+    }, true);
 }
 
-function crearOverlayBusqueda() {
-    if (document.getElementById("navbarSearchOverlay")) {
-        overlay = document.getElementById("navbarSearchOverlay");
-        input = document.getElementById("navbarSearchInput");
-        results = document.getElementById("navbarSearchResults");
-        return;
+function crearDropdownBusqueda() {
+    const existing = document.getElementById("navbarSearchOverlay");
+
+    if (existing) {
+        existing.remove();
     }
 
     overlay = document.createElement("div");
@@ -65,16 +106,14 @@ function crearOverlayBusqueda() {
     overlay.setAttribute("aria-hidden", "true");
 
     overlay.innerHTML = `
-        <div class="navbar-search-backdrop" data-navbar-search-close></div>
-
-        <section class="navbar-search-panel" role="dialog" aria-modal="true" aria-labelledby="navbarSearchTitle">
+        <section class="navbar-search-panel" role="search" aria-labelledby="navbarSearchTitle">
             <div class="navbar-search-header">
                 <div>
                     <h2 id="navbarSearchTitle">Buscar usuarios</h2>
                     <p>Encuentra perfiles por nombre o username.</p>
                 </div>
 
-                <button type="button" class="navbar-search-close" data-navbar-search-close aria-label="Cerrar buscador">
+                <button type="button" class="navbar-search-close" aria-label="Cerrar buscador">
                     <i class="bi bi-x-lg" aria-hidden="true"></i>
                 </button>
             </div>
@@ -102,20 +141,24 @@ function crearOverlayBusqueda() {
     input = document.getElementById("navbarSearchInput");
     results = document.getElementById("navbarSearchResults");
 
-    overlay.querySelectorAll("[data-navbar-search-close]").forEach(element => {
-        element.addEventListener("click", cerrarBuscadorUsuarios);
+    overlay.addEventListener("click", event => {
+        event.stopPropagation();
     });
 
-    input.addEventListener("input", manejarInputBusqueda);
+    overlay.querySelector(".navbar-search-close")?.addEventListener("click", cerrarBuscadorUsuarios);
+
+    input?.addEventListener("input", manejarInputBusqueda);
 }
 
-function abrirBuscadorUsuarios() {
-    if (!overlay) crearOverlayBusqueda();
+function abrirBuscadorUsuarios(button) {
+    if (!overlay) crearDropdownBusqueda();
+
+    lastSearchButton = button || lastSearchButton || document.querySelector(SELECTOR_SEARCH_BUTTONS);
+
+    posicionarDropdown(lastSearchButton);
 
     overlay.classList.add("is-open");
     overlay.setAttribute("aria-hidden", "false");
-
-    document.body.classList.add("navbar-search-open");
 
     limpiarResultadosIniciales();
 
@@ -130,11 +173,23 @@ function cerrarBuscadorUsuarios() {
     overlay.classList.remove("is-open");
     overlay.setAttribute("aria-hidden", "true");
 
-    document.body.classList.remove("navbar-search-open");
+    clearTimeout(searchTimeout);
 
     if (input) input.value = "";
 
     limpiarResultadosIniciales();
+}
+
+function posicionarDropdown(button) {
+    if (!overlay || !button) return;
+
+    const rect = button.getBoundingClientRect();
+
+    const top = rect.bottom + 12;
+    const right = Math.max(12, window.innerWidth - rect.right - 2);
+
+    overlay.style.setProperty("--navbar-search-top", `${top}px`);
+    overlay.style.setProperty("--navbar-search-right", `${right}px`);
 }
 
 function limpiarResultadosIniciales() {
@@ -188,15 +243,22 @@ async function buscarUsuarios(query) {
 function renderUsuarios(usuarios) {
     results.innerHTML = usuarios.map(usuario => {
         const nombre = escapeHtml(usuario.nombre || "Usuario");
-        const username = escapeHtml(usuario.username || "usuario");
-        const descripcion = escapeHtml(usuario.descripcion || "Sin descripción todavía.");
-        const icono = Number(usuario.iconoPerfil || 1);
+        const rawUsername = String(usuario.username || "");
+        const username = escapeHtml(rawUsername);
+        const descripcion = escapeHtml(
+            usuario.descripcion ||
+            usuario.biografia ||
+            usuario.bio ||
+            "Sin descripción todavía."
+        );
+
+        const avatar = escapeAttr(obtenerAvatarUsuario(usuario));
 
         return `
             <button type="button"
                     class="navbar-search-result"
-                    data-username="${username}">
-                <img src="../img/${icono}.webp"
+                    data-username="${escapeAttr(rawUsername)}">
+                <img src="${avatar}"
                      alt=""
                      class="navbar-search-avatar"
                      onerror="this.src='../img/1.webp'">
@@ -225,6 +287,16 @@ function renderUsuarios(usuarios) {
     });
 }
 
+function obtenerAvatarUsuario(usuario) {
+    if (usuario.fotoPerfilUrl) return usuario.fotoPerfilUrl;
+    if (usuario.avatarUrl) return usuario.avatarUrl;
+    if (usuario.fotoUrl) return usuario.fotoUrl;
+
+    const icono = Number(usuario.iconoPerfil || usuario.icono || 1);
+
+    return `../img/${icono}.webp`;
+}
+
 function cerrarBuscadorViejoSiExiste() {
     const oldSearchBar = document.getElementById("navSearchBar");
     const oldSearchToggle = document.getElementById("navSearchToggle");
@@ -239,6 +311,59 @@ function cerrarBuscadorViejoSiExiste() {
     }
 }
 
+function cerrarMenuPerfilSiExiste() {
+    document.querySelectorAll(".nav-profile-menu.is-open").forEach(menu => {
+        menu.classList.remove("is-open");
+    });
+}
+
+/* ============================================================
+   NAVBAR ACTIVE LINKS
+============================================================ */
+
+function marcarNavbarActiva() {
+    const path = window.location.pathname.toLowerCase();
+
+    document.querySelectorAll(".nav-links a").forEach(link => {
+        link.classList.remove("is-active");
+        link.removeAttribute("aria-current");
+    });
+
+    const reglas = [
+        {
+            paginas: ["trending.html"],
+            texto: "trending"
+        },
+        {
+            paginas: ["home.html"],
+            texto: "mis homies"
+        },
+        {
+            paginas: ["cartelera.html"],
+            texto: "cartelera"
+        }
+    ];
+
+    const reglaActiva = reglas.find(regla =>
+        regla.paginas.some(pagina => path.includes(pagina))
+    );
+
+    if (!reglaActiva) return;
+
+    document.querySelectorAll(".nav-links a").forEach(link => {
+        const texto = link.textContent.trim().toLowerCase();
+
+        if (texto === reglaActiva.texto) {
+            link.classList.add("is-active");
+            link.setAttribute("aria-current", "page");
+        }
+    });
+}
+
+/* ============================================================
+   HELPERS
+============================================================ */
+
 function escapeHtml(value) {
     return String(value ?? "")
         .replaceAll("&", "&amp;")
@@ -246,4 +371,8 @@ function escapeHtml(value) {
         .replaceAll(">", "&gt;")
         .replaceAll('"', "&quot;")
         .replaceAll("'", "&#039;");
+}
+
+function escapeAttr(value) {
+    return escapeHtml(value);
 }

@@ -32,23 +32,40 @@ public class UsuarioService {
 
     public Usuario crearUsuario(CrearUsuarioRequest request) {
 
-        if (usuarioRepository.existsByUsername(request.getUsername())) {
+        String username = normalizarUsername(request.getUsername());
+        String email = request.getEmail().trim().toLowerCase();
+
+        if (usuarioRepository.existsByUsernameIgnoreCase(username)) {
             throw new DuplicateResourceException("El username ya está registrado");
         }
 
-        if (usuarioRepository.existsByEmail(request.getEmail())) {
+        if (usuarioRepository.existsByEmailIgnoreCase(email)) {
             throw new DuplicateResourceException("El email ya está registrado");
         }
 
         Usuario usuario = new Usuario();
         usuario.setNombre(request.getNombre().trim());
-        usuario.setUsername(request.getUsername().trim());
-        usuario.setEmail(request.getEmail().trim());
+        usuario.setUsername(username);
+        usuario.setEmail(email);
         usuario.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         usuario.setIconoPerfil(1);
         usuario.setPerfilPrivado(false);
 
         return usuarioRepository.save(usuario);
+    }
+
+    private String normalizarUsername(String username) {
+        if (username == null || username.trim().isBlank()) {
+            throw new BadRequestException("El username es obligatorio");
+        }
+
+        String usernameLimpio = username.trim().toLowerCase();
+
+        if (usernameLimpio.startsWith("@")) {
+            usernameLimpio = usernameLimpio.substring(1);
+        }
+
+        return usernameLimpio;
     }
 
     public Usuario buscarPorId(Long id) {
@@ -135,7 +152,7 @@ public class UsuarioService {
             usernameLimpio = usernameLimpio.substring(1);
         }
 
-        return usuarioRepository.findByUsername(usernameLimpio)
+        return usuarioRepository.findByUsernameIgnoreCase(usernameLimpio)
                 .orElseThrow(() -> new NotFoundException("Usuario no encontrado"));
     }
 }

@@ -20,47 +20,7 @@
 <body>
 
 
-    <nav class="navbar-homi" aria-label="Navegación principal">
-        <a href="./home.html" class="brand">
-            <img src="../img/hamstersolo.webp" alt="Homiewood" width="40px">
-        </a>
-
-        <div class="nav-links d-none d-md-flex gap-4">
-            <a href="./trending.html">Trending</a>
-            <a href="./home.html">Mis Homies</a>
-            <a href="./cartelera.html" class="active">Cartelera</a>
-        </div>
-
-        <div class="nav-search-wrap" id="navSearchWrap">
-            <button type="button" class="nav-search-toggle" id="navSearchToggle" aria-label="Buscar"
-                aria-expanded="false">
-                <i class="bi bi-search"></i>
-            </button>
-
-            <div class="nav-search-bar" id="navSearchBar" aria-hidden="true">
-                <input type="text" id="navSearchInput" placeholder="Buscar películas, series..." autocomplete="off" />
-                <button type="button" class="nav-search-close" id="navSearchClose" aria-label="Cerrar búsqueda">
-                    <i class="bi bi-x-lg"></i>
-                </button>
-            </div>
-        </div>
-
-        <div class="nav-icons d-flex gap-1">
-            <button type="button" aria-label="Notificaciones">
-                <i class="bi bi-bell-fill"></i>
-            </button>
-
-            <button type="button" class="sidebar-toggle d-md-none" id="sidebarToggle" aria-label="Menú">
-                <i class="bi bi-list"></i>
-            </button>
-        </div>
-
-        <span id="nombreUsuario" class="nombre-usuario">Usuario</span>
-
-        <button type="button" class="avatar" onclick="window.location.href='./profile.html'" title="Ver perfil">
-            <img src="../img/hamstericon.webp" alt="Perfil" width="30px">
-        </button>
-    </nav>
+    <div id="navbar-root"></div>
 
     <main class="rec-page">
 
@@ -346,8 +306,10 @@
     </nav>
 
     <!-- JS modular propio de cartelera -->
-    <script type="module" src="../src/JS/cartelera.js"></script>
+    <script type="module" src="../src/JS/components/navbarComponent.js"></script>
     <script type="module" src="../src/JS/navbarSearch.js"></script>
+    <script type="module" src="../src/JS/components/navbarNotifications.js"></script>
+    <script type="module" src="../src/JS/cartelera.js"></script>
 </body>
 
 </html>
