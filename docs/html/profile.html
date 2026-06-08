@@ -11,31 +11,12 @@
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;700&display=swap"
     rel="stylesheet">
   <link rel="stylesheet" href="../css/profile.css">
-    <link rel="stylesheet" href="../css/navbarSearch.css">
+  <link rel="stylesheet" href="../css/navbarSearch.css">
 </head>
 
 <body>
 
-  <nav class="navbar-homi" aria-label="Navegación principal">
-    <a href="./home.html" class="brand">
-      <img src="../img/hamstersolo.webp" alt="Homiewood - Inicio" class="brand-logo">
-    </a>
-
-    <ul class="nav-links" role="list">
-      <li><a href="./trending.html">Trending</a></li>
-      <li><a href="./home.html">Mis Homies</a></li>
-      <li><a href="./cartelera.html">Cartelera</a></li>
-    </ul>
-
-    <div class="nav-icons">
-      <button type="button" aria-label="Buscar">
-        <i class="bi bi-search" aria-hidden="true"></i>
-      </button>
-      <button type="button" aria-label="Notificaciones">
-        <i class="bi bi-bell-fill" aria-hidden="true"></i>
-      </button>
-    </div>
-  </nav>
+  <div id="navbar-root"></div>
 
   <header class="profile-banner" aria-label="Banner de perfil">
     <div class="banner-film-strip" aria-hidden="true"></div>
@@ -71,8 +52,6 @@
 
 
                   <button class="edit-btn js-edit-profile-btn js-owner-only" type="button" data-bs-toggle="modal"
-
-
                     data-bs-target="#editProfileModal" aria-label="Editar perfil">
 
 
@@ -233,75 +212,75 @@
   </main>
 
   <div class="modal fade" id="top5Modal" tabindex="-1" aria-labelledby="top5ModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-    <div class="modal-content modal-box top5-modal-box">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content modal-box top5-modal-box">
 
-      <div class="top5-modal-header">
-        <div>
-          <h3 class="modal-title" id="top5ModalLabel">EDITAR MI TOP 5</h3>
-          <p class="top5-modal-subtitle">
-            Elige una posición, busca una película o serie y arma tu ranking completo antes de guardar.
-          </p>
-        </div>
-
-        <span class="top5-modal-pill">
-          🎬 Ranking personal
-        </span>
-      </div>
-
-      <section class="top5-draft-section" aria-label="Vista previa del Top 5">
-        <div class="top5-draft-toolbar">
+        <div class="top5-modal-header">
           <div>
-            <p class="top5-draft-title">TU TOP 5</p>
-            <small>Haz click en una posición para editarla.</small>
+            <h3 class="modal-title" id="top5ModalLabel">EDITAR MI TOP 5</h3>
+            <p class="top5-modal-subtitle">
+              Elige una posición, busca una película o serie y arma tu ranking completo antes de guardar.
+            </p>
           </div>
+
+          <span class="top5-modal-pill">
+            🎬 Ranking personal
+          </span>
         </div>
 
-        <div id="top5DraftSlots" class="top5-draft-slots"></div>
-      </section>
-
-      <label class="form-label" for="top5SearchInput">BUSCAR PELÍCULA O SERIE</label>
-
-      <input id="top5SearchInput" class="form-control" type="text" placeholder="Busca por título..."
-        autocomplete="off" aria-autocomplete="list" aria-controls="top5Results">
-
-      <div class="top5-picker-layout top5-picker-layout-v2 mt-3">
-
-        <div class="top5-results-wrap">
-          <p class="top5-panel-label">RESULTADOS</p>
-
-          <div id="top5Results" class="top5-results" role="listbox">
-            <p class="top5-empty">Escribe para buscar.</p>
+        <section class="top5-draft-section" aria-label="Vista previa del Top 5">
+          <div class="top5-draft-toolbar">
+            <div>
+              <p class="top5-draft-title">TU TOP 5</p>
+              <small>Haz click en una posición para editarla.</small>
+            </div>
           </div>
+
+          <div id="top5DraftSlots" class="top5-draft-slots"></div>
+        </section>
+
+        <label class="form-label" for="top5SearchInput">BUSCAR PELÍCULA O SERIE</label>
+
+        <input id="top5SearchInput" class="form-control" type="text" placeholder="Busca por título..."
+          autocomplete="off" aria-autocomplete="list" aria-controls="top5Results">
+
+        <div class="top5-picker-layout top5-picker-layout-v2 mt-3">
+
+          <div class="top5-results-wrap">
+            <p class="top5-panel-label">RESULTADOS</p>
+
+            <div id="top5Results" class="top5-results" role="listbox">
+              <p class="top5-empty">Escribe para buscar.</p>
+            </div>
+          </div>
+
+          <aside class="top5-editor-panel top5-editor-panel-v2">
+            <p class="top5-panel-label">SELECCIÓN</p>
+
+            <div id="top5Preview" class="top5-preview" aria-live="polite">
+              Elige una posición y busca una película o serie.
+            </div>
+
+            <button type="button" class="btn-cancel top5-clear-slot-btn" id="clearTop5SlotBtn">
+              Vaciar posición seleccionada
+            </button>
+          </aside>
+
         </div>
 
-        <aside class="top5-editor-panel top5-editor-panel-v2">
-          <p class="top5-panel-label">SELECCIÓN</p>
-
-          <div id="top5Preview" class="top5-preview" aria-live="polite">
-            Elige una posición y busca una película o serie.
-          </div>
-
-          <button type="button" class="btn-cancel top5-clear-slot-btn" id="clearTop5SlotBtn">
-            Vaciar posición seleccionada
+        <div class="modal-actions top5-modal-actions">
+          <button type="button" class="btn-cancel" data-bs-dismiss="modal">
+            Cancelar
           </button>
-        </aside>
+
+          <button type="button" class="btn-save" id="saveTop5Btn" disabled>
+            Sin cambios
+          </button>
+        </div>
 
       </div>
-
-      <div class="modal-actions top5-modal-actions">
-        <button type="button" class="btn-cancel" data-bs-dismiss="modal">
-          Cancelar
-        </button>
-
-        <button type="button" class="btn-save" id="saveTop5Btn" disabled>
-          Sin cambios
-        </button>
-      </div>
-
     </div>
   </div>
-</div>
 
   <div class="modal fade" id="achievementsModal" tabindex="-1" aria-labelledby="achievementsModalLabel"
     aria-hidden="true">
@@ -437,7 +416,10 @@
   <div class="toast-container" id="toastContainer" aria-live="assertive" aria-atomic="true"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script type="module" src="../src/JS/components/navbarComponent.js"></script>
   <script type="module" src="../src/JS/navbarSearch.js"></script>
+  <script type="module" src="../src/JS/components/navbarNotifications.js"></script>
   <script type="module" src="../src/JS/profile.js"></script>
 
 </body>

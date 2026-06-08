@@ -1,6 +1,7 @@
 package com.homiwood.peliculas.repository;
 
 import com.homiwood.peliculas.model.Calificacion;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -22,12 +23,30 @@ public interface CalificacionRepository extends JpaRepository<Calificacion, Long
             Long idContenido
     );
 
+    @Query("""
+            SELECT c
+            FROM Calificacion c
+            JOIN FETCH c.usuario u
+            JOIN FETCH c.contenido con
+            WHERE c.comentario IS NOT NULL
+            AND TRIM(c.comentario) <> ''
+            AND (
+                u.idUsuario = :idUsuario
+                OR u.idUsuario IN (
+                    SELECT s.seguido.idUsuario
+                    FROM Seguimiento s
+                    WHERE s.seguidor.idUsuario = :idUsuario
+                )
+            )
+            ORDER BY c.fechaCalificacion DESC
+            """)
+    List<Calificacion> listarFeedHomies(
+            @Param("idUsuario") Long idUsuario,
+            Pageable pageable
+    );
+
     @Query("SELECT AVG(c.puntaje) FROM Calificacion c WHERE c.contenido.idContenido = :idContenido")
     Double calcularPromedioPorContenido(@Param("idContenido") Long idContenido);
-
-    // =========================================================
-    // MÉTODOS PARA LOGROS - PASO 1
-    // =========================================================
 
     long countByUsuarioIdUsuario(Long idUsuario);
 

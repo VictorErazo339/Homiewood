@@ -6,8 +6,10 @@ let usuarioActual = null;
 let selectedFilm = null;
 
 const POSTS_PER_PAGE = 10;
-let feedPagina = 1;
-let feedTodos = [];
+let feedPagina = 0;
+let feedCargando = false;
+let feedHayMas = true;
+let feedObserver = null;
 
 // ===============================
 // INIT
@@ -136,22 +138,145 @@ function normalizarTipoBackend(tipo) {
 // ===============================
 
 async function cargarFeed() {
+    const feed = document.getElementById("feed");
+    const paginacion = document.getElementById("feedPaginacion");
+
+    if (paginacion) {
+        paginacion.remove();
+    }
+
+    feedPagina = 0;
+    feedHayMas = true;
+    feedCargando = false;
+
+    if (feed) {
+        feed.innerHTML = `
+            <p id="feedLoadingText" style="color:#aaa; text-align:center; margin-top:2rem;">
+                Cargando publicaciones de tus homies...
+            </p>
+        `;
+    }
+
+    await cargarMasFeed(true);
+    inicializarScrollInfinitoFeed();
+}
+async function cargarMasFeed(esPrimeraCarga = false) {
+    if (feedCargando || !feedHayMas) return;
+
+    const idUsuario = usuarioActual?.idUsuario || usuarioActual?.id;
+    const feed = document.getElementById("feed");
+
+    if (!idUsuario || !feed) return;
+
+    feedCargando = true;
+
     try {
-        const calificaciones = await apiRequest("/calificaciones");
+        mostrarLoaderMasPosts();
 
-        feedTodos = calificaciones
-            .filter(esPublicacion)
-            .reverse();
+        const calificaciones = await apiRequest(
+            `/calificaciones/feed/${idUsuario}?page=${feedPagina}&limite=${POSTS_PER_PAGE}`
+        );
 
-        feedPagina = 1;
+        const publicaciones = calificaciones.filter(esPublicacion);
 
-        renderFeedPagina();
+        document.getElementById("feedLoadingText")?.remove();
+
+        if (esPrimeraCarga && publicaciones.length === 0) {
+            feed.innerHTML = `
+                <p style="color:#aaa; text-align:center; margin-top:2rem;">
+                    Aún no hay publicaciones de tus homies.
+                </p>
+            `;
+            feedHayMas = false;
+            return;
+        }
+
+        if (publicaciones.length < POSTS_PER_PAGE) {
+            feedHayMas = false;
+        }
+
+        const html = publicaciones.map(c => renderCalificacion(c)).join("");
+        feed.insertAdjacentHTML("beforeend", html);
+
+        publicaciones.forEach(c => cargarLikes(c.idCalificacion));
+
+        feedPagina++;
 
     } catch (error) {
-        console.error("Error cargando feed:", error);
+        console.error("Error cargando más publicaciones:", error);
+
+        if (esPrimeraCarga) {
+            feed.innerHTML = `
+                <p style="color:#aaa; text-align:center; margin-top:2rem;">
+                    No se pudieron cargar las publicaciones.
+                </p>
+            `;
+        }
+    } finally {
+        feedCargando = false;
+        ocultarLoaderMasPosts();
+    }
+}
+function inicializarScrollInfinitoFeed() {
+    let sentinel = document.getElementById("feedScrollSentinel");
+
+    if (!sentinel) {
+        sentinel = document.createElement("div");
+        sentinel.id = "feedScrollSentinel";
+        sentinel.style.height = "40px";
+        document.getElementById("feed")?.after(sentinel);
+    }
+
+    if (feedObserver) {
+        feedObserver.disconnect();
+    }
+
+    feedObserver = new IntersectionObserver(entries => {
+        const entry = entries[0];
+
+        if (entry.isIntersecting && feedHayMas && !feedCargando) {
+            cargarMasFeed(false);
+        }
+    }, {
+        root: null,
+        rootMargin: "300px",
+        threshold: 0
+    });
+
+    feedObserver.observe(sentinel);
+}
+
+function mostrarLoaderMasPosts() {
+    let loader = document.getElementById("feedMoreLoader");
+
+    if (!loader) {
+        loader = document.createElement("p");
+        loader.id = "feedMoreLoader";
+        loader.style.color = "#aaa";
+        loader.style.textAlign = "center";
+        loader.style.margin = "1.5rem 0";
+        loader.textContent = "Cargando más publicaciones...";
+        document.getElementById("feedScrollSentinel")?.before(loader);
     }
 }
 
+function ocultarLoaderMasPosts() {
+    document.getElementById("feedMoreLoader")?.remove();
+
+    if (!feedHayMas) {
+        let end = document.getElementById("feedEndMessage");
+
+        if (!end) {
+            end = document.createElement("p");
+            end.id = "feedEndMessage";
+            end.style.color = "#777";
+            end.style.textAlign = "center";
+            end.style.margin = "1.5rem 0";
+            end.textContent = "No hay más publicaciones por ahora.";
+            document.getElementById("feedScrollSentinel")?.before(end);
+        }
+    }
+}
 function esPublicacion(calificacion) {
     return calificacion.comentario &&
         String(calificacion.comentario).trim().length > 0;

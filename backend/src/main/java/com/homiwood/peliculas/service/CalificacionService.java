@@ -13,12 +13,10 @@ import com.homiwood.peliculas.repository.ContenidoRepository;
 import com.homiwood.peliculas.repository.ListaContenidoRepository;
 import com.homiwood.peliculas.repository.ListaRepository;
 import com.homiwood.peliculas.repository.UsuarioRepository;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -43,7 +41,8 @@ public class CalificacionService {
             ListaRepository listaRepository,
             ListaContenidoRepository listaContenidoRepository,
             SimpMessagingTemplate messagingTemplate,
-            LogroEvaluacionPublisher logroEvaluacionPublisher) {
+            LogroEvaluacionPublisher logroEvaluacionPublisher
+    ) {
         this.calificacionRepository = calificacionRepository;
         this.usuarioRepository = usuarioRepository;
         this.contenidoRepository = contenidoRepository;
@@ -55,6 +54,20 @@ public class CalificacionService {
 
     public List<Calificacion> listarCalificaciones() {
         return calificacionRepository.findAll();
+    }
+
+    public List<Calificacion> listarFeedHomies(Long idUsuario, int page, int limite) {
+        if (idUsuario == null) {
+            throw new BadRequestException("El idUsuario es obligatorio");
+        }
+
+        int paginaSegura = Math.max(page, 0);
+        int limiteSeguro = Math.min(Math.max(limite, 1), 30);
+
+        return calificacionRepository.listarFeedHomies(
+                idUsuario,
+                PageRequest.of(paginaSegura, limiteSeguro)
+        );
     }
 
     public List<Calificacion> listarPorUsuario(Long idUsuario) {
@@ -97,6 +110,7 @@ public class CalificacionService {
         asegurarContenidoEnVistas(usuario, contenido);
 
         messagingTemplate.convertAndSend("/topic/calificaciones", guardada);
+
         logroEvaluacionPublisher.solicitarEvaluacion(usuario.getIdUsuario());
 
         return guardada;
@@ -119,11 +133,14 @@ public class CalificacionService {
 
         asegurarContenidoEnVistas(
                 calificacion.getUsuario(),
-                calificacion.getContenido());
+                calificacion.getContenido()
+        );
 
         messagingTemplate.convertAndSend("/topic/calificaciones", guardada);
+
         logroEvaluacionPublisher.solicitarEvaluacion(
-                calificacion.getUsuario().getIdUsuario());
+                calificacion.getUsuario().getIdUsuario()
+        );
 
         return guardada;
     }
@@ -196,7 +213,8 @@ public class CalificacionService {
         Lista listaVistas = listaRepository
                 .findByUsuarioIdUsuarioAndTituloIgnoreCase(
                         usuario.getIdUsuario(),
-                        "Vistas")
+                        "Vistas"
+                )
                 .orElseGet(() -> {
                     Lista nueva = new Lista();
                     nueva.setUsuario(usuario);
@@ -209,7 +227,8 @@ public class CalificacionService {
         listaContenidoRepository
                 .findByListaIdListaAndContenidoIdContenido(
                         listaVistas.getIdLista(),
-                        contenido.getIdContenido())
+                        contenido.getIdContenido()
+                )
                 .map(existente -> {
                     existente.setEstado("VISTO");
                     existente.setPosicion(null);

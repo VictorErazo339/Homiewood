@@ -33,19 +33,24 @@ public class AuthService {
 
     public AuthResponse register(RegisterRequest request) {
 
-        if (usuarioRepository.existsByUsername(request.getUsername())) {
+        String username = normalizarUsername(request.getUsername());
+        String email = normalizarEmail(request.getEmail());
+
+        if (usuarioRepository.existsByUsernameIgnoreCase(username)) {
             throw new DuplicateResourceException("El username ya está registrado");
         }
 
-        if (usuarioRepository.existsByEmail(request.getEmail())) {
+        if (usuarioRepository.existsByEmailIgnoreCase(email)) {
             throw new DuplicateResourceException("El email ya está registrado");
         }
 
         Usuario usuario = new Usuario();
-        usuario.setNombre(request.getNombre());
-        usuario.setUsername(request.getUsername());
-        usuario.setEmail(request.getEmail());
+        usuario.setNombre(request.getNombre().trim());
+        usuario.setUsername(username);
+        usuario.setEmail(email);
         usuario.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+        usuario.setIconoPerfil(1);
+        usuario.setPerfilPrivado(false);
 
         Usuario usuarioGuardado = usuarioRepository.save(usuario);
 
@@ -60,7 +65,9 @@ public class AuthService {
 
     public AuthResponse login(LoginRequest request) {
 
-        Usuario usuario = usuarioRepository.findByUsername(request.getUsername())
+        String username = normalizarUsername(request.getUsername());
+
+        Usuario usuario = usuarioRepository.findByUsernameIgnoreCase(username)
                 .orElseThrow(() -> new BadRequestException("Credenciales inválidas"));
 
         boolean passwordValida = passwordEncoder.matches(
@@ -79,5 +86,27 @@ public class AuthService {
                 "Bearer",
                 responseMapper.toUsuarioResponse(usuario)
         );
+    }
+
+    private String normalizarUsername(String username) {
+        if (username == null || username.trim().isBlank()) {
+            throw new BadRequestException("El username es obligatorio");
+        }
+
+        String usernameLimpio = username.trim().toLowerCase();
+
+        if (usernameLimpio.startsWith("@")) {
+            usernameLimpio = usernameLimpio.substring(1);
+        }
+
+        return usernameLimpio;
+    }
+
+    private String normalizarEmail(String email) {
+        if (email == null || email.trim().isBlank()) {
+            throw new BadRequestException("El email es obligatorio");
+        }
+
+        return email.trim().toLowerCase();
     }
 }

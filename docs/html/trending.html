@@ -17,42 +17,7 @@
 <body>
 
     <!-- NAVBAR -->
-    <nav class="navbar-homi" aria-label="Navegación principal">
-        <a href="../html/home.html" class="brand">
-            <img src="../img/hamstersolo.webp" alt="Homiewood" width="40px">
-        </a>
-
-        <div class="nav-links d-none d-md-flex gap-4">
-            <a href="../html/trending.html">Trending</a>
-            <a href="../html/home.html">Mis Homies</a>
-            <a href="../html/cartelera.html">Cartelera</a>
-        </div>
-
-        <div class="nav-search-wrap" id="navSearchWrap">
-            <button type="button" class="nav-search-toggle" id="navSearchToggle" aria-label="Buscar"
-                aria-expanded="false">
-                <i class="bi bi-search"></i>
-            </button>
-            <div class="nav-search-bar" id="navSearchBar" aria-hidden="true">
-                <input type="text" id="navSearchInput" placeholder="Buscar películas, series..." autocomplete="off" />
-                <button type="button" class="nav-search-close" id="navSearchClose" aria-label="Cerrar búsqueda">
-                    <i class="bi bi-x-lg"></i>
-                </button>
-            </div>
-        </div>
-
-        <div class="nav-icons d-flex gap-1">
-            <button type="button" aria-label="Notificaciones"><i class="bi bi-bell-fill"></i></button>
-            <!-- BOTON DE MENU HAMBURGUESA DE BARRA LATERAL PARA MOVIL -->
-            <button type="button" class="sidebar-toggle d-md-none" id="sidebarToggle" aria-label="Ver recomendaciones">
-                <i class="bi bi-list"></i>
-            </button>
-        </div>
-        <span id="nombreUsuario" class="nombre-usuario">Usuario</span>
-        <button type="button" class="avatar" onclick="cerrarSesion()" title="Cerrar sesión">
-            <img src="../img/hamstericon.webp" alt="Homiewood" width="30px">
-        </button>
-    </nav>
+    <div id="navbar-root"></div>
 
 
     <!-- MAIN -->
@@ -363,12 +328,14 @@
     <nav class="bottom-nav" aria-label="Navegación móvil">
         <div class="inner">
             <button class="bottom-nav-btn">
-                <span><a href="../html/trending.html"><img src="../img/trending.webp" alt="Trending" width="50px"></a></span>
+                <span><a href="../html/trending.html"><img src="../img/trending.webp" alt="Trending"
+                            width="50px"></a></span>
                 <span class="bottom-nav-label">Trending</span>
             </button>
 
             <button class="bottom-nav-btn">
-                <span><a href="../html/home.html"></a><img src="../img/myhomies.webp" alt="Mis Homies" width="70px"></a></span>
+                <span><a href="../html/home.html"></a><img src="../img/myhomies.webp" alt="Mis Homies"
+                        width="70px"></a></span>
                 <span class="bottom-nav-label">Mis Homies</span>
             </button>
 
@@ -384,8 +351,10 @@
         </div>
     </nav>
 
-    <script src="../src/JS/trending.js"></script>
+    <script type="module" src="../src/JS/components/navbarComponent.js"></script>
     <script type="module" src="../src/JS/navbarSearch.js"></script>
+    <script type="module" src="../src/JS/components/navbarNotifications.js"></script>
+    <script type="module" src="../src/JS/trending.js"></script>
 
 </body>
 

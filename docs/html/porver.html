@@ -17,27 +17,7 @@
 
 <body>
 
-    <nav class="navbar-homi">
-        <a href="./home.html" class="brand">
-            <img src="../img/hamstersolo.webp" alt="Homiwood" class="brand-logo">
-        </a>
-
-        <ul class="nav-links">
-            <li><a href="./trending.html">Trending</a></li>
-            <li><a href="./home.html">Mis Homies</a></li>
-            <li><a href="./cartelera.html">Cartelera</a></li>
-        </ul>
-
-        <div class="nav-icons">
-            <button type="button" aria-label="Buscar">
-                <i class="bi bi-search"></i>
-            </button>
-
-            <button type="button" aria-label="Notificaciones">
-                <i class="bi bi-bell-fill"></i>
-            </button>
-        </div>
-    </nav>
+    <div id="navbar-root"></div>
 
     <header class="profile-banner">
         <div class="banner-film-strip"></div>
@@ -72,26 +52,26 @@
                                 <div class="profile-actions">
 
 
-                                  <button class="edit-btn js-edit-profile-btn js-owner-only" type="button" data-bs-toggle="modal"
+                                    <button class="edit-btn js-edit-profile-btn js-owner-only" type="button"
+                                        data-bs-toggle="modal" data-bs-target="#editProfileModal"
+                                        aria-label="Editar perfil">
 
 
-                                    data-bs-target="#editProfileModal" aria-label="Editar perfil">
+                                        ✏️ Editar perfil
 
 
-                                    ✏️ Editar perfil
-
-
-                                  </button>
+                                    </button>
 
 
 
-                                  <button class="follow-btn js-follow-profile-btn is-hidden" id="followProfileBtn" type="button">
+                                    <button class="follow-btn js-follow-profile-btn is-hidden" id="followProfileBtn"
+                                        type="button">
 
 
-                                    + Seguir
+                                        + Seguir
 
 
-                                  </button>
+                                    </button>
 
 
                                 </div>
@@ -187,7 +167,8 @@
             <div class="view-title-row">
                 <h2 class="view-title">Películas y series por ver</h2>
 
-                <button type="button" class="edit-btn js-owner-only" data-bs-toggle="modal" data-bs-target="#porverModal">
+                <button type="button" class="edit-btn js-owner-only" data-bs-toggle="modal"
+                    data-bs-target="#porverModal">
                     + Agregar por ver
                 </button>
             </div>
@@ -446,7 +427,9 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
+    <script type="module" src="../src/JS/components/navbarComponent.js"></script>
     <script type="module" src="../src/JS/navbarSearch.js"></script>
+    <script type="module" src="../src/JS/components/navbarNotifications.js"></script>
     <script type="module" src="../src/JS/porver.js"></script>
 
 </body>

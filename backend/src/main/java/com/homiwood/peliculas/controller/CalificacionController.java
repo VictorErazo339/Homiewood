@@ -21,10 +21,20 @@ public class CalificacionController {
 
     public CalificacionController(
             CalificacionService calificacionService,
-            ResponseMapper responseMapper
-    ) {
+            ResponseMapper responseMapper) {
         this.calificacionService = calificacionService;
         this.responseMapper = responseMapper;
+    }
+
+    @GetMapping("/feed/{idUsuario}")
+    public List<CalificacionResponse> listarFeedHomies(
+            @PathVariable Long idUsuario,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int limite) {
+        return calificacionService.listarFeedHomies(idUsuario, page, limite)
+                .stream()
+                .map(responseMapper::toCalificacionResponse)
+                .toList();
     }
 
     @GetMapping
@@ -58,8 +68,7 @@ public class CalificacionController {
 
     @PostMapping
     public ResponseEntity<CalificacionResponse> crearCalificacion(
-            @Valid @RequestBody CrearCalificacionRequest request
-    ) {
+            @Valid @RequestBody CrearCalificacionRequest request) {
         Calificacion calificacionCreada = calificacionService.crearCalificacion(request);
         return ResponseEntity.ok(responseMapper.toCalificacionResponse(calificacionCreada));
     }
@@ -67,8 +76,7 @@ public class CalificacionController {
     @PutMapping("/{idCalificacion}")
     public ResponseEntity<CalificacionResponse> actualizarCalificacion(
             @PathVariable Long idCalificacion,
-            @Valid @RequestBody CrearCalificacionRequest request
-    ) {
+            @Valid @RequestBody CrearCalificacionRequest request) {
         Calificacion calificacionActualizada = calificacionService.actualizarCalificacion(idCalificacion, request);
         return ResponseEntity.ok(responseMapper.toCalificacionResponse(calificacionActualizada));
     }
@@ -89,7 +97,6 @@ public class CalificacionController {
                 "totalCalificaciones", calificacionService.contarCalificacionesUsuario(idUsuario),
                 "totalResenasConComentario", calificacionService.contarResenasConComentario(idUsuario),
                 "totalCalificacionesMadrugada", calificacionService.contarCalificacionesMadrugada(idUsuario),
-                "rachaActual", calificacionService.calcularRachaActualUsuario(idUsuario)
-        );
+                "rachaActual", calificacionService.calcularRachaActualUsuario(idUsuario));
     }
 }
