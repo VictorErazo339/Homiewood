@@ -1,47 +1,31 @@
 package com.homiwood.peliculas.dto;
 
-import java.time.LocalDateTime;
-
-public class UsuarioResponse {
+public class UsuarioSearchResponse {
 
     private Long idUsuario;
     private String nombre;
     private String username;
-    private String email;
     private String descripcion;
-    private LocalDateTime fechaCreacion;
     private Integer iconoPerfil;
     private Boolean perfilPrivado;
 
-    public UsuarioResponse() {
+    public UsuarioSearchResponse() {
     }
 
-    public UsuarioResponse(Long idUsuario, String nombre, String username, String email, LocalDateTime fechaCreacion) {
-        this.idUsuario = idUsuario;
-        this.nombre = nombre;
-        this.username = username;
-        this.email = email;
-        this.fechaCreacion = fechaCreacion;
-    }
-
-    public UsuarioResponse(
+    public UsuarioSearchResponse(
             Long idUsuario,
             String nombre,
             String username,
-            String email,
             String descripcion,
             Integer iconoPerfil,
-            Boolean perfilPrivado,
-            LocalDateTime fechaCreacion
+            Boolean perfilPrivado
     ) {
         this.idUsuario = idUsuario;
         this.nombre = nombre;
         this.username = username;
-        this.email = email;
         this.descripcion = descripcion;
         this.iconoPerfil = iconoPerfil;
         this.perfilPrivado = perfilPrivado;
-        this.fechaCreacion = fechaCreacion;
     }
 
     public Long getIdUsuario() {
@@ -68,28 +52,12 @@ public class UsuarioResponse {
         this.username = username;
     }
 
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
     public String getDescripcion() {
         return descripcion;
     }
 
     public void setDescripcion(String descripcion) {
         this.descripcion = descripcion;
-    }
-
-    public LocalDateTime getFechaCreacion() {
-        return fechaCreacion;
-    }
-
-    public void setFechaCreacion(LocalDateTime fechaCreacion) {
-        this.fechaCreacion = fechaCreacion;
     }
 
     public Integer getIconoPerfil() {

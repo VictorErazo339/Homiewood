@@ -20,10 +20,20 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     usuarioActual = contexto.usuarioActual;
 
-    const idUsuario = contexto.idUsuario;
+    const usuarioPerfil = await profileCommon.resolverUsuarioPerfil();
+    const idUsuario = usuarioPerfil.idUsuario;
 
-    profileCommon.inicializarEditarPerfil();
-    profileCommon.inicializarTop5Modal();
+    profileCommon.asegurarUsernameEnUrl();
+    profileCommon.actualizarLinksPerfilConUsername();
+    profileCommon.aplicarModoPerfil();
+    profileCommon.inicializarBotonSeguirPerfil();
+
+    if (profileCommon.esMiPerfil()) {
+        profileCommon.inicializarEditarPerfil();
+        profileCommon.inicializarTop5Modal();
+        inicializarBuscadorPorVer();
+    }
+
     profileCommon.inicializarLogrosModal();
 
     profileCommon.cargarTop5Local();
@@ -33,14 +43,14 @@ document.addEventListener("DOMContentLoaded", async function () {
     cargarPorVerLocal();
     renderPorVer();
 
-    inicializarBuscadorPorVer();
-
     const resultados = await Promise.allSettled([
         profileCommon.cargarDatosUsuario(idUsuario).then(usuarioActualizado => {
             usuarioActual = usuarioActualizado;
         }),
 
         profileCommon.cargarCantidadPosts(idUsuario),
+
+        profileCommon.cargarResumenSeguimientoPerfil(idUsuario),
 
         profileCommon.cargarTop5DesdeBackend().then(() => {
             profileCommon.renderBioTags();
@@ -148,8 +158,8 @@ function renderPorVer() {
     if (porver.length === 0) {
         grid.innerHTML = `
             <div class="top5-empty-state">
-                <p>Aún no agregas películas o series por ver.</p>
-                <small>Presiona “Agregar por ver” para comenzar.</small>
+                <p>${profileCommon.esMiPerfil() ? "Aún no agregas películas o series por ver." : "Este usuario aún no tiene películas o series por ver."}</p>
+                <small>${profileCommon.esMiPerfil() ? "Presiona “Agregar por ver” para comenzar." : "Cuando agregue contenido por ver, aparecerá aquí."}</small>
             </div>
         `;
         return;
@@ -182,6 +192,8 @@ function renderPorVer() {
 ================================ */
 
 function inicializarBuscadorPorVer() {
+    if (!profileCommon.esMiPerfil()) return;
+
     const input = document.getElementById("porverSearchInput");
     const results = document.getElementById("porverResults");
 
@@ -254,6 +266,11 @@ async function buscarContenidoPorVer(query) {
 }
 
 async function agregarPorVer(item) {
+    if (!profileCommon.esMiPerfil()) {
+        alert("No puedes agregar contenido desde el perfil de otro usuario.");
+        return;
+    }
+
     const existe = porver.some(p =>
         String(p.idContenido || p.apiId) === String(item.idContenido || item.apiId) &&
         String(p.proveedor || "BD") === String(item.proveedor || "BD")
@@ -278,7 +295,7 @@ async function agregarPorVer(item) {
 }
 
 async function guardarPorVerEnBackend(item) {
-    const idUsuario = obtenerIdUsuario();
+    const idUsuario = profileCommon.obtenerIdUsuarioLogueado();
 
     return await apiRequest(`/usuarios/${idUsuario}/listas/porver/contenidos/externo`, {
         method: "POST",

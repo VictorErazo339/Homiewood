@@ -6,6 +6,11 @@ let top5 = [null, null, null, null, null];
 let logrosUsuario = [];
 let logrosDestacados = [];
 
+// Usuario del perfil que estás viendo.
+// Puede ser tu perfil o el perfil de otra persona.
+let usuarioPerfilActual = null;
+let siguiendoPerfilActual = false;
+
 /* ===============================
    INIT COMÚN
 ================================ */
@@ -19,7 +24,8 @@ export function iniciarPerfilComun() {
     }
 
     try {
-        usuarioActual = JSON.parse(usuarioGuardado);
+        usuarioActual = normalizarUsuarioPerfil(JSON.parse(usuarioGuardado));
+        usuarioPerfilActual = usuarioActual;
     } catch (error) {
         console.error("Usuario inválido en localStorage:", error);
         localStorage.removeItem("usuario");
@@ -28,11 +34,13 @@ export function iniciarPerfilComun() {
         return null;
     }
 
-    actualizarHeaderPerfil(usuarioActual);
+    actualizarHeaderPerfil(usuarioPerfilActual);
 
     return {
         usuarioActual,
-        idUsuario: obtenerIdUsuario()
+        usuarioPerfil: usuarioPerfilActual,
+        idUsuario: obtenerIdUsuario(),
+        idUsuarioLogueado: obtenerIdUsuarioLogueado()
     };
 }
 
@@ -40,18 +48,62 @@ export function obtenerUsuarioActual() {
     return usuarioActual;
 }
 
-export function obtenerIdUsuario() {
-    const idUsuario = usuarioActual?.idUsuario || usuarioActual?.id;
+export function obtenerUsuarioPerfil() {
+    return usuarioPerfilActual || usuarioActual;
+}
+
+export function obtenerIdUsuarioLogueado() {
+    const idUsuario = extraerIdUsuario(usuarioActual);
 
     if (!idUsuario) {
         console.error("Usuario inválido en localStorage:", usuarioActual);
         localStorage.removeItem("usuario");
         localStorage.removeItem("token");
         window.location.href = "./login.html";
-        throw new Error("No se encontró idUsuario en localStorage");
+        throw new Error("No se encontró idUsuario del usuario logueado");
     }
 
     return idUsuario;
+}
+
+// ID del perfil que se está viendo.
+// Si estoy viendo mi perfil: devuelve mi ID.
+// Si estoy viendo otro perfil: devuelve el ID del otro usuario.
+export function obtenerIdUsuario() {
+    const idUsuario = extraerIdUsuario(usuarioPerfilActual || usuarioActual);
+
+    if (!idUsuario) {
+        console.error("No se encontró idUsuario del perfil actual:", usuarioPerfilActual);
+        throw new Error("No se encontró idUsuario del perfil actual");
+    }
+
+    return idUsuario;
+}
+
+function extraerIdUsuario(usuario) {
+    return usuario?.idUsuario ||
+        usuario?.id ||
+        usuario?.id_usuario ||
+        usuario?.usuarioId ||
+        null;
+}
+
+function normalizarUsuarioPerfil(usuario) {
+    if (!usuario) return null;
+
+    const idUsuario = extraerIdUsuario(usuario);
+
+    return {
+        ...usuario,
+        idUsuario
+    };
+}
+
+function normalizarUsername(username) {
+    return String(username || "")
+        .trim()
+        .replace(/^@/, "")
+        .toLowerCase();
 }
 
 export function top5StorageKey() {
@@ -63,33 +115,452 @@ export function vistasStorageKey() {
 }
 
 /* ===============================
-   USUARIO
+   USUARIO / PERFIL VISITADO
 ================================ */
 
-export async function cargarDatosUsuario(idUsuario) {
-    actualizarHeaderPerfil(usuarioActual);
+export async function resolverUsuarioPerfil() {
+    const params = new URLSearchParams(window.location.search);
+
+    const idParam =
+        params.get("idUsuario") ||
+        params.get("id") ||
+        params.get("userId");
+
+    const usernameParam =
+        params.get("username") ||
+        params.get("user") ||
+        params.get("u");
 
     try {
-        const usuario = await apiRequest(`/usuarios/${idUsuario}`);
+        let usuario = null;
 
-        usuarioActual = {
-            ...usuarioActual,
-            ...usuario
-        };
+        if (idParam) {
+            usuario = await apiRequest(`/usuarios/${encodeURIComponent(idParam)}`);
+        } else if (usernameParam) {
+            usuario = await buscarUsuarioExactoPorUsername(usernameParam);
+        } else {
+            usuario = usuarioActual;
+        }
 
-        localStorage.setItem("usuario", JSON.stringify(usuarioActual));
-        actualizarHeaderPerfil(usuarioActual);
+        usuarioPerfilActual = normalizarUsuarioPerfil(usuario || usuarioActual);
+        actualizarHeaderPerfil(usuarioPerfilActual);
 
-        return usuarioActual;
+        return usuarioPerfilActual;
     } catch (error) {
-        console.error("Error cargando datos del usuario:", error);
-        actualizarHeaderPerfil(usuarioActual);
-        return usuarioActual;
+        console.error("No se pudo resolver el usuario del perfil:", error);
+
+        usuarioPerfilActual = usuarioActual;
+        actualizarHeaderPerfil(usuarioPerfilActual);
+
+        return usuarioPerfilActual;
     }
 }
 
+async function buscarUsuarioExactoPorUsername(username) {
+    const usernameLimpio = normalizarUsername(username);
+
+    if (!usernameLimpio) {
+        return usuarioActual;
+    }
+
+    if (normalizarUsername(usuarioActual?.username) === usernameLimpio) {
+        return usuarioActual;
+    }
+
+    const usuarios = await apiRequest(`/usuarios/buscar?query=${encodeURIComponent(usernameLimpio)}`);
+
+    if (!Array.isArray(usuarios)) {
+        throw new Error("La búsqueda de usuarios no devolvió una lista válida.");
+    }
+
+    const exacto = usuarios.find(usuario =>
+        normalizarUsername(usuario.username) === usernameLimpio
+    );
+
+    if (exacto) {
+        return exacto;
+    }
+
+    if (usuarios.length === 1) {
+        return usuarios[0];
+    }
+
+    throw new Error(`No se encontró el usuario @${usernameLimpio}`);
+}
+
+export async function cargarDatosUsuario(idUsuario) {
+    const idPerfil = idUsuario || obtenerIdUsuario();
+
+    actualizarHeaderPerfil(usuarioPerfilActual || usuarioActual);
+
+    try {
+        const usuario = normalizarUsuarioPerfil(
+            await apiRequest(`/usuarios/${idPerfil}`)
+        );
+
+        usuarioPerfilActual = usuario;
+
+        // IMPORTANTE:
+        // Solo actualizamos localStorage si el perfil cargado es el usuario logueado.
+        // Si visitas el perfil de otra persona, NO se pisa tu sesión.
+        if (esUsuarioLogueado(usuario)) {
+            usuarioActual = {
+                ...usuarioActual,
+                ...usuario
+            };
+
+            localStorage.setItem("usuario", JSON.stringify(usuarioActual));
+            usuarioPerfilActual = usuarioActual;
+        }
+
+        actualizarHeaderPerfil(usuarioPerfilActual);
+
+        return usuarioPerfilActual;
+    } catch (error) {
+        console.error("Error cargando datos del usuario:", error);
+        actualizarHeaderPerfil(usuarioPerfilActual || usuarioActual);
+        return usuarioPerfilActual || usuarioActual;
+    }
+}
+
+function esUsuarioLogueado(usuario) {
+    const idLogueado = extraerIdUsuario(usuarioActual);
+    const idComparado = extraerIdUsuario(usuario);
+
+    return String(idLogueado) === String(idComparado);
+}
+
+export function esMiPerfil() {
+    return String(obtenerIdUsuario()) === String(obtenerIdUsuarioLogueado());
+}
+
+export function aplicarModoPerfil() {
+    const propio = esMiPerfil();
+
+    document.body.classList.toggle("is-own-profile", propio);
+    document.body.classList.toggle("is-foreign-profile", !propio);
+
+    document.querySelectorAll(".js-owner-only").forEach(element => {
+        element.classList.toggle("is-hidden", !propio);
+        element.setAttribute("aria-hidden", String(!propio));
+    });
+
+    const followBtn = document.getElementById("followProfileBtn");
+
+    if (followBtn) {
+        followBtn.classList.toggle("is-hidden", propio);
+        followBtn.setAttribute("aria-hidden", String(propio));
+    }
+}
+
+export function asegurarUsernameEnUrl() {
+    const usuarioPerfil = obtenerUsuarioPerfil();
+    const username = usuarioPerfil?.username;
+
+    if (!username) return;
+
+    const url = new URL(window.location.href);
+    const usernameActual = url.searchParams.get("username");
+
+    if (normalizarUsername(usernameActual) === normalizarUsername(username)) {
+        return;
+    }
+
+    url.searchParams.delete("idUsuario");
+    url.searchParams.delete("id");
+    url.searchParams.delete("userId");
+    url.searchParams.set("username", username);
+
+    window.history.replaceState({}, "", url.toString());
+}
+
+export function actualizarLinksPerfilConUsername() {
+    const usuarioPerfil = obtenerUsuarioPerfil();
+    const username = usuarioPerfil?.username;
+
+    if (!username) return;
+
+    const query = `?username=${encodeURIComponent(username)}`;
+
+    const links = [
+        ["profile.html", `./profile.html${query}`],
+        ["vistas.html", `./vistas.html${query}`],
+        ["porver.html", `./porver.html${query}`]
+    ];
+
+    document.querySelectorAll(".profile-tabs a").forEach(link => {
+        const href = link.getAttribute("href") || "";
+        const match = links.find(([page]) => href.includes(page));
+
+        if (match) {
+            link.setAttribute("href", match[1]);
+        }
+    });
+}
+
+/* ===============================
+   SEGUIMIENTOS / CONTADORES
+================================ */
+
+export async function cargarResumenSeguimientoPerfil(idUsuario = obtenerIdUsuario()) {
+    const statSeguidores = document.getElementById("statSeguidores");
+    const statSiguiendo = document.getElementById("statSiguiendo");
+
+    try {
+        const [seguidoresResult, siguiendoResult] = await Promise.allSettled([
+            apiRequest(`/usuarios/${idUsuario}/seguidores`),
+            apiRequest(`/usuarios/${idUsuario}/siguiendo`)
+        ]);
+
+        const seguidores =
+            seguidoresResult.status === "fulfilled"
+                ? seguidoresResult.value
+                : [];
+
+        const siguiendo =
+            siguiendoResult.status === "fulfilled"
+                ? siguiendoResult.value
+                : [];
+
+        const totalSeguidores = contarItemsRespuesta(seguidores);
+        const totalSiguiendo = contarItemsRespuesta(siguiendo);
+
+        if (statSeguidores) statSeguidores.textContent = totalSeguidores;
+        if (statSiguiendo) statSiguiendo.textContent = totalSiguiendo;
+
+        return {
+            seguidores,
+            siguiendo,
+            totalSeguidores,
+            totalSiguiendo
+        };
+    } catch (error) {
+        console.error("Error cargando resumen de seguimiento:", error);
+
+        if (statSeguidores) statSeguidores.textContent = "0";
+        if (statSiguiendo) statSiguiendo.textContent = "0";
+
+        return {
+            seguidores: [],
+            siguiendo: [],
+            totalSeguidores: 0,
+            totalSiguiendo: 0
+        };
+    }
+}
+
+function contarItemsRespuesta(data) {
+    if (Array.isArray(data)) return data.length;
+
+    if (typeof data === "number") return data;
+
+    if (data && typeof data === "object") {
+        return Number(
+            data.total ??
+            data.count ??
+            data.cantidad ??
+            data.length ??
+            0
+        );
+    }
+
+    return 0;
+}
+
+export function inicializarBotonSeguirPerfil() {
+    const followBtn = document.getElementById("followProfileBtn");
+
+    if (!followBtn || esMiPerfil()) {
+        return;
+    }
+
+    if (followBtn.dataset.followInitialized === "true") {
+        cargarEstadoBotonSeguirPerfil();
+        return;
+    }
+
+    followBtn.dataset.followInitialized = "true";
+
+    followBtn.addEventListener("click", async () => {
+        await alternarSeguimientoPerfil();
+    });
+
+    cargarEstadoBotonSeguirPerfil();
+}
+
+async function cargarEstadoBotonSeguirPerfil() {
+    const followBtn = document.getElementById("followProfileBtn");
+
+    if (!followBtn || esMiPerfil()) {
+        return;
+    }
+
+    const idLogueado = obtenerIdUsuarioLogueado();
+    const idPerfil = obtenerIdUsuario();
+
+    followBtn.disabled = true;
+    followBtn.textContent = "Cargando...";
+
+    try {
+        const siguiendo = await apiRequest(`/usuarios/${idLogueado}/siguiendo`);
+        const lista = normalizarListaRespuesta(siguiendo);
+
+        siguiendoPerfilActual = lista.some(item =>
+            String(extraerIdUsuarioRelacionado(item)) === String(idPerfil)
+        );
+    } catch (error) {
+        console.warn("No se pudo verificar si ya sigues este perfil:", error);
+        siguiendoPerfilActual = false;
+    } finally {
+        actualizarBotonSeguirPerfil();
+    }
+}
+
+function normalizarListaRespuesta(data) {
+    if (Array.isArray(data)) return data;
+
+    if (Array.isArray(data?.content)) return data.content;
+    if (Array.isArray(data?.items)) return data.items;
+    if (Array.isArray(data?.data)) return data.data;
+    if (Array.isArray(data?.usuarios)) return data.usuarios;
+    if (Array.isArray(data?.siguiendo)) return data.siguiendo;
+    if (Array.isArray(data?.seguidores)) return data.seguidores;
+
+    return [];
+}
+
+function extraerIdUsuarioRelacionado(item) {
+    if (!item) return null;
+
+    return item.idUsuario ||
+        item.id ||
+        item.id_usuario ||
+        item.usuarioId ||
+
+        // Posibles nombres cuando el backend devuelve un DTO de seguimiento
+        item.idSeguido ||
+        item.idUsuarioSeguido ||
+        item.usuarioSeguidoId ||
+        item.seguidoId ||
+
+        // Posibles objetos anidados
+        item.seguido?.idUsuario ||
+        item.seguido?.id ||
+        item.usuarioSeguido?.idUsuario ||
+        item.usuarioSeguido?.id ||
+        item.usuario?.idUsuario ||
+        item.usuario?.id ||
+
+        null;
+}
+
+function actualizarBotonSeguirPerfil() {
+    const followBtn = document.getElementById("followProfileBtn");
+
+    if (!followBtn) return;
+
+    followBtn.disabled = false;
+    followBtn.classList.toggle("is-following", siguiendoPerfilActual);
+    followBtn.textContent = siguiendoPerfilActual ? "Siguiendo" : "+ Seguir";
+    followBtn.title = siguiendoPerfilActual ? "Dejar de seguir" : "Seguir usuario";
+}
+
+async function alternarSeguimientoPerfil() {
+    const followBtn = document.getElementById("followProfileBtn");
+
+    if (!followBtn || esMiPerfil()) return;
+
+    const idLogueado = obtenerIdUsuarioLogueado();
+    const idPerfil = obtenerIdUsuario();
+
+    followBtn.disabled = true;
+    followBtn.textContent = siguiendoPerfilActual ? "Quitando..." : "Siguiendo...";
+
+    try {
+        if (siguiendoPerfilActual) {
+            await apiRequest(`/usuarios/${idLogueado}/siguiendo/${idPerfil}`, {
+                method: "DELETE"
+            });
+
+            siguiendoPerfilActual = false;
+        } else {
+            await apiRequest(`/usuarios/${idPerfil}/seguidores`, {
+                method: "POST",
+                body: JSON.stringify({
+                    idSeguidor: idLogueado
+                })
+            });
+
+            siguiendoPerfilActual = true;
+        }
+
+        actualizarBotonSeguirPerfil();
+        await cargarResumenSeguimientoPerfil(idPerfil);
+    } catch (error) {
+        console.error("Error actualizando seguimiento:", error);
+
+        // Si el backend dice que ya lo sigues, el frontend debe reflejarlo.
+        if (esErrorUsuarioYaSeguido(error)) {
+            siguiendoPerfilActual = true;
+            actualizarBotonSeguirPerfil();
+            await cargarResumenSeguimientoPerfil(idPerfil);
+            return;
+        }
+
+        // Si el backend dice que no existe el seguimiento al eliminar,
+        // dejamos el botón como "+ Seguir".
+        if (esErrorSeguimientoNoExiste(error)) {
+            siguiendoPerfilActual = false;
+            actualizarBotonSeguirPerfil();
+            await cargarResumenSeguimientoPerfil(idPerfil);
+            return;
+        }
+
+        alert(obtenerMensajeError(error) || "No se pudo actualizar el seguimiento.");
+        actualizarBotonSeguirPerfil();
+    }
+}
+
+function esErrorUsuarioYaSeguido(error) {
+    const mensaje = obtenerMensajeError(error).toLowerCase();
+
+    return mensaje.includes("ya sigue") ||
+        mensaje.includes("ya sigues") ||
+        mensaje.includes("already follow") ||
+        mensaje.includes("duplicate") ||
+        mensaje.includes("duplicado");
+}
+
+function esErrorSeguimientoNoExiste(error) {
+    const mensaje = obtenerMensajeError(error).toLowerCase();
+
+    return mensaje.includes("no sigue") ||
+        mensaje.includes("no existe") ||
+        mensaje.includes("not found") ||
+        mensaje.includes("seguimiento no encontrado");
+}
+
+function obtenerMensajeError(error) {
+    if (!error) return "";
+
+    if (typeof error === "string") return error;
+
+    return error.message ||
+        error.error ||
+        error.mensaje ||
+        error.detalle ||
+        JSON.stringify(error);
+}
+
+/* ===============================
+   HEADER PERFIL
+================================ */
+
 function obtenerDescripcionPerfil(usuario) {
-    const descripcion = usuario?.descripcion;
+    const descripcion =
+        usuario?.descripcion ||
+        usuario?.biografia ||
+        usuario?.bio;
 
     if (descripcion && String(descripcion).trim().length > 0) {
         return descripcion;
@@ -120,11 +591,14 @@ export function actualizarHeaderPerfil(usuario) {
         bioEl.textContent = obtenerDescripcionPerfil(usuario);
     }
 
-    if (profileAvatar && usuario?.iconoPerfil) {
-        profileAvatar.src = `../img/${usuario.iconoPerfil}.webp`;
+    if (profileAvatar) {
+        const icono = Number(usuario?.iconoPerfil || 1);
+        profileAvatar.src = `../img/${icono}.webp`;
+        profileAvatar.onerror = function () {
+            this.src = "../img/1.webp";
+        };
     }
 }
-
 /* ===============================
    EDITAR PERFIL
 ================================ */
@@ -137,6 +611,10 @@ export function inicializarEditarPerfil() {
     const guardarBtn = document.getElementById("saveProfileBtn");
 
     if (!modalEl || !nombreInput || !descripcionInput || !guardarBtn) {
+        return;
+    }
+
+    if (!esMiPerfil()) {
         return;
     }
 
@@ -193,6 +671,12 @@ async function guardarPerfilEditado() {
         return;
     }
 
+    if (!esMiPerfil()) {
+        alert("No puedes editar el perfil de otro usuario.");
+        return;
+    }
+
+    const idUsuarioLogueado = obtenerIdUsuarioLogueado();
     const nombre = nombreInput.value.trim();
     const descripcion = descripcionInput.value.trim();
 
@@ -218,7 +702,7 @@ async function guardarPerfilEditado() {
     guardarBtn.textContent = "Guardando...";
 
     try {
-        const usuarioActualizado = await apiRequest(`/usuarios/${obtenerIdUsuario()}/perfil`, {
+        const usuarioActualizado = await apiRequest(`/usuarios/${idUsuarioLogueado}/perfil`, {
             method: "PUT",
             body: JSON.stringify({
                 nombre,
@@ -237,7 +721,7 @@ async function guardarPerfilEditado() {
             const icono = Number(iconoSeleccionado.dataset.icono);
 
             const usuarioConIcono = await apiRequest(
-                `/usuarios/${obtenerIdUsuario()}/icono?iconoPerfil=${icono}`,
+                `/usuarios/${idUsuarioLogueado}/icono?iconoPerfil=${icono}`,
                 {
                     method: "PATCH"
                 }
@@ -396,12 +880,13 @@ export function renderTop5() {
     if (!grid) return;
 
     const seleccionadas = top5.filter(Boolean);
+    const puedeEditar = esMiPerfil();
 
     if (seleccionadas.length === 0) {
         grid.innerHTML = `
             <div class="top5-empty-state">
-                <p>Tu Top 5 está vacío.</p>
-                <small>Agrega tus películas o series favoritas.</small>
+                <p>${puedeEditar ? "Tu Top 5 está vacío." : "Este usuario aún no tiene Top 5."}</p>
+                <small>${puedeEditar ? "Agrega tus películas o series favoritas." : "Vuelve más tarde para ver sus favoritos."}</small>
             </div>
         `;
         return;
@@ -421,28 +906,30 @@ export function renderTop5() {
             <article class="movie-card top5-card-wrap" style="position:relative;">
                 <span class="top5-rank">#${index + 1}</span>
 
-                <button type="button"
-                        class="top5-remove-btn"
-                        data-index="${index}"
-                        title="Quitar del Top 5"
-                        aria-label="Quitar ${escapeHtml(item.titulo)} del Top 5"
-                        style="
-                            position:absolute;
-                            top:8px;
-                            right:8px;
-                            z-index:5;
-                            width:28px;
-                            height:28px;
-                            border-radius:50%;
-                            border:1px solid rgba(255,255,255,.35);
-                            background:rgba(0,0,0,.78);
-                            color:#fff;
-                            font-size:18px;
-                            line-height:1;
-                            cursor:pointer;
-                        ">
-                    ×
-                </button>
+                ${puedeEditar ? `
+                    <button type="button"
+                            class="top5-remove-btn"
+                            data-index="${index}"
+                            title="Quitar del Top 5"
+                            aria-label="Quitar ${escapeHtml(item.titulo)} del Top 5"
+                            style="
+                                position:absolute;
+                                top:8px;
+                                right:8px;
+                                z-index:5;
+                                width:28px;
+                                height:28px;
+                                border-radius:50%;
+                                border:1px solid rgba(255,255,255,.35);
+                                background:rgba(0,0,0,.78);
+                                color:#fff;
+                                font-size:18px;
+                                line-height:1;
+                                cursor:pointer;
+                            ">
+                        ×
+                    </button>
+                ` : ""}
 
                 ${
                     item.posterUrl
@@ -453,17 +940,24 @@ export function renderTop5() {
         `;
     }).join("");
 
-    document.querySelectorAll(".top5-remove-btn").forEach(btn => {
-        btn.addEventListener("click", async event => {
-            event.stopPropagation();
+    if (puedeEditar) {
+        document.querySelectorAll(".top5-remove-btn").forEach(btn => {
+            btn.addEventListener("click", async event => {
+                event.stopPropagation();
 
-            const index = Number(btn.dataset.index);
-            await quitarDelTop5(index);
+                const index = Number(btn.dataset.index);
+                await quitarDelTop5(index);
+            });
         });
-    });
+    }
 }
 
 async function quitarDelTop5(index) {
+    if (!esMiPerfil()) {
+        alert("No puedes modificar el Top 5 de otro usuario.");
+        return;
+    }
+
     const item = top5[index];
 
     if (!item) return;
@@ -772,16 +1266,19 @@ function renderLogroCard(logro, destacadosIds) {
 
     const claseEstado = desbloqueado ? "is-unlocked" : "is-locked";
     const claseOculto = ocultoBloqueado ? "is-hidden-locked" : "";
+    const puedeEditar = esMiPerfil();
 
     const botonDestacar = desbloqueado
-        ? `
-            <button type="button"
-                    class="ach-select-btn ${destacado ? "is-selected" : ""}"
-                    data-id-logro="${logro.idLogro}"
-                    title="${destacado ? "Quitar de destacados" : "Destacar logro"}">
-                ${destacado ? "✓" : "+"}
-            </button>
-        `
+        ? (puedeEditar
+            ? `
+                <button type="button"
+                        class="ach-select-btn ${destacado ? "is-selected" : ""}"
+                        data-id-logro="${logro.idLogro}"
+                        title="${destacado ? "Quitar de destacados" : "Destacar logro"}">
+                    ${destacado ? "✓" : "+"}
+                </button>
+            `
+            : `<span class="ach-modal-badge">✓</span>`)
         : `<span class="ach-modal-lock">🔒</span>`;
 
     return `
@@ -813,6 +1310,11 @@ function renderLogroCard(logro, destacadosIds) {
 }
 
 async function toggleLogroDestacado(idLogro) {
+    if (!esMiPerfil()) {
+        alert("No puedes modificar los logros destacados de otro usuario.");
+        return;
+    }
+
     const logro = logrosUsuario.find(item => Number(item.idLogro) === Number(idLogro));
 
     if (!logro || !logro.desbloqueado) {
@@ -837,14 +1339,14 @@ async function toggleLogroDestacado(idLogro) {
     }
 
     try {
-        logrosDestacados = await apiRequest(`/usuarios/${obtenerIdUsuario()}/logros/destacados`, {
+        logrosDestacados = await apiRequest(`/usuarios/${obtenerIdUsuarioLogueado()}/logros/destacados`, {
             method: "PUT",
             body: JSON.stringify({
                 idsLogros: nuevosIds
             })
         });
 
-        await cargarLogrosPerfil(obtenerIdUsuario());
+        await cargarLogrosPerfil(obtenerIdUsuarioLogueado());
     } catch (error) {
         console.error("Error actualizando logros destacados:", error);
         alert(error?.message || "No se pudieron actualizar los logros destacados.");
@@ -859,6 +1361,10 @@ let posicionDraftActiva = 0;
 let peliculaSeleccionada = null;
 
 export function inicializarTop5Modal() {
+    if (!esMiPerfil()) {
+        return;
+    }
+
     const modalEl = document.getElementById("top5Modal");
     const input = document.getElementById("top5SearchInput");
     const saveBtn = document.getElementById("saveTop5Btn");
@@ -1191,6 +1697,11 @@ function limpiarPosicionDraftActiva() {
 }
 
 async function guardarCambiosTop5Draft() {
+    if (!esMiPerfil()) {
+        alert("No puedes modificar el Top 5 de otro usuario.");
+        return;
+    }
+
     const saveBtn = document.getElementById("saveTop5Btn");
 
     if (!saveBtn) return;
@@ -1276,7 +1787,7 @@ async function borrarItemTop5Backend(item, index) {
 }
 
 async function guardarTop5EnBackend(item, posicion) {
-    const idUsuario = obtenerIdUsuario();
+    const idUsuario = obtenerIdUsuarioLogueado();
 
     return await apiRequest(`/usuarios/${idUsuario}/listas/top5/contenidos/externo`, {
         method: "POST",
