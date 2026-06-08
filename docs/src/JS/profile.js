@@ -22,13 +22,21 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     usuarioActual = contexto.usuarioActual;
 
-    const idUsuario = contexto.idUsuario;
+    const usuarioPerfil = await profileCommon.resolverUsuarioPerfil();
+    const idUsuario = usuarioPerfil.idUsuario;
 
-    profileCommon.inicializarEditarPerfil();
-    profileCommon.inicializarTop5Modal();
+    profileCommon.asegurarUsernameEnUrl();
+    profileCommon.actualizarLinksPerfilConUsername();
+    profileCommon.aplicarModoPerfil();
+    profileCommon.inicializarBotonSeguirPerfil();
+
+    if (profileCommon.esMiPerfil()) {
+        profileCommon.inicializarEditarPerfil();
+        profileCommon.inicializarTop5Modal();
+        inicializarComposerPerfil();
+    }
+
     profileCommon.inicializarLogrosModal();
-
-    inicializarComposerPerfil();
 
     profileCommon.cargarTop5Local();
     profileCommon.renderTop5();
@@ -42,6 +50,8 @@ document.addEventListener("DOMContentLoaded", async function () {
         }),
 
         cargarPostsUsuario(idUsuario),
+
+        profileCommon.cargarResumenSeguimientoPerfil(idUsuario),
 
         profileCommon.cargarTop5DesdeBackend().then(() => {
             profileCommon.renderBioTags();
@@ -62,7 +72,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 });
 
 function obtenerIdUsuario() {
-    return profileCommon.obtenerIdUsuario();
+    return profileCommon.obtenerIdUsuarioLogueado();
 }
 
 /* ===============================
@@ -85,7 +95,10 @@ async function cargarPostsUsuario(idUsuario) {
         if (!feed) return;
 
         if (publicaciones.length === 0) {
-            mostrarEstadoFeed("Aún no has publicado nada.");
+            mostrarEstadoFeed(profileCommon.esMiPerfil()
+                ? "Aún no has publicado nada."
+                : "Este usuario aún no ha publicado nada."
+            );
             return;
         }
 
@@ -182,6 +195,8 @@ function renderEstrellas(puntaje) {
 ================================ */
 
 function inicializarComposerPerfil() {
+    if (!profileCommon.esMiPerfil()) return;
+
     const trigger = document.getElementById("composerTrigger");
     const body = document.getElementById("composerBody");
     const input = document.getElementById("profileFilmSearch");
@@ -319,6 +334,11 @@ function validarPostPerfil() {
 }
 
 async function publicarResenaPerfil() {
+    if (!profileCommon.esMiPerfil()) {
+        alert("No puedes publicar desde el perfil de otro usuario.");
+        return;
+    }
+
     const textarea = document.getElementById("profilePostText");
     const publishBtn = document.getElementById("publishProfilePost");
 

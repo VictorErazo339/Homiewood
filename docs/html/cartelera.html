@@ -13,8 +13,8 @@
         rel="stylesheet" />
 
     <link rel="stylesheet" href="../css/recommendations.css" />
-    <!-- CSS exclusivo de cartelera (solo diferencias) -->
     <link rel="stylesheet" href="../css/cartelera.css" />
+    <link rel="stylesheet" href="../css/navbarSearch.css" />
 </head>
 
 <body>
@@ -87,8 +87,10 @@
                 <div class="cartelera-tabs" id="cartelera-tabs" role="tablist">
                     <button class="cartelera-tab active" data-tab="" role="tab" aria-selected="true">Todo</button>
                     <button class="cartelera-tab" data-tab="En cines" role="tab" aria-selected="false">En cines</button>
-                    <button class="cartelera-tab" data-tab="Streaming" role="tab" aria-selected="false">Streaming</button>
-                    <button class="cartelera-tab" data-tab="Próximamente" role="tab" aria-selected="false">Próximamente</button>
+                    <button class="cartelera-tab" data-tab="Streaming" role="tab"
+                        aria-selected="false">Streaming</button>
+                    <button class="cartelera-tab" data-tab="Próximamente" role="tab"
+                        aria-selected="false">Próximamente</button>
                 </div>
             </div>
 
@@ -318,7 +320,7 @@
         </div>
     </div>
 
-   
+
     <nav class="bottom-nav" aria-label="Navegación móvil">
         <div class="inner">
             <button class="bottom-nav-btn" onclick="window.location.href='./trending.html'">
@@ -345,7 +347,7 @@
 
     <!-- JS modular propio de cartelera -->
     <script type="module" src="../src/JS/cartelera.js"></script>
-
+    <script type="module" src="../src/JS/navbarSearch.js"></script>
 </body>
 
 </html>

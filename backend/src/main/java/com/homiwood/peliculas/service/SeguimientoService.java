@@ -9,6 +9,7 @@ import com.homiwood.peliculas.model.Usuario;
 import com.homiwood.peliculas.repository.SeguimientoRepository;
 import com.homiwood.peliculas.repository.UsuarioRepository;
 import org.springframework.stereotype.Service;
+import com.homiwood.peliculas.dto.SeguimientoResumenResponse;
 
 import java.util.List;
 
@@ -73,6 +74,36 @@ public class SeguimientoService {
                 idSeguido);
 
         return guardado;
+    }
+
+    public SeguimientoResumenResponse obtenerResumenSeguimiento(Long idUsuario, Long idUsuarioLogueado) {
+
+        if (idUsuario == null) {
+            throw new BadRequestException("El idUsuario es obligatorio");
+        }
+
+        boolean existeUsuario = usuarioRepository.existsById(idUsuario);
+
+        if (!existeUsuario) {
+            throw new NotFoundException("Usuario no encontrado");
+        }
+
+        long seguidores = seguimientoRepository.countBySeguidoIdUsuario(idUsuario);
+        long siguiendo = seguimientoRepository.countBySeguidorIdUsuario(idUsuario);
+
+        boolean loSigo = false;
+
+        if (idUsuarioLogueado != null && !idUsuarioLogueado.equals(idUsuario)) {
+            loSigo = seguimientoRepository.existsBySeguidorIdUsuarioAndSeguidoIdUsuario(
+                    idUsuarioLogueado,
+                    idUsuario);
+        }
+
+        return new SeguimientoResumenResponse(
+                idUsuario,
+                seguidores,
+                siguiendo,
+                loSigo);
     }
 
     public List<Seguimiento> listarUsuariosQueSigo(Long idUsuario) {

@@ -8,6 +8,7 @@ import com.homiwood.peliculas.service.SeguimientoService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.homiwood.peliculas.dto.SeguimientoResumenResponse;
 
 import java.util.List;
 import java.util.Map;
@@ -21,8 +22,7 @@ public class SeguimientoController {
 
     public SeguimientoController(
             SeguimientoService seguimientoService,
-            ResponseMapper responseMapper
-    ) {
+            ResponseMapper responseMapper) {
         this.seguimientoService = seguimientoService;
         this.responseMapper = responseMapper;
     }
@@ -30,8 +30,7 @@ public class SeguimientoController {
     @PostMapping("/{idSeguido}/seguidores")
     public ResponseEntity<SeguimientoResponse> seguirUsuario(
             @PathVariable Long idSeguido,
-            @Valid @RequestBody CrearSeguimientoRequest request
-    ) {
+            @Valid @RequestBody CrearSeguimientoRequest request) {
         Seguimiento seguimiento = seguimientoService.seguirUsuario(idSeguido, request);
         return ResponseEntity.ok(responseMapper.toSeguimientoResponse(seguimiento));
     }
@@ -62,11 +61,18 @@ public class SeguimientoController {
         return seguimientoService.contarMisSeguidores(idUsuario);
     }
 
+    @GetMapping("/{idUsuario}/seguimiento/resumen")
+    public ResponseEntity<SeguimientoResumenResponse> obtenerResumenSeguimiento(
+            @PathVariable Long idUsuario,
+            @RequestParam(required = false) Long idUsuarioLogueado) {
+        return ResponseEntity.ok(
+                seguimientoService.obtenerResumenSeguimiento(idUsuario, idUsuarioLogueado));
+    }
+
     @DeleteMapping("/{idSeguidor}/siguiendo/{idSeguido}")
     public ResponseEntity<String> dejarDeSeguir(
             @PathVariable Long idSeguidor,
-            @PathVariable Long idSeguido
-    ) {
+            @PathVariable Long idSeguido) {
         seguimientoService.dejarDeSeguir(idSeguidor, idSeguido);
         return ResponseEntity.ok("Dejaste de seguir al usuario correctamente");
     }
@@ -77,8 +83,7 @@ public class SeguimientoController {
 
     @GetMapping("/{idUsuario}/estadisticas-logros-social")
     public Map<String, Object> obtenerEstadisticasLogrosSocial(
-            @PathVariable Long idUsuario
-    ) {
+            @PathVariable Long idUsuario) {
         return Map.of(
                 "siguiendo", seguimientoService.contarUsuariosQueSigo(idUsuario),
                 "seguidores", seguimientoService.contarMisSeguidores(idUsuario),
@@ -86,7 +91,6 @@ public class SeguimientoController {
                 "primerHomie", seguimientoService.tienePrimerHomie(idUsuario),
                 "sociable", seguimientoService.esSociable(idUsuario),
                 "comunidad", seguimientoService.tieneComunidad(idUsuario),
-                "leyendaHomiewood", seguimientoService.esLeyendaHomiewood(idUsuario)
-        );
+                "leyendaHomiewood", seguimientoService.esLeyendaHomiewood(idUsuario));
     }
 }

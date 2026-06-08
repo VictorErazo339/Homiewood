@@ -26,21 +26,11 @@ public class Usuario {
     @Column(length = 255)
     private String descripcion;
 
-
-    // ----> Ordenar despues ICONOS DE PERFIL
     @Column
     private Integer iconoPerfil = 1;
 
-    public Integer getIconoPerfil() {
-        return iconoPerfil;
-    }
-
-    public void setIconoPerfil(Integer iconoPerfil) {
-        this.iconoPerfil = iconoPerfil;
-    }
-
-    // ---->
-
+    @Column(nullable = false)
+    private Boolean perfilPrivado = false;
 
     private LocalDateTime fechaCreacion = LocalDateTime.now();
 
@@ -90,6 +80,22 @@ public class Usuario {
 
     public void setDescripcion(String descripcion) {
         this.descripcion = descripcion;
+    }
+
+    public Integer getIconoPerfil() {
+        return iconoPerfil;
+    }
+
+    public void setIconoPerfil(Integer iconoPerfil) {
+        this.iconoPerfil = iconoPerfil;
+    }
+
+    public Boolean getPerfilPrivado() {
+        return perfilPrivado;
+    }
+
+    public void setPerfilPrivado(Boolean perfilPrivado) {
+        this.perfilPrivado = perfilPrivado;
     }
 
     public LocalDateTime getFechaCreacion() {

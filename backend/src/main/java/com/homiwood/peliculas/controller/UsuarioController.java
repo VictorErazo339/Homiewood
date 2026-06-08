@@ -3,6 +3,7 @@ package com.homiwood.peliculas.controller;
 import com.homiwood.peliculas.dto.ActualizarPerfilRequest;
 import com.homiwood.peliculas.dto.CrearUsuarioRequest;
 import com.homiwood.peliculas.dto.UsuarioResponse;
+import com.homiwood.peliculas.dto.UsuarioSearchResponse;
 import com.homiwood.peliculas.mapper.ResponseMapper;
 import com.homiwood.peliculas.model.Usuario;
 import com.homiwood.peliculas.service.UsuarioService;
@@ -32,10 +33,22 @@ public class UsuarioController {
                 .toList();
     }
 
+    @GetMapping("/buscar")
+    public ResponseEntity<List<UsuarioSearchResponse>> buscarUsuarios(
+            @RequestParam String query) {
+        return ResponseEntity.ok(usuarioService.buscarUsuarios(query));
+    }
+
     @PostMapping
     public ResponseEntity<UsuarioResponse> crearUsuario(@Valid @RequestBody CrearUsuarioRequest request) {
         Usuario usuarioCreado = usuarioService.crearUsuario(request);
         return ResponseEntity.ok(responseMapper.toUsuarioResponse(usuarioCreado));
+    }
+
+    @GetMapping("/username/{username}")
+    public UsuarioResponse buscarUsuarioPorUsername(@PathVariable String username) {
+        return responseMapper.toUsuarioResponse(
+                usuarioService.buscarPorUsername(username));
     }
 
     @GetMapping("/{id}")
@@ -46,8 +59,7 @@ public class UsuarioController {
     @PutMapping("/{id}/perfil")
     public ResponseEntity<UsuarioResponse> actualizarPerfil(
             @PathVariable Long id,
-            @Valid @RequestBody ActualizarPerfilRequest request
-    ) {
+            @Valid @RequestBody ActualizarPerfilRequest request) {
         Usuario usuarioActualizado = usuarioService.actualizarPerfil(id, request);
         return ResponseEntity.ok(responseMapper.toUsuarioResponse(usuarioActualizado));
     }
@@ -55,12 +67,18 @@ public class UsuarioController {
     @PatchMapping("/{id}/icono")
     public ResponseEntity<UsuarioResponse> actualizarIcono(
             @PathVariable Long id,
-            @RequestParam Integer iconoPerfil
-    ) {
+            @RequestParam Integer iconoPerfil) {
         Usuario usuarioActualizado = usuarioService.actualizarIconoPerfil(id, iconoPerfil);
         return ResponseEntity.ok(responseMapper.toUsuarioResponse(usuarioActualizado));
     }
 
+    @PatchMapping("/{id}/privacidad")
+    public ResponseEntity<UsuarioResponse> actualizarPrivacidad(
+            @PathVariable Long id,
+            @RequestParam Boolean perfilPrivado) {
+        Usuario usuarioActualizado = usuarioService.actualizarPrivacidadPerfil(id, perfilPrivado);
+        return ResponseEntity.ok(responseMapper.toUsuarioResponse(usuarioActualizado));
+    }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<String> eliminarUsuario(@PathVariable Long id) {

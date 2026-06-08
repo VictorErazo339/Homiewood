@@ -11,6 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;700&display=swap"
     rel="stylesheet">
   <link rel="stylesheet" href="../css/profile.css">
+    <link rel="stylesheet" href="../css/navbarSearch.css">
 </head>
 
 <body>
@@ -23,7 +24,7 @@
     <ul class="nav-links" role="list">
       <li><a href="./trending.html">Trending</a></li>
       <li><a href="./home.html">Mis Homies</a></li>
-      <li><a href="#">Cartelera</a></li>
+      <li><a href="./cartelera.html">Cartelera</a></li>
     </ul>
 
     <div class="nav-icons">
@@ -66,10 +67,32 @@
                   </p>
                 </div>
 
-                <button class="edit-btn js-edit-profile-btn" type="button" data-bs-toggle="modal"
-                  data-bs-target="#editProfileModal" aria-label="Editar perfil">
-                  ✏️ Editar perfil
-                </button>
+                <div class="profile-actions">
+
+
+                  <button class="edit-btn js-edit-profile-btn js-owner-only" type="button" data-bs-toggle="modal"
+
+
+                    data-bs-target="#editProfileModal" aria-label="Editar perfil">
+
+
+                    ✏️ Editar perfil
+
+
+                  </button>
+
+
+
+                  <button class="follow-btn js-follow-profile-btn is-hidden" id="followProfileBtn" type="button">
+
+
+                    + Seguir
+
+
+                  </button>
+
+
+                </div>
               </div>
             </div>
 
@@ -88,14 +111,14 @@
           <div class="stat-divider" aria-hidden="true"></div>
 
           <div class="stat-item" role="listitem">
-            <span class="stat-number">342</span>
+            <span class="stat-number" id="statSeguidores">0</span>
             <span class="stat-label">Homies</span>
           </div>
 
           <div class="stat-divider" aria-hidden="true"></div>
 
           <div class="stat-item" role="listitem">
-            <span class="stat-number">519</span>
+            <span class="stat-number" id="statSiguiendo">0</span>
             <span class="stat-label">Siguiendo</span>
           </div>
         </div>
@@ -140,7 +163,7 @@
           <span>MI TOP 5</span>
         </h2>
 
-        <button class="edit-btn" type="button" data-bs-toggle="modal" data-bs-target="#top5Modal">
+        <button class="edit-btn js-owner-only" type="button" data-bs-toggle="modal" data-bs-target="#top5Modal">
           + Agregar al Top 5
         </button>
       </div>
@@ -154,7 +177,7 @@
       <a href="./porver.html" class="profile-tab">Por ver</a>
     </nav>
 
-    <section class="profile-composer-section" aria-label="Crear post">
+    <section class="profile-composer-section js-owner-only" aria-label="Crear post">
       <div class="composer-card">
 
         <button class="composer-trigger" id="composerTrigger" type="button" aria-expanded="false"
@@ -414,6 +437,7 @@
   <div class="toast-container" id="toastContainer" aria-live="assertive" aria-atomic="true"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script type="module" src="../src/JS/navbarSearch.js"></script>
   <script type="module" src="../src/JS/profile.js"></script>
 
 </body>

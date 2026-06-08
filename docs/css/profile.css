@@ -3179,3 +3179,69 @@ body {
 #top5Modal .top5-draft-info {
   min-height: 58px;
 }
+
+/* ============================================================
+   PERFIL AJENO / FOLLOW
+   ============================================================ */
+
+.is-hidden {
+  display: none !important;
+}
+
+.profile-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.follow-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 116px;
+  height: 34px;
+  padding: 0.38rem 1rem;
+  border-radius: 999px;
+  border: 1px solid var(--gold);
+  background: var(--gold);
+  color: var(--black);
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  font-weight: 900;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s, transform 0.2s;
+}
+
+.follow-btn:hover {
+  background: var(--gold-light);
+  box-shadow: 0 0 18px var(--gold-glow);
+  transform: translateY(-1px);
+}
+
+.follow-btn.is-following {
+  background: transparent;
+  color: var(--gold);
+  border-color: var(--gold-dim);
+}
+
+.follow-btn.is-following:hover {
+  background: rgba(255, 112, 112, 0.1);
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.follow-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+body.is-foreign-profile .profile-composer-section,
+body.is-foreign-profile .js-owner-only {
+  display: none !important;
+}
+
+body.is-own-profile .js-follow-profile-btn {
+  display: none !important;
+}

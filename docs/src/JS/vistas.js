@@ -20,10 +20,20 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     usuarioActual = contexto.usuarioActual;
 
-    const idUsuario = contexto.idUsuario;
+    const usuarioPerfil = await profileCommon.resolverUsuarioPerfil();
+    const idUsuario = usuarioPerfil.idUsuario;
 
-    profileCommon.inicializarEditarPerfil();
-    profileCommon.inicializarTop5Modal();
+    profileCommon.asegurarUsernameEnUrl();
+    profileCommon.actualizarLinksPerfilConUsername();
+    profileCommon.aplicarModoPerfil();
+    profileCommon.inicializarBotonSeguirPerfil();
+
+    if (profileCommon.esMiPerfil()) {
+        profileCommon.inicializarEditarPerfil();
+        profileCommon.inicializarTop5Modal();
+        inicializarBuscadorVistas();
+    }
+
     profileCommon.inicializarLogrosModal();
 
     profileCommon.cargarTop5Local();
@@ -33,14 +43,14 @@ document.addEventListener("DOMContentLoaded", async function () {
     cargarVistasLocal();
     renderVistas();
 
-    inicializarBuscadorVistas();
-
     const resultados = await Promise.allSettled([
         profileCommon.cargarDatosUsuario(idUsuario).then(usuarioActualizado => {
             usuarioActual = usuarioActualizado;
         }),
 
         profileCommon.cargarCantidadPosts(idUsuario),
+
+        profileCommon.cargarResumenSeguimientoPerfil(idUsuario),
 
         profileCommon.cargarTop5DesdeBackend().then(() => {
             profileCommon.renderBioTags();
@@ -155,8 +165,8 @@ function renderVistas() {
     if (vistas.length === 0) {
         grid.innerHTML = `
             <div class="top5-empty-state">
-                <p>Aún no agregas películas o series vistas.</p>
-                <small>Presiona “Agregar vista” para comenzar.</small>
+                <p>${profileCommon.esMiPerfil() ? "Aún no agregas películas o series vistas." : "Este usuario aún no tiene películas o series vistas."}</p>
+                <small>${profileCommon.esMiPerfil() ? "Presiona “Agregar vista” para comenzar." : "Cuando agregue vistas, aparecerán aquí."}</small>
             </div>
         `;
         return;
@@ -211,6 +221,8 @@ function renderEstrellasLectura(puntaje) {
 ================================ */
 
 function inicializarBuscadorVistas() {
+    if (!profileCommon.esMiPerfil()) return;
+
     const input = document.getElementById("vistasSearchInput");
     const results = document.getElementById("vistasResults");
 
@@ -423,6 +435,11 @@ function inicializarSelectorPuntaje(item) {
 ================================ */
 
 async function agregarVista(item, puntaje) {
+    if (!profileCommon.esMiPerfil()) {
+        alert("No puedes agregar vistas desde el perfil de otro usuario.");
+        return;
+    }
+
     try {
         const contenidoEnLista = await guardarVistaEnBackend(item);
 
@@ -481,7 +498,7 @@ async function agregarVista(item, puntaje) {
 }
 
 async function guardarVistaEnBackend(item) {
-    const idUsuario = obtenerIdUsuario();
+    const idUsuario = profileCommon.obtenerIdUsuarioLogueado();
 
     return await apiRequest(`/usuarios/${idUsuario}/listas/vistas/contenidos/externo`, {
         method: "POST",
@@ -506,7 +523,7 @@ async function guardarCalificacionVista(idContenido, puntaje) {
     return await apiRequest("/calificaciones", {
         method: "POST",
         body: JSON.stringify({
-            idUsuario: obtenerIdUsuario(),
+            idUsuario: profileCommon.obtenerIdUsuarioLogueado(),
             idContenido,
             puntaje,
             comentario: null
