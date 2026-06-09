@@ -1,0 +1,180 @@
+/* Library grid styles for Vistas / PorVer (legacy profile.css sections 15/26/27). */
+.movies-view-section {
+  margin-top: 2rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.view-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.view-title {
+  font-family: var(--font-title);
+  font-size: 2rem;
+  line-height: 1;
+  color: var(--gold);
+  letter-spacing: 0.06em;
+}
+
+.view-count {
+  flex-shrink: 0;
+  color: var(--gold);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.movie-library-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1rem;
+}
+
+.library-card {
+  overflow: hidden;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+
+.library-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--gold-dim);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+}
+
+.library-card img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+  height: auto;
+  background: var(--card-hover);
+}
+
+.movie-poster-empty {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  background: var(--surface-dark);
+  border: 1px dashed var(--border);
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-title);
+  font-size: 1.2rem;
+  letter-spacing: 0.06em;
+}
+
+.library-card-body {
+  padding: 0.75rem;
+}
+
+.library-card-title {
+  margin: 0 0 0.18rem;
+  color: var(--text);
+  font-size: 0.85rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.library-card-meta {
+  margin: 0 0 0.55rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.library-status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0.2rem 0.55rem;
+  border: 1px solid rgba(232, 185, 79, 0.28);
+  border-radius: 999px;
+  color: var(--gold);
+  background: var(--gold-tint);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.library-status.is-pending {
+  border-color: rgba(232, 185, 79, 0.2);
+  background: var(--surface-dark);
+  color: var(--muted);
+}
+
+.vista-stars-read {
+  margin-top: 0.45rem;
+}
+
+.empty-state {
+  grid-column: 1 / -1;
+  min-height: 220px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-mid);
+  color: var(--muted);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-body);
+}
+
+.empty-state p {
+  color: var(--text);
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 0.3rem;
+}
+
+.empty-state small {
+  color: var(--muted);
+}
+
+/* Rating selector shown when adding a "vista". */
+.rating-box {
+  background: var(--card-hover);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1rem;
+  margin-top: 0.75rem;
+  grid-column: 1 / -1;
+}
+
+.rating-stars {
+  display: flex;
+  gap: 0.35rem;
+  margin-top: 0.35rem;
+}
+
+.rating-star-btn {
+  background: none;
+  border: none;
+  font-size: 1.6rem;
+  cursor: pointer;
+  line-height: 1;
+}
+
+@media (max-width: 640px) {
+  .movie-library-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .view-title-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 400px) {
+  .movie-library-grid {
+    grid-template-columns: 1fr;
+  }
+}

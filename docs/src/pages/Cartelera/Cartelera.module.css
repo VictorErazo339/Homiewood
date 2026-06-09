@@ -1,0 +1,156 @@
+/* Cartelera-only styles that extend the shared recommendations layout. */
+.cartelera-hero {
+  position: relative;
+  width: 100%;
+  height: 320px;
+  border-radius: 18px;
+  overflow: hidden;
+  margin-bottom: 36px;
+  display: flex;
+  align-items: flex-end;
+}
+
+.cartelera-hero-bg {
+  position: absolute;
+  inset: 0;
+  background: var(--hero-gradient);
+  z-index: 0;
+}
+
+.cartelera-hero-bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    90deg,
+    transparent 0px,
+    transparent 38px,
+    rgba(232, 185, 79, 0.04) 38px,
+    rgba(232, 185, 79, 0.04) 40px
+  );
+  z-index: 0;
+}
+
+.cartelera-hero-content {
+  position: relative;
+  z-index: 1;
+  padding: 0 36px 30px;
+  width: 100%;
+}
+
+.cartelera-hero-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold-dim);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cartelera-hero-label::before {
+  content: "";
+  display: inline-block;
+  width: 22px;
+  height: 2px;
+  background: var(--gold-dim);
+  border-radius: 2px;
+}
+
+.cartelera-hero-title {
+  font-family: var(--font-title);
+  font-size: 3.4rem;
+  letter-spacing: 0.06em;
+  color: var(--text-strong);
+  line-height: 1;
+  margin-bottom: 10px;
+}
+
+.cartelera-hero-sub {
+  font-size: 0.9rem;
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.hero-deco {
+  position: absolute;
+  top: 24px;
+  right: 36px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  opacity: 0.55;
+}
+
+.hero-deco i {
+  font-size: 2.8rem;
+  color: var(--gold);
+}
+
+.cartelera-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.cartelera-tab {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 8px 20px;
+  color: var(--muted);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
+  white-space: nowrap;
+}
+
+.cartelera-tab:hover {
+  border-color: var(--gold-dim);
+  color: var(--gold);
+}
+
+.cartelera-tab.active {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: var(--on-accent);
+}
+
+@media (max-width: 767px) {
+  .cartelera-hero {
+    height: 220px;
+    margin-bottom: 24px;
+  }
+
+  .cartelera-hero-title {
+    font-size: 2.2rem;
+  }
+
+  .cartelera-hero-content {
+    padding: 0 18px 22px;
+  }
+
+  .hero-deco {
+    right: 18px;
+    top: 16px;
+  }
+
+  .hero-deco i {
+    font-size: 2rem;
+  }
+
+  .cartelera-tabs {
+    gap: 6px;
+  }
+
+  .cartelera-tab {
+    padding: 6px 14px;
+    font-size: 0.8rem;
+  }
+}

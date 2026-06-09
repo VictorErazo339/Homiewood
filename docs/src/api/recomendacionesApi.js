@@ -1,15 +1,15 @@
-import { apiRequest } from "./api";
+import { apiRequest } from "./api.js";
 
 export function recomendarParaUsuario(idUsuario, limite = 10) {
-    return apiRequest(`/recomendaciones/usuario/${idUsuario}?limite=${limite}`);
+  return apiRequest(`/recomendaciones/usuario/${idUsuario}?limite=${limite}`);
 }
 
 export function recomendarDesdeOtroUsuario(idUsuario, idOtroUsuario, limite = 10) {
-    return apiRequest(
-        `/recomendaciones/usuario/${idUsuario}/desde/${idOtroUsuario}?limite=${limite}`
-    );
+  return apiRequest(
+    `/recomendaciones/usuario/${idUsuario}/desde/${idOtroUsuario}?limite=${limite}`
+  );
 }
 
 export function recomendarParaGrupo(idGrupo, limite = 10) {
-    return apiRequest(`/recomendaciones/grupo/${idGrupo}?limite=${limite}`);
+  return apiRequest(`/recomendaciones/grupo/${idGrupo}?limite=${limite}`);
 }

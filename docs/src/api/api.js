@@ -1,56 +1,56 @@
-
-
-// CORREGIDO: Si no existe import.meta.env, usa directo tu backend de Spring Boot en local
-//const API_BASE_URL = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL) 
- //   ? import.meta.env.VITE_API_URL 
- //   : "http://localhost:8080/api";
-const API_BASE_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+// Base URL for the Spring Boot backend. An explicit VITE_API_URL always wins;
+// otherwise we auto-target the local backend when the app is served from
+// localhost and the production Render URL everywhere else. (Ported from the
+// vanilla frontend's hostname switch, kept behind the Vite env override.)
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL ||
+  (window.location.hostname === "localhost" ||
+  window.location.hostname === "127.0.0.1"
     ? "http://localhost:8080/api"
-    : "https://homiewood-p3p5.onrender.com/api";
-//const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api";
+    : "https://homiewood-p3p5.onrender.com/api");
 
 export function guardarToken(token) {
-    localStorage.setItem("token", token);
+  localStorage.setItem("token", token);
 }
 
 export function obtenerToken() {
-    return localStorage.getItem("token");
+  return localStorage.getItem("token");
 }
 
 export function eliminarToken() {
-    localStorage.removeItem("token");
+  localStorage.removeItem("token");
 }
 
 export async function apiRequest(endpoint, options = {}) {
-    const token = obtenerToken();
+  const token = obtenerToken();
 
-    const headers = {
-        "Content-Type": "application/json",
-        ...options.headers,
-    };
+  const headers = {
+    "Content-Type": "application/json",
+    ...options.headers,
+  };
 
-    if (token) {
-        headers.Authorization = `Bearer ${token}`;
-    }
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
 
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-        ...options,
-        headers,
-    });
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    ...options,
+    headers,
+  });
 
-    const contentType = response.headers.get("content-type");
+  const contentType = response.headers.get("content-type");
 
-    let data = null;
+  let data = null;
 
-    if (contentType && contentType.includes("application/json")) {
-        data = await response.json();
-    } else {
-        data = await response.text();
-    }
+  if (contentType && contentType.includes("application/json")) {
+    data = await response.json();
+  } else {
+    data = await response.text();
+  }
 
-    if (!response.ok) {
-        throw data;
-    }
+  if (!response.ok) {
+    throw data;
+  }
 
-    return data;
+  return data;
 }

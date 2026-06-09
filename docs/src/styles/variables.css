@@ -1,0 +1,158 @@
+/* ============================================================
+   HOMIEWOOD — Design tokens
+   Two themes share one token contract. Components only ever read
+   var(--token); the value swaps based on [data-theme] on <html>.
+
+   · dark  → cyberpunk, electric-yellow neon palette (default)
+   · light → milky-soft, warm-cream palette
+
+   data-theme is set on <html> by the inline boot script in index.html
+   (before paint, no flash) and kept in sync by ThemeContext.
+   ============================================================ */
+
+/* ---------- Theme-neutral tokens (same in every theme) ---------- */
+:root {
+  /* Typography */
+  --font-title: "Bebas Neue", sans-serif;
+  --font-body: "DM Sans", sans-serif;
+
+  /* Layout */
+  --nav-h: 64px;
+  --bottom-h: 68px;
+  --radius: 12px;
+  --feed-margin-left: 160px;
+  --feed-margin-right: 190px;
+  --sidebar-width: 290px;
+  --page-margin: 80px;
+
+  /* Z-index stack */
+  --z-nav: 100;
+  --z-dropdown: 200;
+  --z-modal: 500;
+  --z-toast: 9999;
+}
+
+/* ============================================================
+   DARK — cyberpunk / electric yellow (default)
+   ============================================================ */
+:root,
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* Base surfaces */
+  --black: #07080b;
+  --dark: #0d0f15;
+  --card: #13161e;
+  --card-hover: #1a1e29;
+  --border: #292e3b;
+
+  /* Deep surfaces (profile/vistas/porver) */
+  --surface-deep: #0a0c11;
+  --surface-mid: #0e1117;
+  --surface-dark: #10131a;
+
+  /* Accent — electric neon yellow (brand) */
+  --gold: #ffd60a;
+  --gold-dim: #b9912a;
+  --gold-glow: rgba(255, 214, 10, 0.2);
+  --gold-light: #ffe45c;
+  --gold-tint: rgba(255, 214, 10, 0.08);
+
+  /* Secondary punch (hot hover) */
+  --accent-hot: #ff9100;
+
+  /* Semantic */
+  --red: #c0392b;
+  --danger: #ff7a7a;
+  --warn: #ff5470;
+
+  /* Text */
+  --text: #eceef4;
+  --text-strong: #ffffff;
+  --muted: #848a99;
+  --on-accent: #0a0a0a;
+
+  /* Chrome */
+  --nav-bg: rgba(7, 8, 11, 0.82);
+  --overlay: rgba(0, 0, 0, 0.75);
+  --scrollbar-thumb: #ffd60a;
+  --scrollbar-track: #1a1e29;
+
+  /* Warm "noir amber" surfaces (post cards / comments) */
+  --warm-surface: rgba(71, 38, 0, 0.29);
+  --warm-border: rgba(255, 237, 75, 0.29);
+  --warm-strong: rgba(255, 94, 0, 0.24);
+  --avatar-warm: #e07800;
+  --input-warm-bg: #ac7f03;
+  --input-warm-text: #fff4b8;
+  --input-warm-placeholder: #fff067;
+
+  /* Decorative gradients */
+  --banner-gradient: linear-gradient(135deg, #0d0e12 0%, #1a1108 50%, #0d0e12 100%);
+  --hero-gradient: linear-gradient(to top, var(--black) 0%, rgba(7, 8, 11, 0.55) 55%, transparent 100%),
+    linear-gradient(135deg, #0d0f18 0%, #1a1030 50%, #0d1020 100%);
+  --placeholder-gradient: linear-gradient(135deg, #202333, #3d255c);
+  --rec-info-gradient: linear-gradient(180deg, #171b23, #14171f);
+}
+
+/* ============================================================
+   LIGHT — milky soft / warm cream
+   ============================================================ */
+[data-theme="light"] {
+  color-scheme: light;
+
+  /* Base surfaces (--black is the page backdrop, now milky cream) */
+  --black: #f7f3ea;
+  --dark: #efe9dc;
+  --card: #fffdf8;
+  --card-hover: #f4eee1;
+  --border: #e4ddcd;
+
+  /* Deep surfaces */
+  --surface-deep: #f1ebde;
+  --surface-mid: #f4efe4;
+  --surface-dark: #ece5d5;
+
+  /* Accent — soft honey (legible on cream) */
+  --gold: #b07d12;
+  --gold-dim: #8f7338;
+  --gold-glow: rgba(176, 125, 18, 0.18);
+  --gold-light: #cf9a2e;
+  --gold-tint: rgba(176, 125, 18, 0.1);
+
+  /* Secondary punch */
+  --accent-hot: #d8932e;
+
+  /* Semantic */
+  --red: #c0392b;
+  --danger: #d64545;
+  --warn: #e0556e;
+
+  /* Text */
+  --text: #3a352c;
+  --text-strong: #2a261f;
+  --muted: #948c7c;
+  --on-accent: #2a241a;
+
+  /* Chrome */
+  --nav-bg: rgba(247, 243, 234, 0.82);
+  --overlay: rgba(58, 53, 44, 0.45);
+  --scrollbar-thumb: #c79330;
+  --scrollbar-track: #e4ddcd;
+
+  /* Warm cream surfaces */
+  --warm-surface: rgba(232, 211, 170, 0.45);
+  --warm-border: rgba(200, 165, 90, 0.4);
+  --warm-strong: rgba(240, 220, 180, 0.6);
+  --avatar-warm: #d8a743;
+  --input-warm-bg: #f3e7c4;
+  --input-warm-text: #5a4a22;
+  --input-warm-placeholder: #b09a5e;
+
+  /* Decorative gradients */
+  --banner-gradient: linear-gradient(135deg, #efe6d4 0%, #f5ddb0 50%, #efe6d4 100%);
+  --hero-gradient: linear-gradient(to top, var(--black) 0%, rgba(247, 243, 234, 0.4) 55%, transparent 100%),
+    linear-gradient(135deg, #f3ead8 0%, #efe0c2 50%, #f1e8d6 100%);
+  --placeholder-gradient: linear-gradient(135deg, #e8dcc2, #d9c3e0);
+  --rec-info-gradient: linear-gradient(180deg, #fffdf8, #f4eee1);
+}

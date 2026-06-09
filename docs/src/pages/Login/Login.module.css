@@ -1,0 +1,134 @@
+/* Login keeps its own visual identity (purple gradient + Inter). Everything is
+   scoped here so the legacy bare element selectors don't leak across the SPA. */
+.login-page {
+  font-family: "Inter", sans-serif;
+  background-image: linear-gradient(
+      180deg,
+      rgba(73, 73, 157, 0.7) 0%,
+      rgba(9, 9, 20, 0.9) 100%
+    ),
+    url("../../assets/img/imglogin.webp");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  min-height: 100vh;
+}
+
+.main {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.tarjeta {
+  background-color: rgba(130, 123, 145, 0.8);
+  border: 1px solid #000000;
+  padding: 40px 40px 50px 40px;
+  border-radius: 12px;
+  width: 380px;
+  height: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* The single h1 in the card; merged so it renders like the legacy cascade
+   where .logo-titulo won over the generic h1 rule. */
+.logo-titulo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  font-family: "Bebas Neue", sans-serif;
+  font-size: 4rem;
+  font-weight: 500;
+  color: #1e1b35;
+  text-align: center;
+  letter-spacing: 2px;
+  margin-bottom: 10px;
+}
+
+.logo-titulo img {
+  width: 70px;
+  height: 70px;
+  object-fit: contain;
+}
+
+.tarjeta p {
+  color: #393941;
+  font-size: 12px;
+  text-align: center;
+  margin-bottom: 24px;
+  letter-spacing: 0.5px;
+}
+
+.tarjeta form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 85%;
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.tarjeta label {
+  color: #393941;
+  font-size: 13px;
+  letter-spacing: 1px;
+}
+
+.tarjeta input {
+  width: 100%;
+  padding: 10px;
+  background-color: #f5f2fa;
+  border: 1px solid #c8c0d8;
+  border-radius: 6px;
+  color: #1a1a2e;
+  font-size: 13px;
+  box-sizing: border-box;
+}
+
+.btn {
+  width: 100%;
+  padding: 10px;
+  background-color: #2c2c3e;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  letter-spacing: 1px;
+  transition: 0.3s;
+}
+
+/* Declared after .btn so equal-specificity wins, matching the legacy order. */
+.btn-secundario {
+  background-color: transparent;
+  color: #ffffff;
+  border: 1px solid #ffffff;
+}
+
+.btn:hover {
+  background-color: #3d3d52;
+  opacity: 1;
+}
+
+.tarjeta a {
+  color: #393941;
+  text-decoration: none;
+  font-size: 13px;
+  cursor: pointer;
+  text-align: center;
+}
+
+.tarjeta a:hover {
+  color: #ffffff;
+  text-decoration: underline;
+}

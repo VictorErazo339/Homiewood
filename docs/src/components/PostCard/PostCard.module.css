@@ -1,0 +1,346 @@
+.post-card {
+  background: var(--warm-surface);
+  border: 1px solid var(--warm-border);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 16px;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.post-card .timestamp {
+  font-size: 0.78rem;
+  color: var(--gold-dim);
+  margin-bottom: 10px;
+}
+
+.post-layout {
+  display: grid;
+  grid-template-columns: 125px 0.6fr 1fr;
+  gap: 14px;
+  align-items: start;
+}
+
+.post-col-poster {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.post-col-film {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.post-film-title {
+  font-family: var(--font-title);
+  font-size: 21px;
+  color: var(--text-strong);
+  line-height: 1.2;
+  word-break: break-word;
+}
+
+.post-film-meta {
+  font-size: 0.78rem;
+  color: var(--gold-dim);
+  font-weight: 600;
+}
+
+.post-film-cast {
+  font-size: 0.75rem;
+  color: var(--muted);
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.post-film-desc {
+  font-size: 0.78rem;
+  color: var(--text);
+  opacity: 0.8;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.post-film-rating {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.post-film-rating-stars {
+  display: flex;
+  gap: 1px;
+}
+
+.post-film-rating-stars :global(.bi) {
+  font-size: 15px;
+  color: var(--gold);
+}
+
+.post-film-rating-value {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--gold);
+}
+
+.list-wrap {
+  margin-top: 4px;
+}
+
+.post-col-social {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  justify-content: space-between;
+  height: 100%;
+}
+
+.post-card .username {
+  font-weight: 0;
+  font-size: 19px;
+  color: var(--gold);
+  font-family: var(--font-title);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.post-footer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 8px;
+}
+
+.user-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #4a3558;
+  border: 2px solid #9b82ac;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.post-thumb {
+  width: 135px;
+  height: 208px;
+  border-radius: 10px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.58rem;
+  font-weight: 900;
+  color: #fff;
+  text-align: center;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+  padding: 4px;
+  cursor: pointer;
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.post-thumb:hover {
+  transform: scale(1.05);
+  filter: drop-shadow(0 0 6px rgba(255, 216, 44, 0.6));
+}
+
+.post-text {
+  color: var(--text);
+  font-weight: 200;
+  padding-top: 4px;
+}
+
+/* Merged from the two legacy .post-actions rules (later props win). */
+.post-actions {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.post-actions button {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: color 0.15s;
+}
+
+.post-actions button:hover {
+  color: var(--text-strong);
+}
+
+.post-actions button.liked {
+  color: var(--gold);
+}
+
+.glow-image {
+  width: 35px;
+  transition: transform 0.3s ease, filter 0.3s ease;
+  cursor: pointer;
+}
+
+.glow-image:hover {
+  transform: scale(1.28);
+  filter: drop-shadow(0 0 3px rgb(255, 216, 44));
+}
+
+.glow-image:active {
+  transform: scale(1.28);
+  filter: drop-shadow(0 0 3px rgb(255, 216, 44));
+}
+
+.post-actions button.active .glow-image {
+  transform: scale(1.15);
+  filter: drop-shadow(0 0 6px rgb(255, 216, 44));
+}
+
+.comment-toggle {
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 20px 0 0 0;
+  display: block;
+  width: 100%;
+  text-align: left;
+  transition: color 0.15s;
+}
+
+.comment-toggle img:hover {
+  transform: scale(1.28);
+  filter: drop-shadow(0 0 3px rgb(255, 216, 44));
+  transition: transform 0.3s ease, filter 0.3s ease;
+}
+
+.comment-section {
+  display: none;
+  margin-top: 14px;
+  border-top: 1px solid var(--border);
+  padding-top: 14px;
+}
+
+.comment-section.open {
+  display: block;
+}
+
+.comment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.comment {
+  display: flex;
+  gap: 8px;
+  background: var(--warm-strong);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.comment .c-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--avatar-warm);
+  border: 2px solid var(--card);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+
+.comment .c-name {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--gold);
+}
+
+.comment .c-text {
+  font-size: 0.88rem;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.comment .c-time {
+  font-size: 0.7rem;
+  color: var(--gold-dim);
+  margin-top: 2px;
+}
+
+.comment-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.comment-input-row input {
+  flex: 1;
+  background: var(--input-warm-bg);
+  border: none;
+  border-radius: 10px;
+  padding: 9px 14px;
+  color: var(--input-warm-text);
+  font-family: var(--font-body);
+  outline: none;
+  font-size: 0.9rem;
+}
+
+.comment-input-row input::placeholder {
+  color: var(--input-warm-placeholder);
+}
+
+.comment-input-row button {
+  background: var(--gold);
+  border: none;
+  border-radius: 10px;
+  padding: 9px 16px;
+  color: var(--on-accent);
+  font-weight: 800;
+  font-family: var(--font-body);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s;
+}
+
+.comment-input-row button:hover {
+  background: var(--gold-light);
+}
+
+@media (max-width: 767px) {
+  .post-layout {
+    grid-template-columns: 120px 1fr;
+    grid-template-rows: auto auto;
+  }
+
+  .post-col-social {
+    grid-column: 1 / -1;
+    grid-row: 3;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1024px) {
+  .post-layout {
+    grid-template-columns: 85px 1fr 1fr;
+  }
+}
