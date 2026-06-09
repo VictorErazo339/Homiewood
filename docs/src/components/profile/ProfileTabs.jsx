@@ -1,17 +1,24 @@
 import { Link } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext.jsx";
 import styles from "./ProfileHero.module.css";
 
-const TABS = [
-  { key: "hilo", label: "Hilo", to: "/profile" },
-  { key: "vistas", label: "Vistas", to: "/vistas" },
-  { key: "porver", label: "Por ver", to: "/porver" },
-];
-
-// Hilo / Vistas / Por ver tabs. `active` is the key of the current tab.
 export default function ProfileTabs({ active }) {
+  const { usuario } = useAuth();
+  const username = usuario?.username ? encodeURIComponent(usuario.username) : "";
+
+  const profilePath = username ? `/profile/${username}` : "/profile";
+  const vistasPath = username ? `/profile/${username}/vistas` : "/vistas";
+  const porVerPath = username ? `/profile/${username}/porver` : "/porver";
+
+  const tabs = [
+    { key: "hilo", label: "Hilo", to: profilePath },
+    { key: "vistas", label: "Vistas", to: vistasPath },
+    { key: "porver", label: "Por ver", to: porVerPath },
+  ];
+
   return (
     <nav className={styles.tabs} aria-label="Secciones del perfil">
-      {TABS.map((t) => (
+      {tabs.map((t) => (
         <Link
           key={t.key}
           to={t.to}

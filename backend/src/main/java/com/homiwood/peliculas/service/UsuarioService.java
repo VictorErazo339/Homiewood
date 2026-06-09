@@ -2,14 +2,22 @@ package com.homiwood.peliculas.service;
 
 import com.homiwood.peliculas.dto.ActualizarPerfilRequest;
 import com.homiwood.peliculas.dto.CrearUsuarioRequest;
+import com.homiwood.peliculas.dto.LogroResponse;
+import com.homiwood.peliculas.dto.PerfilResumenResponse;
 import com.homiwood.peliculas.dto.UsuarioSearchResponse;
 import com.homiwood.peliculas.exception.BadRequestException;
 import com.homiwood.peliculas.exception.DuplicateResourceException;
 import com.homiwood.peliculas.exception.NotFoundException;
+import com.homiwood.peliculas.model.Logro;
 import com.homiwood.peliculas.model.Usuario;
+import com.homiwood.peliculas.model.UsuarioLogro;
+import com.homiwood.peliculas.repository.CalificacionRepository;
+import com.homiwood.peliculas.repository.SeguimientoRepository;
+import com.homiwood.peliculas.repository.UsuarioLogroRepository;
 import com.homiwood.peliculas.repository.UsuarioRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -18,12 +26,21 @@ public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
+    private final CalificacionRepository calificacionRepository;
+    private final SeguimientoRepository seguimientoRepository;
+    private final UsuarioLogroRepository usuarioLogroRepository;
 
     public UsuarioService(
             UsuarioRepository usuarioRepository,
-            PasswordEncoder passwordEncoder) {
+            PasswordEncoder passwordEncoder,
+            CalificacionRepository calificacionRepository,
+            SeguimientoRepository seguimientoRepository,
+            UsuarioLogroRepository usuarioLogroRepository) {
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
+        this.calificacionRepository = calificacionRepository;
+        this.seguimientoRepository = seguimientoRepository;
+        this.usuarioLogroRepository = usuarioLogroRepository;
     }
 
     public List<Usuario> listarUsuarios() {
@@ -92,6 +109,72 @@ public class UsuarioService {
                         usuario.getIconoPerfil(),
                         usuario.getPerfilPrivado()))
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public PerfilResumenResponse obtenerPerfilResumen(Long idUsuario) {
+        Usuario usuario = buscarPorId(idUsuario);
+
+        Long cantidadPosts = calificacionRepository.contarResenasConComentario(idUsuario);
+        Long cantidadSeguidores = seguimientoRepository.countBySeguidoIdUsuario(idUsuario);
+        Long cantidadSiguiendo = seguimientoRepository.countBySeguidorIdUsuario(idUsuario);
+
+        List<LogroResponse> logrosDestacados = usuarioLogroRepository
+                .listarDestacadosPorUsuario(idUsuario)
+                .stream()
+                .map(this::toLogroResponse)
+                .toList();
+
+        PerfilResumenResponse response = new PerfilResumenResponse();
+
+        response.setIdUsuario(usuario.getIdUsuario());
+        response.setNombre(usuario.getNombre());
+        response.setUsername(usuario.getUsername());
+        response.setDescripcion(usuario.getDescripcion());
+        response.setIconoPerfil(usuario.getIconoPerfil());
+        response.setPerfilPrivado(usuario.getPerfilPrivado());
+
+        response.setCantidadPosts(cantidadPosts);
+        response.setCantidadSeguidores(cantidadSeguidores);
+        response.setCantidadSiguiendo(cantidadSiguiendo);
+
+        response.setLogrosDestacados(logrosDestacados);
+
+        return response;
+    }
+
+    private LogroResponse toLogroResponse(UsuarioLogro usuarioLogro) {
+        Logro logro = usuarioLogro.getLogro();
+
+        boolean desbloqueado = Boolean.TRUE.equals(usuarioLogro.getDesbloqueado());
+        boolean oculto = Boolean.TRUE.equals(logro.getOculto());
+        boolean visible = !oculto || desbloqueado;
+
+        LogroResponse response = new LogroResponse();
+
+        response.setIdLogro(logro.getIdLogro());
+        response.setOculto(oculto);
+        response.setVisible(visible);
+        response.setDesbloqueado(desbloqueado);
+        response.setDestacado(Boolean.TRUE.equals(usuarioLogro.getDestacado()));
+        response.setFechaDesbloqueo(usuarioLogro.getFechaDesbloqueo());
+        response.setDificultad(logro.getDificultad());
+        response.setValorObjetivo(logro.getValorObjetivo());
+        response.setProgresoActual(usuarioLogro.getProgresoActual());
+
+        if (visible) {
+            response.setCodigo(logro.getCodigo());
+            response.setNombre(logro.getNombre());
+            response.setDescripcion(logro.getDescripcion());
+            response.setIcono(logro.getIcono());
+        } else {
+            response.setCodigo("OCULTO");
+            response.setNombre("???");
+            response.setDescripcion("Logro oculto. Sigue usando Homiewood para descubrirlo.");
+            response.setIcono("🔒");
+        }
+
+        return response;
     }
 
     public Usuario actualizarPerfil(Long id, ActualizarPerfilRequest request) {
