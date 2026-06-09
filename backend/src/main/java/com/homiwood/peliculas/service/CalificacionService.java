@@ -22,6 +22,8 @@ import com.homiwood.peliculas.dto.CalificacionResponse;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
+import java.util.Optional;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -84,6 +86,10 @@ public class CalificacionService {
 
     public List<Calificacion> listarPorContenido(Long idContenido) {
         return calificacionRepository.findByContenidoIdContenido(idContenido);
+    }
+
+    public Optional<Calificacion> obtenerPorId(Long id) {
+        return calificacionRepository.findById(id);
     }
 
 
@@ -293,4 +299,6 @@ public class CalificacionService {
             throw new BadRequestException("El puntaje debe estar entre 1 y 5");
         }
     }
+
+
 }

@@ -60,6 +60,15 @@ public class CalificacionController {
                 .map(responseMapper::toCalificacionResponse)
                 .toList();
     }
+    @GetMapping("/{idCalificacion}")
+    public ResponseEntity<CalificacionResponse> obtenerCalificacion(
+            @PathVariable Long idCalificacion) {
+        return calificacionService.obtenerPorId(idCalificacion)
+                .map(responseMapper::toCalificacionResponse)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
 
     @GetMapping("/contenido/{idContenido}/promedio")
     public Double obtenerPromedioContenido(@PathVariable Long idContenido) {
