@@ -90,7 +90,17 @@ export default function Navbar({ showSidebarToggle = false, onSidebarToggle }) {
   }
 
   const nombre = usuario?.username || usuario?.nombre || "Usuario";
+  const usernamePerfil = usuario?.username
+    ? encodeURIComponent(usuario.username)
+    : "";
 
+  const rutaMiPerfil = usernamePerfil
+    ? `/profile/${usernamePerfil}`
+    : "/profile";
+
+  const rutaEditarPerfil = usernamePerfil
+    ? `/profile/${usernamePerfil}?edit=1`
+    : "/profile?edit=1";
   // Debounced user search while the search bar is open.
   useEffect(() => {
     if (!searchOpen) return undefined;
@@ -123,8 +133,19 @@ export default function Navbar({ showSidebarToggle = false, onSidebarToggle }) {
 
   function irAPerfil(username) {
     if (!username) return;
+
     cerrarBusqueda();
-    navigate(`/u/${encodeURIComponent(username)}`);
+
+    const usernameLimpio = String(username).trim();
+    const esMiPerfil =
+      usuario?.username &&
+      usernameLimpio.toLowerCase() === usuario.username.toLowerCase();
+
+    const ruta = esMiPerfil
+      ? `/profile/${encodeURIComponent(usernameLimpio)}`
+      : `/u/${encodeURIComponent(usernameLimpio)}`;
+
+    navigate(ruta);
   }
 
   const mostrarResultados = searchOpen && query.trim().length >= 2;
@@ -303,7 +324,7 @@ export default function Navbar({ showSidebarToggle = false, onSidebarToggle }) {
               type="button"
               role="menuitem"
               className={styles.profileOption}
-              onClick={() => irA("/profile")}
+              onClick={() => irA(rutaMiPerfil)}
             >
               <i className="bi bi-person-circle"></i>
               <span>Mi perfil</span>
@@ -312,7 +333,7 @@ export default function Navbar({ showSidebarToggle = false, onSidebarToggle }) {
               type="button"
               role="menuitem"
               className={styles.profileOption}
-              onClick={() => irA("/profile?edit=1")}
+              onClick={() => irA(rutaEditarPerfil)}
             >
               <i className="bi bi-pencil-square"></i>
               <span>Editar perfil</span>

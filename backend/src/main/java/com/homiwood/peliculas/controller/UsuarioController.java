@@ -10,6 +10,7 @@ import com.homiwood.peliculas.service.UsuarioService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.homiwood.peliculas.dto.PerfilResumenResponse;
 
 import java.util.List;
 
@@ -54,6 +55,11 @@ public class UsuarioController {
     @GetMapping("/{id}")
     public UsuarioResponse buscarUsuario(@PathVariable Long id) {
         return responseMapper.toUsuarioResponse(usuarioService.buscarPorId(id));
+    }
+
+    @GetMapping("/{id}/perfil-resumen")
+    public ResponseEntity<PerfilResumenResponse> obtenerPerfilResumen(@PathVariable Long id) {
+        return ResponseEntity.ok(usuarioService.obtenerPerfilResumen(id));
     }
 
     @PutMapping("/{id}/perfil")

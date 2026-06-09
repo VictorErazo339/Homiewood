@@ -8,6 +8,11 @@ export function buscarUsuarioPorId(idUsuario) {
   return apiRequest(`/usuarios/${idUsuario}`);
 }
 
+export function obtenerPerfilResumen(idUsuario) {
+  return apiRequest(`/usuarios/${idUsuario}/perfil-resumen`);
+}
+
+
 export function buscarUsuarioPorUsername(username) {
   return apiRequest(`/usuarios/username/${encodeURIComponent(username)}`);
 }
