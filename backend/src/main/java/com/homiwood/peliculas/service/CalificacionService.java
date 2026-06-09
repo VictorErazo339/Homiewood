@@ -3,6 +3,7 @@ package com.homiwood.peliculas.service;
 import com.homiwood.peliculas.dto.CrearCalificacionRequest;
 import com.homiwood.peliculas.exception.BadRequestException;
 import com.homiwood.peliculas.exception.NotFoundException;
+import com.homiwood.peliculas.mapper.ResponseMapper;
 import com.homiwood.peliculas.model.Calificacion;
 import com.homiwood.peliculas.model.Contenido;
 import com.homiwood.peliculas.model.Lista;
@@ -17,6 +18,11 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.homiwood.peliculas.dto.CalificacionResponse;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+
+import java.util.Optional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -34,6 +40,8 @@ public class CalificacionService {
     private final SimpMessagingTemplate messagingTemplate;
     private final LogroEvaluacionPublisher logroEvaluacionPublisher;
 
+    private final ResponseMapper responseMapper;
+
     public CalificacionService(
             CalificacionRepository calificacionRepository,
             UsuarioRepository usuarioRepository,
@@ -41,7 +49,8 @@ public class CalificacionService {
             ListaRepository listaRepository,
             ListaContenidoRepository listaContenidoRepository,
             SimpMessagingTemplate messagingTemplate,
-            LogroEvaluacionPublisher logroEvaluacionPublisher
+            LogroEvaluacionPublisher logroEvaluacionPublisher,
+            ResponseMapper responseMapper
     ) {
         this.calificacionRepository = calificacionRepository;
         this.usuarioRepository = usuarioRepository;
@@ -50,6 +59,7 @@ public class CalificacionService {
         this.listaContenidoRepository = listaContenidoRepository;
         this.messagingTemplate = messagingTemplate;
         this.logroEvaluacionPublisher = logroEvaluacionPublisher;
+        this.responseMapper = responseMapper;
     }
 
     public List<Calificacion> listarCalificaciones() {
@@ -78,6 +88,12 @@ public class CalificacionService {
         return calificacionRepository.findByContenidoIdContenido(idContenido);
     }
 
+    public Optional<Calificacion> obtenerPorId(Long id) {
+        return calificacionRepository.findById(id);
+    }
+
+
+    // PARA EL CREAR CALIFICACION
     @Transactional
     public Calificacion crearCalificacion(CrearCalificacionRequest request) {
 
@@ -109,7 +125,15 @@ public class CalificacionService {
 
         asegurarContenidoEnVistas(usuario, contenido);
 
-        messagingTemplate.convertAndSend("/topic/calificaciones", guardada);
+
+        CalificacionResponse dto = responseMapper.toCalificacionResponse(guardada);
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                messagingTemplate.convertAndSend("/topic/calificaciones", dto);
+            }
+        });
+        //messagingTemplate.convertAndSend("/topic/calificaciones", guardada);
 
         logroEvaluacionPublisher.solicitarEvaluacion(usuario.getIdUsuario());
 
@@ -136,7 +160,15 @@ public class CalificacionService {
                 calificacion.getContenido()
         );
 
-        messagingTemplate.convertAndSend("/topic/calificaciones", guardada);
+
+        CalificacionResponse dto = responseMapper.toCalificacionResponse(guardada);
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                messagingTemplate.convertAndSend("/topic/calificaciones", dto);
+            }
+        });
+        //messagingTemplate.convertAndSend("/topic/calificaciones", guardada);
 
         logroEvaluacionPublisher.solicitarEvaluacion(
                 calificacion.getUsuario().getIdUsuario()
@@ -267,4 +299,6 @@ public class CalificacionService {
             throw new BadRequestException("El puntaje debe estar entre 1 y 5");
         }
     }
+
+
 }

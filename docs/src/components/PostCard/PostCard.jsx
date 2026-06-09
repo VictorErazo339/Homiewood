@@ -1,9 +1,21 @@
 import { useEffect, useState } from "react";
 import { apiRequest } from "../../api/api.js";
 import { tagClass, soloFecha } from "../../lib/format.js";
-import img from "../../assets/images.js";
+import img, { avatarPorIcono } from "../../assets/images.js";
 import AddToList from "../AddToList/AddToList.jsx";
 import styles from "./PostCard.module.css";
+
+
+
+import { useComentariosSocket } from "../../lib/websocket.js";
+
+
+function avatarUsuario(iconoPerfil) {
+  console.log("El icono que llega desde el backend es:", iconoPerfil);
+  
+  // Usamos tu función nativa de images.js que resta 1 (n - 1) para buscar en el array
+  return avatarPorIcono(iconoPerfil);
+}
 
 const POST_LIST_OPTIONS = [
   { key: "watchlist", label: "Watchlist", img: img.watchlist },
@@ -51,6 +63,24 @@ export default function PostCard({ calificacion: c, currentUser }) {
     };
   }, [id, idUsuario]);
 
+  // Cargar conteo inicial de comentarios
+  useEffect(() => {
+    let activo = true;
+    const timer = setTimeout(() => {
+      apiRequest(`/comentarios-calificacion/${id}`)
+        .then((data) => {
+          if (!activo) return;
+          setCommentCount((data || []).length);
+        })
+        .catch((error) => console.error("Error cargando conteo comentarios:", error));
+    }, 500); // espera 500ms antes de hacer el fetch
+
+    return () => {
+      activo = false;
+      clearTimeout(timer);
+    };
+  }, [id]);
+
   async function toggleLike(tipo) {
     try {
       const data = await apiRequest("/likes-calificacion", {
@@ -63,6 +93,21 @@ export default function PostCard({ calificacion: c, currentUser }) {
     }
   }
 
+  useComentariosSocket(id, (nuevoComentario) => {
+    setComentarios((prev) => {
+      if (prev.some((cm) => cm.text === nuevoComentario.texto)) return prev;
+      return [...prev, {
+        user: nuevoComentario.username,
+        text: nuevoComentario.texto,
+        time: "ahora mismo",
+        iconoPerfil: nuevoComentario.iconoPerfil,
+      }];
+    });
+    setCommentCount((prev) => prev + 1);
+  });
+
+
+
   async function cargarComentarios() {
     try {
       const data = await apiRequest(`/comentarios-calificacion/${id}`);
@@ -71,6 +116,7 @@ export default function PostCard({ calificacion: c, currentUser }) {
           user: cm.username || cm.nombreUsuario || "Usuario",
           text: cm.texto,
           time: cm.fechaComentario ? soloFecha(cm.fechaComentario) : "ahora mismo",
+          iconoPerfil: cm.iconoPerfil,
         }))
       );
       setCommentCount((data || []).length);
@@ -88,15 +134,30 @@ export default function PostCard({ calificacion: c, currentUser }) {
   async function addComment() {
     const text = commentInput.trim();
     if (!text) return;
+
+    // Agregar inmediatamente al estado local
+    const nuevoComentario = {
+      user: currentUser?.username || currentUser?.nombreUsuario || "Usuario",
+      text: text,
+      time: "ahora mismo",
+      iconoPerfil: currentUser?.iconoPerfil,
+    };
+    setComentarios((prev) => [...prev, nuevoComentario]);
+    setCommentCount((prev) => prev + 1);
+    setCommentInput("");
+
     try {
       await apiRequest("/comentarios-calificacion", {
         method: "POST",
         body: JSON.stringify({ idCalificacion: id, idUsuario, texto: text }),
       });
-      setCommentInput("");
+      // Sincronizar con el servidor
       await cargarComentarios();
     } catch (error) {
       console.error("Error agregando comentario:", error);
+      // Revertir si falló
+      setComentarios((prev) => prev.filter((cm) => cm !== nuevoComentario));
+      setCommentCount((prev) => prev - 1);
     }
   }
 
@@ -143,8 +204,21 @@ export default function PostCard({ calificacion: c, currentUser }) {
 
         <div className={styles.postColSocial}>
           <div className={styles.username}>
-            <div className={styles.userIcon}>👤</div>
-            {username}
+
+            <img 
+              src={avatarPorIcono(c.iconoPerfil || 1)} 
+              alt={username || "Perfil"} 
+              width="30" 
+              height="30"
+              style={{ borderRadius: "50%", objectFit: "cover", marginRight: "8px" }}
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = avatarPorIcono(1);
+              }}
+            />
+            <span>{username}</span>
+
+
           </div>
 
           <p className={`${styles.postText} mb-0`}>{c.comentario || ""}</p>
@@ -192,7 +266,19 @@ export default function PostCard({ calificacion: c, currentUser }) {
         <div className={styles.commentList}>
           {comentarios.map((cm, i) => (
             <div className={styles.comment} key={i}>
-              <div className={styles.cAvatar}>👤</div>
+              
+              <div className={styles.cAvatar}>
+                <img
+                  src={avatarUsuario(cm.iconoPerfil)}
+                  alt={cm.user}
+                  width="32"
+                  height="32"
+                  onError={(e) => { e.target.onerror = null;
+                                    e.target.src = avatarPorIcono(1);
+                   }}
+                />
+              </div>
+
               <div>
                 <div className={styles.cName}>{cm.user}</div>
                 <div className={styles.cText}>{cm.text}</div>
