@@ -5,6 +5,8 @@ import img from "../../assets/images.js";
 import AddToList from "../AddToList/AddToList.jsx";
 import styles from "./PostCard.module.css";
 
+import { useComentariosSocket } from "../../lib/websocket.js";
+
 const POST_LIST_OPTIONS = [
   { key: "watchlist", label: "Watchlist", img: img.watchlist },
   { key: "porver", label: "Por ver", img: img.pendinglist },
@@ -51,6 +53,24 @@ export default function PostCard({ calificacion: c, currentUser }) {
     };
   }, [id, idUsuario]);
 
+  // Cargar conteo inicial de comentarios
+  useEffect(() => {
+    let activo = true;
+    const timer = setTimeout(() => {
+      apiRequest(`/comentarios-calificacion/${id}`)
+        .then((data) => {
+          if (!activo) return;
+          setCommentCount((data || []).length);
+        })
+        .catch((error) => console.error("Error cargando conteo comentarios:", error));
+    }, 500); // espera 500ms antes de hacer el fetch
+
+    return () => {
+      activo = false;
+      clearTimeout(timer);
+    };
+  }, [id]);
+
   async function toggleLike(tipo) {
     try {
       const data = await apiRequest("/likes-calificacion", {
@@ -62,6 +82,20 @@ export default function PostCard({ calificacion: c, currentUser }) {
       console.error("Error en toggleLike:", error);
     }
   }
+
+  useComentariosSocket(id, (nuevoComentario) => {
+    setComentarios((prev) => {
+      if (prev.some((cm) => cm.text === nuevoComentario.texto)) return prev;
+      return [...prev, {
+        user: nuevoComentario.username,
+        text: nuevoComentario.texto,
+        time: "ahora mismo",
+      }];
+    });
+    setCommentCount((prev) => prev + 1);
+  });
+
+
 
   async function cargarComentarios() {
     try {
@@ -88,15 +122,29 @@ export default function PostCard({ calificacion: c, currentUser }) {
   async function addComment() {
     const text = commentInput.trim();
     if (!text) return;
+
+    // Agregar inmediatamente al estado local
+    const nuevoComentario = {
+      user: currentUser?.username || currentUser?.nombreUsuario || "Usuario",
+      text: text,
+      time: "ahora mismo",
+    };
+    setComentarios((prev) => [...prev, nuevoComentario]);
+    setCommentCount((prev) => prev + 1);
+    setCommentInput("");
+
     try {
       await apiRequest("/comentarios-calificacion", {
         method: "POST",
         body: JSON.stringify({ idCalificacion: id, idUsuario, texto: text }),
       });
-      setCommentInput("");
+      // Sincronizar con el servidor
       await cargarComentarios();
     } catch (error) {
       console.error("Error agregando comentario:", error);
+      // Revertir si falló
+      setComentarios((prev) => prev.filter((cm) => cm !== nuevoComentario));
+      setCommentCount((prev) => prev - 1);
     }
   }
 
