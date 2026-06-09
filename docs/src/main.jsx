@@ -1,8 +1,8 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { BrowserRouter } from "react-router-dom";
+import { HashRouter } from "react-router-dom";
 
-// Global CSS: Bootstrap (grid utilities + icons) first, then our tokens/reset.
+// Global CSS: Bootstrap first, then project styles.
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import "./styles/variables.css";
@@ -15,7 +15,7 @@ import { NotificationsProvider } from "./context/NotificationsContext.jsx";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <BrowserRouter basename={import.meta.env.BASE_URL}>
+    <HashRouter>
       <ThemeProvider>
         <AuthProvider>
           <NotificationsProvider>
@@ -23,6 +23,6 @@ createRoot(document.getElementById("root")).render(
           </NotificationsProvider>
         </AuthProvider>
       </ThemeProvider>
-    </BrowserRouter>
+    </HashRouter>
   </StrictMode>
 );
