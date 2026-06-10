@@ -11,9 +11,6 @@ import { useComentariosSocket } from "../../lib/websocket.js";
 
 
 function avatarUsuario(iconoPerfil) {
-  console.log("El icono que llega desde el backend es:", iconoPerfil);
-  
-  // Usamos tu función nativa de images.js que resta 1 (n - 1) para buscar en el array
   return avatarPorIcono(iconoPerfil);
 }
 
@@ -95,8 +92,14 @@ export default function PostCard({ calificacion: c, currentUser }) {
 
   useComentariosSocket(id, (nuevoComentario) => {
     setComentarios((prev) => {
-      if (prev.some((cm) => cm.text === nuevoComentario.texto)) return prev;
+      const existe = nuevoComentario.idComentario
+        ? prev.some((cm) => cm.idComentario === nuevoComentario.idComentario)
+        : prev.some((cm) => cm.text === nuevoComentario.texto && cm.user === nuevoComentario.username);
+
+      if (existe) return prev;
+
       return [...prev, {
+        idComentario: nuevoComentario.idComentario,
         user: nuevoComentario.username,
         text: nuevoComentario.texto,
         time: "ahora mismo",
@@ -107,12 +110,12 @@ export default function PostCard({ calificacion: c, currentUser }) {
   });
 
 
-
   async function cargarComentarios() {
     try {
       const data = await apiRequest(`/comentarios-calificacion/${id}`);
       setComentarios(
         (data || []).map((cm) => ({
+          idComentario: cm.idComentario,
           user: cm.username || cm.nombreUsuario || "Usuario",
           text: cm.texto,
           time: cm.fechaComentario ? soloFecha(cm.fechaComentario) : "ahora mismo",
