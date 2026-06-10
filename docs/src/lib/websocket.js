@@ -4,8 +4,15 @@ import { useEffect, useRef } from "react";
 import SockJS from "sockjs-client";
 import { Client } from "@stomp/stompjs";
 
+// Must point at the SAME backend instance as the REST API: the STOMP broker
+// is in-memory per instance, so events posted to one host never reach
+// subscribers on another. Mirrors the localhost logic in api.js.
 const WS_URL =
-  import.meta.env.VITE_WS_URL || "https://homiewood.onrender.com/ws";
+  import.meta.env.VITE_WS_URL ||
+  (window.location.hostname === "localhost" ||
+  window.location.hostname === "127.0.0.1"
+    ? "http://localhost:8080/ws"
+    : "https://homiewood-p3p5.onrender.com/ws");
 
 function crearCliente() {
   return new Client({
