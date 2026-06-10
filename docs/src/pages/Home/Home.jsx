@@ -97,7 +97,29 @@ export default function Home() {
   }, [idUsuario, recargar]);
 
   // Live updates: a new rating over the socket resets the feed to the top.
-  useCalificacionesSocket(recargar);
+  useCalificacionesSocket(useCallback(async (nuevaCalificacion) => {
+    if (!esPublicacion(nuevaCalificacion)) return;
+
+    try {
+      const postCompleto = await apiRequest(`/calificaciones/${nuevaCalificacion.idCalificacion}`);
+      setPosts((prev) => {
+        const existe = prev.some((c) => c.idCalificacion === postCompleto.idCalificacion);
+        if (existe) {
+          // Actualizar el post existente con datos frescos
+          return prev.map((c) =>
+            c.idCalificacion === postCompleto.idCalificacion ? postCompleto : c
+          );
+        }
+        return [postCompleto, ...prev];
+      });
+    } catch {
+      setPosts((prev) => {
+        const vistos = new Set(prev.map((c) => c.idCalificacion));
+        if (vistos.has(nuevaCalificacion.idCalificacion)) return prev;
+        return [nuevaCalificacion, ...prev];
+      });
+    }
+  }, []));
 
   // Infinite scroll: load the next page when the sentinel nears the viewport.
   useEffect(() => {
@@ -144,7 +166,7 @@ export default function Home() {
     <>
       <div className={styles.mainRow} style={feedThemeStyle}>
         <div className={styles.feedCol}>
-          <Composer onPosted={recargar} />
+          <Composer onPosted={null} />
 
           <div>
             {vacio ? (

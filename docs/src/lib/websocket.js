@@ -7,31 +7,17 @@ import { Client } from "@stomp/stompjs";
 const WS_URL =
   import.meta.env.VITE_WS_URL || "https://homiewood.onrender.com/ws";
 
-export function crearStompClient(onCalificacion) {
-  const client = new Client({
+function crearCliente() {
+  return new Client({
     webSocketFactory: () => new SockJS(WS_URL),
     reconnectDelay: 5000,
+    heartbeatIncoming: 10000,
+    heartbeatOutgoing: 10000,
     debug: () => {},
-    onConnect: () => {
-      console.log("✅ WebSocket conectado");
-      client.subscribe("/topic/calificaciones", (mensaje) => {
-        try {
-          const calificacion = JSON.parse(mensaje.body);
-          console.log("🔔 Nueva calificación:", calificacion);
-          if (typeof onCalificacion === "function") {
-            onCalificacion(calificacion);
-          }
-        } catch (error) {
-          console.error("Error parseando calificación WS:", error);
-        }
-      });
-    },
     onStompError: (frame) => {
       console.log("❌ Error WebSocket:", frame);
     },
   });
-
-  return client;
 }
 
 // React hook: subscribes to /topic/calificaciones and invokes the latest
@@ -41,13 +27,44 @@ export function useCalificacionesSocket(onCalificacion) {
   cbRef.current = onCalificacion;
 
   useEffect(() => {
-    const client = crearStompClient((calificacion) => {
-      if (cbRef.current) cbRef.current(calificacion);
-    });
-    client.activate();
-
-    return () => {
-      client.deactivate();
+    const client = crearCliente();
+    client.onConnect = () => {
+      console.log("✅ WebSocket conectado");
+      client.subscribe("/topic/calificaciones", (mensaje) => {
+        try {
+          const calificacion = JSON.parse(mensaje.body);
+          console.log("🔔 Nueva calificación:", calificacion);
+          if (cbRef.current) cbRef.current(calificacion);
+        } catch (error) {
+          console.error("Error parseando calificación WS:", error);
+        }
+      });
     };
+    client.activate();
+    return () => client.deactivate();
   }, []);
+}
+
+// React hook: subscribes to /topic/comentarios/{idCalificacion} and invokes
+// the latest callback for each incoming comment.
+export function useComentariosSocket(idCalificacion, onComentario) {
+  const cbRef = useRef(onComentario);
+  cbRef.current = onComentario;
+
+  useEffect(() => {
+    if (!idCalificacion) return;
+    const client = crearCliente();
+    client.onConnect = () => {
+      client.subscribe(`/topic/comentarios/${idCalificacion}`, (mensaje) => {
+        try {
+          const comentario = JSON.parse(mensaje.body);
+          if (cbRef.current) cbRef.current(comentario);
+        } catch (error) {
+          console.error("Error parseando comentario WS:", error);
+        }
+      });
+    };
+    client.activate();
+    return () => client.deactivate();
+  }, [idCalificacion]);
 }

@@ -15,7 +15,8 @@ import {
   normalizarContenidoApi,
   obtenerTagsDelItem,
 } from "../../lib/contenido.js";
-import { soloFecha } from "../../lib/format.js";
+import { esEstrenoSensible, motivoSpoiler } from "../../lib/spoiler.js";
+import PostCard from "../../components/PostCard/PostCard.jsx";
 import ProfileBanner from "../../components/profile/ProfileBanner.jsx";
 import ProfileHero from "../../components/profile/ProfileHero.jsx";
 import ProfileTabs from "../../components/profile/ProfileTabs.jsx";
@@ -297,12 +298,6 @@ function obtenerProfileTheme(id, appearanceMode = "dark") {
   }
 
   return theme;
-}
-
-function estrellas(puntaje) {
-  let s = "";
-  for (let i = 1; i <= 5; i++) s += i <= puntaje ? "★" : "☆";
-  return s;
 }
 
 function esPublicacion(c) {
@@ -922,6 +917,20 @@ export default function Profile() {
                 </div>
               )}
 
+              {pSelected && esEstrenoSensible(pSelected.fechaEstreno) && (
+                <div className={styles.spoilerNotice}>
+                  <i className="bi bi-exclamation-triangle-fill"></i>
+                  <p>
+                    Tu post es sobre un{" "}
+                    <strong>
+                      estreno {motivoSpoiler(pSelected.fechaEstreno) === "futuro" ? "futuro" : "reciente"}
+                    </strong>{" "}
+                    y podrá ser susceptible a <strong>SPOILERS.</strong> Estará
+                    oculto para los demás a menos que decidan verlo.
+                  </p>
+                </div>
+              )}
+
               <label className={`${styles.composerLabel} mt-3`}>
                 2. ¿Qué quieres compartir?
               </label>
@@ -951,45 +960,14 @@ export default function Profile() {
         </section>
         )}
 
-        {/* FEED */}
+        {/* FEED — shared PostCard module (same as Home / Trending) */}
         <section className={styles.profileFeed} aria-label="Posts del usuario">
           {posts.length === 0 ? (
             <p className={styles.emptyFeed}>Aún no has publicado nada.</p>
           ) : (
-            posts.map((c) => {
-              const titulo =
-                c.tituloContenido || c.contenidoTitulo || c.titulo || "Contenido";
-              const tipo = c.tipoContenido || c.contenidoTipo || "Contenido";
-              const poster = c.posterUrl || c.contenidoPosterUrl || "";
-              const puntaje = Number(c.puntaje || 0);
-              return (
-                <article className={styles.postCard} key={c.idCalificacion}>
-                  <div
-                    className={styles.postCover}
-                    style={
-                      poster
-                        ? { backgroundImage: `url('${poster}')` }
-                        : { background: "linear-gradient(135deg,#2a1a4a,#5a2a8a)" }
-                    }
-                  ></div>
-                  <div className={styles.postBody}>
-                    <div className={styles.postMovieInfo}>
-                      <span className={styles.postMovieTitle}>{titulo}</span>
-                      <span className={styles.postMovieMeta}>{tipo}</span>
-                    </div>
-                    {puntaje > 0 && (
-                      <div className={styles.postRating} aria-label={`${puntaje} de 5 estrellas`}>
-                        {estrellas(puntaje)}
-                      </div>
-                    )}
-                    <p className={styles.postText}>{c.comentario || ""}</p>
-                    <div className={styles.postFooter}>
-                      <span className={styles.postDate}>{soloFecha(c.fechaCalificacion)}</span>
-                    </div>
-                  </div>
-                </article>
-              );
-            })
+            posts.map((c) => (
+              <PostCard key={c.idCalificacion} calificacion={c} currentUser={usuario} />
+            ))
           )}
         </section>
       </main>

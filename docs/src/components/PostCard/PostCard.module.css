@@ -1,248 +1,343 @@
-.post-card {
-  background: var(--warm-surface);
-  border: 1px solid var(--warm-border);
-  border-radius: 16px;
-  padding: 16px;
-  margin-bottom: 16px;
-  transition: background-color 0.3s ease, border-color 0.3s ease;
+/* ============================================================
+   PostCard — redesigned layout (shared across Home / Trending /
+   Profile). Reads the same design tokens / profile-accent as the
+   rest of the app.
+
+     ┌──────────────────────────────────────────────┐
+     │  [avatar] username · fecha                    │  header
+     ├───────────────┬──────────────────────────────┤
+     │               │  TÍTULO            [tag]      │
+     │    poster      │  ★★★★☆  4                    │  body
+     │  (rating +     │  "review text…"              │
+     │   add-to-list) │                              │
+     ├───────────────┴──────────────────────────────┤
+     │  💬 3 comentarios          👍 12   👎 1        │  footer
+     └──────────────────────────────────────────────┘
+   ============================================================ */
+
+.card {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 0 0, rgba(var(--profile-accent-rgb, 255, 210, 19), 0.13), transparent 34%),
+    rgba(var(--profile-accent-rgb, 255, 210, 19), 0.065);
+  border: 1px solid rgba(var(--profile-accent-rgb, 255, 210, 19), 0.26);
+  border-radius: 18px;
+  padding: 16px 18px;
+  margin-bottom: 18px;
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.22);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
 }
 
-.post-card .timestamp {
-  font-size: 0.78rem;
-  color: var(--gold-dim);
-  margin-bottom: 10px;
+.card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(var(--profile-accent-rgb, 255, 210, 19), 0.45);
+  box-shadow:
+    0 18px 42px rgba(0, 0, 0, 0.32),
+    0 0 20px rgba(var(--profile-accent-rgb, 255, 210, 19), 0.12);
 }
 
-.post-layout {
+/* ---------- Header ---------- */
+.head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 2px solid rgba(var(--profile-accent-rgb, 255, 210, 19), 0.6);
+  box-shadow: 0 0 12px rgba(var(--profile-accent-rgb, 255, 210, 19), 0.18);
+}
+
+.headText {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+  min-width: 0;
+}
+
+.username {
+  font-family: var(--font-title);
+  font-size: 20px;
+  letter-spacing: 0.4px;
+  color: var(--gold);
+}
+
+.timestamp {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: color-mix(in srgb, var(--gold) 70%, var(--muted));
+}
+
+.headSpacer {
+  flex: 1;
+}
+
+/* ---------- Body: poster + content ---------- */
+.body {
   display: grid;
-  grid-template-columns: 125px 0.6fr 1fr;
-  gap: 14px;
+  grid-template-columns: 130px 1fr;
+  gap: 16px;
   align-items: start;
 }
 
-.post-col-poster {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+/* Holds the poster + the overlaid add-to-list pill. No overflow:hidden here so
+   the list dropdown can escape the poster's clipped bounds. */
+.posterCol {
+  position: relative;
+  width: 130px;
 }
 
-.post-col-film {
+.posterWrap {
+  position: relative;
+  width: 130px;
+  height: 196px;
+  border-radius: 12px;
+  overflow: hidden;
+  flex-shrink: 0;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+  transition: transform 0.25s ease, filter 0.25s ease;
+}
+
+.posterWrap:hover {
+  transform: scale(1.03);
+  filter: drop-shadow(0 0 8px rgba(var(--profile-accent-rgb, 255, 210, 19), 0.5));
+}
+
+.poster {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  font-size: 0.62rem;
+  font-weight: 900;
+  text-align: center;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+}
+
+/* Rating badge floating over the poster */
+.ratingBadge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.62);
+  backdrop-filter: blur(4px);
+  color: var(--gold);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.ratingBadge :global(.bi) {
+  font-size: 0.8rem;
+}
+
+/* Spinner shown over the poster while the film detail is being fetched. */
+.posterLoading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(2px);
+  z-index: 2;
+}
+
+.posterLoading :global(.bi) {
+  font-size: 1.8rem;
+  color: var(--gold);
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.filmError {
+  margin-top: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--danger);
+  text-align: center;
+}
+
+/* Add-to-list pill overlaid on the poster's bottom-right corner. Sits on the
+   non-clipping .posterCol so its dropdown isn't cut off, and outside the
+   hover-scaling .posterWrap so it stays put while the poster zooms. */
+.posterListWrap {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  margin: 0;
+  z-index: 3;
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.55));
+}
+
+.content {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
   min-width: 0;
 }
 
-.post-film-title {
+.titleRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.title {
   font-family: var(--font-title);
-  font-size: 21px;
+  font-size: 26px;
+  line-height: 1.05;
   color: var(--text-strong);
-  line-height: 1.2;
   word-break: break-word;
 }
 
-.post-film-meta {
-  font-size: 0.78rem;
-  color: var(--gold-dim);
-  font-weight: 600;
-}
-
-.post-film-cast {
-  font-size: 0.75rem;
-  color: var(--muted);
-  font-weight: 500;
-  line-height: 1.4;
-}
-
-.post-film-desc {
-  font-size: 0.78rem;
-  color: var(--text);
-  opacity: 0.8;
-  line-height: 1.5;
-  display: -webkit-box;
-  -webkit-line-clamp: 4;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.post-film-rating {
+.stars {
   display: flex;
   align-items: center;
   gap: 4px;
-  flex-wrap: wrap;
 }
 
-.post-film-rating-stars {
-  display: flex;
-  gap: 1px;
-}
-
-.post-film-rating-stars :global(.bi) {
-  font-size: 15px;
+.stars :global(.bi) {
+  font-size: 16px;
   color: var(--gold);
 }
 
-.post-film-rating-value {
-  font-size: 0.78rem;
-  font-weight: 700;
+.starsValue {
+  margin-left: 4px;
+  font-size: 0.82rem;
+  font-weight: 800;
   color: var(--gold);
 }
 
-.list-wrap {
-  margin-top: 4px;
-}
-
-.post-col-social {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  min-width: 0;
-  justify-content: space-between;
-  height: 100%;
-}
-
-.post-card .username {
-  font-weight: 0;
-  font-size: 19px;
-  color: var(--gold);
-  font-family: var(--font-title);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.post-footer-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-top: auto;
-  padding-top: 8px;
-}
-
-.user-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: #4a3558;
-  border: 2px solid #9b82ac;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.post-thumb {
-  width: 135px;
-  height: 208px;
-  border-radius: 10px;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.58rem;
-  font-weight: 900;
-  color: #fff;
-  text-align: center;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
-  padding: 4px;
-  cursor: pointer;
-  transition: transform 0.2s ease, filter 0.2s ease;
-}
-
-.post-thumb:hover {
-  transform: scale(1.05);
-  filter: drop-shadow(0 0 6px rgba(255, 216, 44, 0.6));
-}
-
-.post-text {
+.review {
+  font-size: 0.95rem;
+  line-height: 1.5;
   color: var(--text);
-  font-weight: 200;
-  padding-top: 4px;
+  font-weight: 300;
+  position: relative;
+  padding-left: 12px;
 }
 
-/* Merged from the two legacy .post-actions rules (later props win). */
-.post-actions {
+.review::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 2px;
+  bottom: 2px;
+  width: 3px;
+  border-radius: 3px;
+  background: var(--gold);
+  opacity: 0.8;
+}
+
+/* ---------- Footer action bar ---------- */
+.footer {
   display: flex;
   align-items: center;
-  flex-shrink: 0;
-  justify-content: flex-end;
-  gap: 12px;
-  margin-top: 14px;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(var(--profile-accent-rgb, 255, 210, 19), 0.18);
 }
 
-.post-actions button {
+.commentToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.commentToggle img {
+  transition: transform 0.25s ease, filter 0.25s ease;
+}
+
+.commentToggle:hover img {
+  transform: scale(1.15);
+  filter: drop-shadow(0 0 5px rgba(var(--profile-accent-rgb, 255, 210, 19), 0.6));
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   background: none;
   border: none;
   color: var(--muted);
-  font-weight: 700;
+  font-weight: 800;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 5px;
   transition: color 0.15s;
 }
 
-.post-actions button:hover {
+.actions button:hover {
   color: var(--text-strong);
 }
 
-.post-actions button.liked {
+.actions button.active {
   color: var(--gold);
 }
 
-.glow-image {
-  width: 35px;
-  transition: transform 0.3s ease, filter 0.3s ease;
-  cursor: pointer;
+.glowImage {
+  width: 34px;
+  transition: transform 0.25s ease, filter 0.25s ease;
 }
 
-.glow-image:hover {
-  transform: scale(1.28);
-  filter: drop-shadow(0 0 3px rgb(255, 216, 44));
+.actions button:hover .glowImage,
+.actions button.active .glowImage {
+  transform: scale(1.18);
+  filter: drop-shadow(0 0 6px rgba(var(--profile-accent-rgb, 255, 210, 19), 0.6));
 }
 
-.glow-image:active {
-  transform: scale(1.28);
-  filter: drop-shadow(0 0 3px rgb(255, 216, 44));
-}
-
-.post-actions button.active .glow-image {
-  transform: scale(1.15);
-  filter: drop-shadow(0 0 6px rgb(255, 216, 44));
-}
-
-.comment-toggle {
-  background: none;
-  border: none;
-  color: var(--text);
-  font-size: 0.82rem;
-  font-weight: 700;
-  cursor: pointer;
-  padding: 20px 0 0 0;
-  display: block;
-  width: 100%;
-  text-align: left;
-  transition: color 0.15s;
-}
-
-.comment-toggle img:hover {
-  transform: scale(1.28);
-  filter: drop-shadow(0 0 3px rgb(255, 216, 44));
-  transition: transform 0.3s ease, filter 0.3s ease;
-}
-
-.comment-section {
+/* ---------- Comments (collapsible) ---------- */
+.commentSection {
   display: none;
   margin-top: 14px;
-  border-top: 1px solid var(--border);
   padding-top: 14px;
+  border-top: 1px solid rgba(var(--profile-accent-rgb, 255, 210, 19), 0.18);
 }
 
-.comment-section.open {
+.commentSection.open {
   display: block;
+  animation: fadeIn 0.25s ease;
 }
 
-.comment-list {
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.commentList {
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -250,72 +345,75 @@
 }
 
 .comment {
+  position: relative;
+  overflow: hidden;
   display: flex;
-  gap: 8px;
-  background: var(--warm-strong);
-  border-radius: 10px;
+  gap: 10px;
+  align-items: flex-start;
   padding: 10px 12px;
+  border-radius: 12px;
+  background: linear-gradient(135deg,
+    rgba(var(--profile-accent-rgb, 255, 210, 19), 0.16),
+    rgba(var(--profile-accent-rgb, 255, 210, 19), 0.06));
+  border: 1px solid rgba(var(--profile-accent-rgb, 255, 210, 19), 0.18);
 }
 
-.comment .c-avatar {
-  width: 28px;
-  height: 28px;
+.cAvatar {
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
-  background: var(--avatar-warm);
-  border: 2px solid var(--card);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.75rem;
+  object-fit: cover;
   flex-shrink: 0;
+  border: 2px solid rgba(var(--profile-accent-rgb, 255, 210, 19), 0.5);
 }
 
-.comment .c-name {
-  font-size: 0.8rem;
+.cName {
+  font-size: 0.82rem;
   font-weight: 800;
   color: var(--gold);
 }
 
-.comment .c-text {
-  font-size: 0.88rem;
+.cText {
+  font-size: 0.9rem;
   color: var(--text);
-  font-weight: 600;
+  font-weight: 500;
 }
 
-.comment .c-time {
-  font-size: 0.7rem;
-  color: var(--gold-dim);
+.cTime {
   margin-top: 2px;
+  font-size: 0.7rem;
+  color: color-mix(in srgb, var(--gold) 70%, var(--muted));
 }
 
-.comment-input-row {
+.commentInputRow {
   display: flex;
   gap: 8px;
   align-items: center;
 }
 
-.comment-input-row input {
+.commentInputRow input {
   flex: 1;
-  background: var(--input-warm-bg);
-  border: none;
+  border: 1px solid rgba(var(--profile-accent-rgb, 255, 210, 19), 0.22);
+  background: rgba(var(--profile-accent-rgb, 255, 210, 19), 0.12);
   border-radius: 10px;
   padding: 9px 14px;
-  color: var(--input-warm-text);
+  color: var(--text);
   font-family: var(--font-body);
-  outline: none;
   font-size: 0.9rem;
+  outline: none;
 }
 
-.comment-input-row input::placeholder {
-  color: var(--input-warm-placeholder);
+.commentInputRow input:focus {
+  border-color: rgba(var(--profile-accent-rgb, 255, 210, 19), 0.48);
+  box-shadow: 0 0 0 3px rgba(var(--profile-accent-rgb, 255, 210, 19), 0.13);
 }
 
-.comment-input-row button {
-  background: var(--gold);
+.commentInputRow button {
   border: none;
+  background: var(--gold);
+  color: var(--on-accent);
   border-radius: 10px;
   padding: 9px 16px;
-  color: var(--on-accent);
   font-weight: 800;
   font-family: var(--font-body);
   cursor: pointer;
@@ -323,114 +421,125 @@
   transition: background 0.2s;
 }
 
-.comment-input-row button:hover {
+.commentInputRow button:hover {
   background: var(--gold-light);
 }
 
-@media (max-width: 767px) {
-  .post-layout {
-    grid-template-columns: 120px 1fr;
-    grid-template-rows: auto auto;
-  }
+/* ============================================================
+   Spoiler filter
+   Recent/future releases blur the post body until revealed. The
+   header and poster are lifted above the overlay so viewers can
+   still see who posted and what title it's about.
+   ============================================================ */
 
-  .post-col-social {
-    grid-column: 1 / -1;
-    grid-row: 3;
-  }
+.blurred {
+  filter: blur(9px);
+  pointer-events: none;
+  user-select: none;
 }
 
-@media (min-width: 768px) and (max-width: 1024px) {
-  .post-layout {
-    grid-template-columns: 85px 1fr 1fr;
-  }
-}
-
-/* ---------- FIX: comentarios y publicaciones con color de perfil ---------- */
-.post-card {
-  background:
-    radial-gradient(circle at 0 0, rgba(var(--profile-accent-rgb, 255, 210, 19), 0.13), transparent 34%),
-    rgba(var(--profile-accent-rgb, 255, 210, 19), 0.065);
-  border-color: rgba(var(--profile-accent-rgb, 255, 210, 19), 0.26);
-  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.22);
-}
-
-.post-card:hover {
-  border-color: rgba(var(--profile-accent-rgb, 255, 210, 19), 0.42);
-  box-shadow:
-    0 16px 38px rgba(0, 0, 0, 0.30),
-    0 0 18px rgba(var(--profile-accent-rgb, 255, 210, 19), 0.10);
-}
-
-.post-card .timestamp,
-.post-film-meta,
-.comment .c-time {
-  color: color-mix(in srgb, var(--gold) 78%, var(--muted));
-}
-
-.user-icon,
-.comment .c-avatar {
-  background: rgba(var(--profile-accent-rgb, 255, 210, 19), 0.18);
-  border-color: rgba(var(--profile-accent-rgb, 255, 210, 19), 0.54);
-  box-shadow: 0 0 12px rgba(var(--profile-accent-rgb, 255, 210, 19), 0.13);
-}
-
-.comment-section {
-  border-top-color: rgba(var(--profile-accent-rgb, 255, 210, 19), 0.22);
-}
-
-.comment {
+/* Lifts the header / poster above the spoiler overlay. */
+.lifted {
   position: relative;
-  overflow: hidden;
-  background:
-    linear-gradient(135deg, rgba(var(--profile-accent-rgb, 255, 210, 19), 0.18), rgba(var(--profile-accent-rgb, 255, 210, 19), 0.07));
-  border: 1px solid rgba(var(--profile-accent-rgb, 255, 210, 19), 0.18);
+  z-index: 4;
 }
 
-.comment::before {
-  content: "";
+.spoilerOverlay {
   position: absolute;
-  inset: 0 auto 0 0;
-  width: 3px;
-  background: var(--gold);
-  opacity: 0.9;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 16px;
+  text-align: center;
+  border-radius: 18px;
+  background: rgba(8, 6, 2, 0.42);
+  backdrop-filter: blur(1.5px);
 }
 
-.comment .c-name {
+.spoilerIcon {
+  font-size: 1.7rem;
   color: var(--gold);
+  filter: drop-shadow(0 0 8px rgba(var(--profile-accent-rgb, 255, 210, 19), 0.45));
 }
 
-.comment-input-row input {
-  background: rgba(var(--profile-accent-rgb, 255, 210, 19), 0.14);
-  border: 1px solid rgba(var(--profile-accent-rgb, 255, 210, 19), 0.22);
+.spoilerTitle {
+  font-family: var(--font-title);
+  font-size: 20px;
+  letter-spacing: 0.5px;
+  color: var(--text-strong);
+}
+
+.spoilerSub {
+  font-size: 0.78rem;
+  font-weight: 600;
   color: var(--text);
+  opacity: 0.85;
+  max-width: 280px;
 }
 
-.comment-input-row input::placeholder {
-  color: color-mix(in srgb, var(--gold) 62%, var(--muted));
-}
-
-.comment-input-row input:focus {
-  border-color: rgba(var(--profile-accent-rgb, 255, 210, 19), 0.48);
-  box-shadow: 0 0 0 3px rgba(var(--profile-accent-rgb, 255, 210, 19), 0.13);
-}
-
-.comment-input-row button,
-.post-actions button.active span {
+.spoilerReveal {
+  margin-top: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: none;
+  border-radius: 999px;
+  padding: 9px 18px;
+  background: var(--gold);
   color: var(--on-accent);
+  font-family: var(--font-body);
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
 }
 
-.glow-image:hover,
-.post-actions button.active .glow-image,
-.comment-toggle img:hover,
-.post-thumb:hover {
-  filter: drop-shadow(0 0 6px rgba(var(--profile-accent-rgb, 255, 210, 19), 0.58));
+.spoilerReveal:hover {
+  background: var(--gold-light);
+  transform: translateY(-1px);
 }
 
-@supports not (background: color-mix(in srgb, #fff 10%, transparent)) {
-  .post-card .timestamp,
-  .post-film-meta,
-  .comment .c-time,
-  .comment-input-row input::placeholder {
-    color: var(--gold-dim);
+/* Small "re-hide" chip floating at the card's top-right once revealed. */
+.spoilerHide {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid rgba(var(--profile-accent-rgb, 255, 210, 19), 0.35);
+  border-radius: 999px;
+  padding: 4px 11px;
+  background: rgba(8, 6, 2, 0.35);
+  color: var(--gold);
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.spoilerHide:hover {
+  background: rgba(8, 6, 2, 0.55);
+  border-color: rgba(var(--profile-accent-rgb, 255, 210, 19), 0.6);
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 767px) {
+  .body {
+    grid-template-columns: 120px 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .body {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+  .content {
+    width: 100%;
   }
 }
