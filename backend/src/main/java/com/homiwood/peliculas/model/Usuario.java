@@ -32,6 +32,12 @@ public class Usuario {
     @Column(nullable = false)
     private Boolean perfilPrivado = false;
 
+    @Column(nullable = false, length = 30)
+    private String temaPerfil = "yellow";
+
+    @Column(nullable = false, length = 20)
+    private String portadaPerfil = "top1";
+
     private LocalDateTime fechaCreacion = LocalDateTime.now();
 
     public Long getIdUsuario() {
@@ -96,6 +102,22 @@ public class Usuario {
 
     public void setPerfilPrivado(Boolean perfilPrivado) {
         this.perfilPrivado = perfilPrivado;
+    }
+
+    public String getTemaPerfil() {
+        return temaPerfil;
+    }
+
+    public void setTemaPerfil(String temaPerfil) {
+        this.temaPerfil = temaPerfil;
+    }
+
+    public String getPortadaPerfil() {
+        return portadaPerfil;
+    }
+
+    public void setPortadaPerfil(String portadaPerfil) {
+        this.portadaPerfil = portadaPerfil;
     }
 
     public LocalDateTime getFechaCreacion() {

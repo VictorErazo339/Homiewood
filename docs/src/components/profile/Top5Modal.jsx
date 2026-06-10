@@ -44,33 +44,55 @@ function cx(...nombres) {
     .join(" ");
 }
 
+function payloadTop5(item, posicion) {
+  return {
+    proveedor: item.proveedor,
+    apiId: String(item.apiId),
+    titulo: item.titulo,
+    tipoContenido: item.tipoBackend || convertirTipoBackend(item.tipoVisual),
+    descripcion: item.descripcion || "",
+    fechaEstreno: item.fechaEstreno || null,
+    anioEstreno: item.anioEstreno || null,
+    posterUrl: item.posterUrl || "",
+    idiomaOriginal: item.idioma || "",
+    puntajeExterno: item.puntajeExterno || 0,
+    posicion: posicion + 1,
+    estado: "FAVORITO",
+    generos: item.generos || [],
+  };
+}
+
 /**
  * Modal compartido para editar el Top 5.
- * Lo usan Profile, Vistas y PorVer mediante ProfileChrome.
+ * Cambio v2:
+ * - Ya no requiere botón Guardar.
+ * - Primero eliges una posición (#1 a #5) y luego haces click en un resultado.
+ * - El resultado se guarda inmediatamente en esa posición.
+ * - También puedes arrastrar un resultado a un slot y se guarda al soltarlo.
  */
 export default function Top5Modal({ open, onClose, idUsuario, top5 = [], onSaved }) {
   const inputRef = useRef(null);
 
   const [query, setQuery] = useState("");
   const [results, setResults] = useState(null);
-  const [selected, setSelected] = useState(null);
   const [pos, setPos] = useState(null);
-  const [saving, setSaving] = useState(false);
+  const [savingPos, setSavingPos] = useState(null);
   const [mensaje, setMensaje] = useState("");
   const [draftTop5, setDraftTop5] = useState(() => normalizarTop5(top5));
   const [dragOverPos, setDragOverPos] = useState(null);
 
-  const totalCompletos = useMemo(() => top5.filter(Boolean).length, [top5]);
-  const posOcupada = pos !== null && !!top5[pos];
-  const puedeGuardar = !!selected && pos !== null && !saving;
+  const saving = savingPos !== null;
+  const totalCompletos = useMemo(() => draftTop5.filter(Boolean).length, [draftTop5]);
+  const posicionActual = pos !== null ? draftTop5[pos] : null;
+  const posOcupada = Boolean(posicionActual);
 
   useEffect(() => {
     if (!open) {
       setQuery("");
       setResults(null);
-      setSelected(null);
       setPos(null);
       setMensaje("");
+      setSavingPos(null);
       setDragOverPos(null);
       setDraftTop5(normalizarTop5(top5));
       return;
@@ -79,6 +101,7 @@ export default function Top5Modal({ open, onClose, idUsuario, top5 = [], onSaved
     const normalizado = normalizarTop5(top5);
     setDraftTop5(normalizado);
     setPos(primeraPosicionDisponible(normalizado));
+    setMensaje("Elige una posición y toca un resultado: se guardará altiro.");
     setTimeout(() => inputRef.current?.focus(), 120);
   }, [open, top5]);
 
@@ -111,33 +134,62 @@ export default function Top5Modal({ open, onClose, idUsuario, top5 = [], onSaved
     return () => clearTimeout(timeout);
   }, [query, open]);
 
-  function colocarEnPosicion(item, nuevaPos) {
-    if (!item || nuevaPos === null) return;
-
-    setSelected(item);
+  function seleccionarPosicion(nuevaPos) {
+    if (saving) return;
     setPos(nuevaPos);
-    setMensaje(`"${item.titulo}" queda listo para la posición #${nuevaPos + 1}. Presiona Guardar para confirmar.`);
+    setMensaje(
+      draftTop5[nuevaPos]
+        ? `Posición #${nuevaPos + 1} seleccionada. El próximo resultado reemplazará "${draftTop5[nuevaPos].titulo}".`
+        : `Posición #${nuevaPos + 1} seleccionada. El próximo resultado se guardará aquí.`
+    );
+  }
+
+  async function guardarItemEnPosicion(item, nuevaPos) {
+    if (!item || nuevaPos === null || nuevaPos === undefined || !idUsuario || saving) return;
+
+    const anterior = draftTop5[nuevaPos] || null;
+
+    setPos(nuevaPos);
+    setSavingPos(nuevaPos);
+    setMensaje(`Guardando "${item.titulo}" en la posición #${nuevaPos + 1}...`);
 
     setDraftTop5((actual) => {
       const copia = normalizarTop5(actual);
       copia[nuevaPos] = item;
       return copia;
     });
+
+    try {
+      await apiRequest(`/usuarios/${idUsuario}/listas/top5/contenidos/externo`, {
+        method: "POST",
+        body: JSON.stringify(payloadTop5(item, nuevaPos)),
+      });
+
+      await onSaved?.();
+
+      setMensaje(
+        anterior
+          ? `Listo: reemplazaste la posición #${nuevaPos + 1} por "${item.titulo}".`
+          : `Listo: "${item.titulo}" quedó en la posición #${nuevaPos + 1}.`
+      );
+    } catch (error) {
+      console.error("Error guardando Top 5:", error);
+
+      setDraftTop5((actual) => {
+        const copia = normalizarTop5(actual);
+        copia[nuevaPos] = anterior;
+        return copia;
+      });
+
+      setMensaje("No se pudo guardar en tu Top 5. Intenta de nuevo.");
+    } finally {
+      setSavingPos(null);
+    }
   }
 
   function seleccionarResultado(item) {
     const destino = pos !== null ? pos : primeraPosicionDisponible(draftTop5);
-    colocarEnPosicion(item, destino);
-  }
-
-  function seleccionarPosicion(nuevaPos) {
-    if (selected) {
-      colocarEnPosicion(selected, nuevaPos);
-      return;
-    }
-
-    setPos(nuevaPos);
-    setMensaje("");
+    guardarItemEnPosicion(item, destino);
   }
 
   function handleDragStartResultado(event, item) {
@@ -150,6 +202,7 @@ export default function Top5Modal({ open, onClose, idUsuario, top5 = [], onSaved
 
   function handleDragOverSlot(event, nuevaPos) {
     event.preventDefault();
+    if (saving) return;
     event.dataTransfer.dropEffect = "copy";
     setDragOverPos(nuevaPos);
   }
@@ -157,6 +210,7 @@ export default function Top5Modal({ open, onClose, idUsuario, top5 = [], onSaved
   function handleDropSlot(event, nuevaPos) {
     event.preventDefault();
     setDragOverPos(null);
+    if (saving) return;
 
     try {
       const raw = event.dataTransfer.getData("application/json");
@@ -164,67 +218,26 @@ export default function Top5Modal({ open, onClose, idUsuario, top5 = [], onSaved
 
       const payload = JSON.parse(raw);
       if (payload?.source === "catalogo" && payload.item) {
-        colocarEnPosicion(payload.item, nuevaPos);
+        guardarItemEnPosicion(payload.item, nuevaPos);
       }
     } catch (error) {
       console.error("Error recibiendo contenido arrastrado:", error);
     }
   }
 
-  async function guardar() {
-    if (!selected || pos === null || !idUsuario) return;
-
-    setSaving(true);
-    setMensaje("");
-
-    try {
-      const item = selected;
-
-      await apiRequest(`/usuarios/${idUsuario}/listas/top5/contenidos/externo`, {
-        method: "POST",
-        body: JSON.stringify({
-          proveedor: item.proveedor,
-          apiId: String(item.apiId),
-          titulo: item.titulo,
-          tipoContenido: item.tipoBackend || convertirTipoBackend(item.tipoVisual),
-          descripcion: item.descripcion || "",
-          fechaEstreno: item.fechaEstreno || null,
-          anioEstreno: item.anioEstreno || null,
-          posterUrl: item.posterUrl || "",
-          idiomaOriginal: item.idioma || "",
-          puntajeExterno: item.puntajeExterno || 0,
-          posicion: pos + 1,
-          estado: "FAVORITO",
-          generos: item.generos || [],
-        }),
-      });
-
-      await onSaved?.();
-
-      setMensaje(
-        posOcupada
-          ? `Posición #${pos + 1} reemplazada correctamente.`
-          : `Agregado en la posición #${pos + 1}.`
-      );
-      setSelected(null);
-      setQuery("");
-      setResults(null);
-    } catch (error) {
-      console.error("Error guardando Top 5:", error);
-      setMensaje("No se pudo guardar en tu Top 5. Intenta de nuevo.");
-    } finally {
-      setSaving(false);
-    }
-  }
-
   async function vaciarPosicion() {
-    if (pos === null || !top5[pos]) return;
+    if (pos === null || !posicionActual || saving) return;
 
-    const item = top5[pos];
-    const ok = confirm(`¿Eliminar "${item.titulo}" de la posición #${pos + 1}?`);
+    const item = top5[pos] || posicionActual;
+    const ok = confirm(`¿Eliminar "${posicionActual.titulo}" de la posición #${pos + 1}?`);
     if (!ok) return;
 
-    setSaving(true);
+    if (!item.idListaContenido && !(item.idLista && item.idContenido)) {
+      setMensaje("Espera un momento a que termine de sincronizarse antes de eliminar esta posición.");
+      return;
+    }
+
+    setSavingPos(pos);
     setMensaje("");
 
     try {
@@ -245,13 +258,12 @@ export default function Top5Modal({ open, onClose, idUsuario, top5 = [], onSaved
       });
 
       await onSaved?.();
-      setSelected(null);
       setMensaje(`Posición #${pos + 1} eliminada.`);
     } catch (error) {
       console.error("Error eliminando posición:", error);
       setMensaje("No se pudo eliminar la posición seleccionada.");
     } finally {
-      setSaving(false);
+      setSavingPos(null);
     }
   }
 
@@ -265,7 +277,7 @@ export default function Top5Modal({ open, onClose, idUsuario, top5 = [], onSaved
               EDITAR MI TOP 5
             </h3>
             <p className={cx("top5ModalSubtitle")}>
-              Elige una posición, busca una película o serie y arrástrala al cuadro del ranking. Si la posición ya tiene contenido, se reemplaza al guardar.
+              Elige un cuadro del ranking y luego toca una película o serie. Se guardará automáticamente en esa posición.
             </p>
           </div>
 
@@ -276,84 +288,49 @@ export default function Top5Modal({ open, onClose, idUsuario, top5 = [], onSaved
           className={cx("top5DraftSlots")}
           role="radiogroup"
           aria-label="Posiciones actuales del Top 5"
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(5, minmax(86px, 116px))",
-            justifyContent: "start",
-            alignItems: "start",
-            gap: "0.65rem",
-            maxWidth: "100%",
-            overflowX: "auto",
-            overflowY: "hidden",
-            padding: "0.15rem 0 0.5rem",
-            margin: "0.1rem 0 0.35rem",
-          }}
         >
           {POSICIONES.map((i) => {
             const item = draftTop5[i];
             const selectedSlot = pos === i;
             const dropTarget = dragOverPos === i;
+            const savingThis = savingPos === i;
 
             return (
               <button
                 key={i}
                 type="button"
-                className={cx("top5DraftSlot", selectedSlot && "isSelected", dropTarget && "isDropTarget", item && "isFilled")}
+                className={cx(
+                  "top5DraftSlot",
+                  selectedSlot && "isSelected",
+                  dropTarget && "isDropTarget",
+                  item && "isFilled"
+                )}
                 aria-pressed={selectedSlot}
+                disabled={saving}
                 onClick={() => seleccionarPosicion(i)}
                 onDragOver={(event) => handleDragOverSlot(event, i)}
                 onDragLeave={() => setDragOverPos(null)}
                 onDrop={(event) => handleDropSlot(event, i)}
-                style={{
-                  position: "relative",
-                  width: "100%",
-                  height: "clamp(126px, 15vw, 158px)",
-                  minHeight: "126px",
-                  maxHeight: "158px",
-                  display: "block",
-                  padding: 0,
-                  overflow: "hidden",
-                  borderRadius: "14px",
-                  border: selectedSlot || dropTarget
-                    ? "1px solid var(--gold)"
-                    : "1px solid rgba(255, 255, 255, 0.14)",
-                  background: "rgba(18, 20, 28, 0.92)",
-                  cursor: "pointer",
-                  appearance: "none",
-                  WebkitAppearance: "none",
-                }}
               >
                 <span className={cx("top5DraftRank")}>#{i + 1}</span>
 
                 {item?.posterUrl ? (
-                  <img
-                    src={item.posterUrl}
-                    alt={item.titulo}
-                    loading="lazy"
-                    decoding="async"
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      display: "block",
-                      objectFit: "cover",
-                      objectPosition: "center",
-                    }}
-                  />
+                  <img src={item.posterUrl} alt={item.titulo} loading="lazy" decoding="async" />
                 ) : (
                   <span className={cx("top5DraftEmpty")}>+</span>
                 )}
 
                 <span className={cx("top5DraftOverlay")}>
-                  <strong>{item ? tituloCorto(item.titulo) : "Vacío"}</strong>
-                  <small>{selectedSlot ? "Seleccionado" : item ? "Cambiar" : "Arrastra aquí"}</small>
+                  <strong>{savingThis ? "Guardando..." : item ? tituloCorto(item.titulo) : "Vacío"}</strong>
+                  <small>{selectedSlot ? "Seleccionado" : item ? "Click para reemplazar" : "Click para usar"}</small>
                 </span>
               </button>
             );
           })}
         </div>
 
-        <div className={cx("top5ModalGrid")}>
-          <section className={cx("top5SearchPanel")}>
+        <div className={cx("top5ModalGrid")}> 
+          <section className={cx("top5SearchPanel")}> 
             <label className={mstyles.formLabel}>BUSCAR PELÍCULA O SERIE</label>
 
             <div className={cx("top5SearchBox")}>
@@ -365,6 +342,7 @@ export default function Top5Modal({ open, onClose, idUsuario, top5 = [], onSaved
                 placeholder="Ej: Demon Slayer, Crash Landing on You..."
                 autoComplete="off"
                 value={query}
+                disabled={saving}
                 onChange={(e) => {
                   setQuery(e.target.value);
                   setMensaje("");
@@ -388,9 +366,10 @@ export default function Top5Modal({ open, onClose, idUsuario, top5 = [], onSaved
                   <button
                     key={`${item.proveedor || "BD"}-${item.apiId || item.titulo}-${i}`}
                     type="button"
-                    className={cx("top5ResultBtn", selected === item && "isSelected")}
-                    draggable
-                    title="Arrastra esta película a una posición del Top 5"
+                    className={cx("top5ResultBtn")}
+                    draggable={!saving}
+                    disabled={saving}
+                    title="Click para guardar en la posición seleccionada. También puedes arrastrar al cuadro."
                     onDragStart={(event) => handleDragStartResultado(event, item)}
                     onClick={() => seleccionarResultado(item)}
                   >
@@ -410,41 +389,36 @@ export default function Top5Modal({ open, onClose, idUsuario, top5 = [], onSaved
             </div>
           </section>
 
-          <aside className={cx("top5EditorPanel")}>
-            <div className={cx("top5Preview", !selected && "isEmpty")} aria-live="polite">
-              {selected ? (
+          <aside className={cx("top5EditorPanel")}> 
+            <div className={cx("top5Preview", !posicionActual && "isEmpty")} aria-live="polite">
+              {posicionActual ? (
                 <>
-                  {selected.posterUrl ? (
+                  {posicionActual.posterUrl ? (
                     <img
                       className={cx("top5PreviewPoster")}
-                      src={selected.posterUrl}
-                      alt={selected.titulo}
+                      src={posicionActual.posterUrl}
+                      alt={posicionActual.titulo}
                       loading="lazy"
                       decoding="async"
-                      style={{
-                        width: "min(128px, 74%)",
-                        maxHeight: "192px",
-                        objectFit: "cover",
-                      }}
                     />
                   ) : (
                     <div className={cx("top5PreviewPosterEmpty")}></div>
                   )}
 
-                  <strong>{selected.titulo}</strong>
-                  <small>{textoMeta(selected) || "Contenido"}</small>
+                  <strong>#{pos + 1} · {posicionActual.titulo}</strong>
+                  <small>{textoMeta(posicionActual) || "Contenido"}</small>
                 </>
               ) : (
-                <div className={cx("top5PreviewEmptyContent")}>
+                <div className={cx("top5PreviewEmptyContent")}> 
                   <span>🎞️</span>
-                  <strong>Elige un resultado</strong>
-                  <small>También puedes arrastrarlo directo al ranking.</small>
+                  <strong>{pos === null ? "Elige una posición" : `Posición #${pos + 1} vacía`}</strong>
+                  <small>Al tocar un resultado se guardará aquí.</small>
                 </div>
               )}
             </div>
 
-            <div className={cx("top5PositionBox")}>
-              <label className={mstyles.formLabel}>ELEGIR POSICIÓN</label>
+            <div className={cx("top5PositionBox")}> 
+              <label className={mstyles.formLabel}>POSICIÓN SELECCIONADA</label>
 
               <div className={cx("top5SlotOptions")} role="radiogroup" aria-label="Posición en el Top 5">
                 {POSICIONES.map((p) => {
@@ -454,7 +428,8 @@ export default function Top5Modal({ open, onClose, idUsuario, top5 = [], onSaved
                     <button
                       key={p}
                       type="button"
-                      className={cx("top5SlotBtn", pos === p && "isSelected")}
+                      className={cx("top5SlotBtn", pos === p && "isSelected", dragOverPos === p && "isDropTarget")}
+                      disabled={saving}
                       onClick={() => seleccionarPosicion(p)}
                       onDragOver={(event) => handleDragOverSlot(event, p)}
                       onDragLeave={() => setDragOverPos(null)}
@@ -463,7 +438,7 @@ export default function Top5Modal({ open, onClose, idUsuario, top5 = [], onSaved
                       <strong>#{p + 1}</strong>
                       <span>
                         <b>{item ? tituloCorto(item.titulo) : "Vacío"}</b>
-                        <small>{item ? "Se puede reemplazar" : "Disponible"}</small>
+                        <small>{item ? "Click para reemplazar" : "Disponible"}</small>
                       </span>
                     </button>
                   );
@@ -471,12 +446,12 @@ export default function Top5Modal({ open, onClose, idUsuario, top5 = [], onSaved
               </div>
             </div>
 
-            <p className={cx("top5PositionHint")}>
+            <p className={cx("top5PositionHint")}> 
               {pos === null
                 ? "Selecciona una posición."
                 : posOcupada
-                  ? `La posición #${pos + 1} se reemplazará al guardar.`
-                  : `Se guardará en la posición #${pos + 1}.`}
+                  ? `La posición #${pos + 1} se reemplazará al tocar un resultado.`
+                  : `El próximo resultado se guardará en la posición #${pos + 1}.`}
             </p>
 
             {posOcupada && (
@@ -495,12 +470,8 @@ export default function Top5Modal({ open, onClose, idUsuario, top5 = [], onSaved
         </div>
 
         <div className={mstyles.modalActions}>
-          <button type="button" className={mstyles.btnCancel} onClick={onClose} disabled={saving}>
-            Listo
-          </button>
-
-          <button type="button" className={mstyles.btnSave} disabled={!puedeGuardar} onClick={guardar}>
-            {saving ? "Guardando..." : posOcupada ? "Reemplazar posición" : "Guardar en Top 5"}
+          <button type="button" className={mstyles.btnSave} onClick={onClose} disabled={saving}>
+            {saving ? "Guardando..." : "Listo"}
           </button>
         </div>
       </div>

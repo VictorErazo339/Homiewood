@@ -147,8 +147,8 @@ public class CatalogoGuardarService {
         String tipo =
                 request.getTipoContenido().toUpperCase();
 
-        if (!tipo.equals("PELICULA") && !tipo.equals("SERIE")) {
-            throw new BadRequestException("El tipo de contenido debe ser PELICULA o SERIE");
+        if (!tipo.equals("PELICULA") && !tipo.equals("SERIE") && !tipo.equals("ANIME")) {
+            throw new BadRequestException("El tipo de contenido debe ser PELICULA, SERIE o ANIME");
         }
     }
 

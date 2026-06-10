@@ -1,7 +1,6 @@
 // Base URL for the Spring Boot backend. An explicit VITE_API_URL always wins;
 // otherwise we auto-target the local backend when the app is served from
-// localhost and the production Render URL everywhere else. (Ported from the
-// vanilla frontend's hostname switch, kept behind the Vite env override.)
+// localhost and the production Render URL everywhere else.
 const API_BASE_URL =
   import.meta.env.VITE_API_URL ||
   (window.location.hostname === "localhost" ||
@@ -39,7 +38,6 @@ export async function apiRequest(endpoint, options = {}) {
   });
 
   const contentType = response.headers.get("content-type");
-
   let data = null;
 
   if (contentType && contentType.includes("application/json")) {

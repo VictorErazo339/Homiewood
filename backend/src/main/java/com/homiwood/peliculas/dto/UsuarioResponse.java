@@ -12,6 +12,8 @@ public class UsuarioResponse {
     private LocalDateTime fechaCreacion;
     private Integer iconoPerfil;
     private Boolean perfilPrivado;
+    private String temaPerfil;
+    private String portadaPerfil;
 
     public UsuarioResponse() {
     }
@@ -32,6 +34,8 @@ public class UsuarioResponse {
             String descripcion,
             Integer iconoPerfil,
             Boolean perfilPrivado,
+            String temaPerfil,
+            String portadaPerfil,
             LocalDateTime fechaCreacion
     ) {
         this.idUsuario = idUsuario;
@@ -41,6 +45,8 @@ public class UsuarioResponse {
         this.descripcion = descripcion;
         this.iconoPerfil = iconoPerfil;
         this.perfilPrivado = perfilPrivado;
+        this.temaPerfil = temaPerfil;
+        this.portadaPerfil = portadaPerfil;
         this.fechaCreacion = fechaCreacion;
     }
 
@@ -106,5 +112,21 @@ public class UsuarioResponse {
 
     public void setPerfilPrivado(Boolean perfilPrivado) {
         this.perfilPrivado = perfilPrivado;
+    }
+
+    public String getTemaPerfil() {
+        return temaPerfil;
+    }
+
+    public void setTemaPerfil(String temaPerfil) {
+        this.temaPerfil = temaPerfil;
+    }
+
+    public String getPortadaPerfil() {
+        return portadaPerfil;
+    }
+
+    public void setPortadaPerfil(String portadaPerfil) {
+        this.portadaPerfil = portadaPerfil;
     }
 }

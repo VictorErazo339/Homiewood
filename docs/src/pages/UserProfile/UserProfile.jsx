@@ -8,6 +8,8 @@ import {
   dejarDeSeguir,
 } from "../../api/usuariosApi.js";
 import { useAuth } from "../../context/AuthContext.jsx";
+import { useTheme } from "../../context/ThemeContext.jsx";
+import { obtenerIndicePortada, obtenerProfileTheme, prefsDesdeUsuario } from "../../lib/profileTheme.js";
 import { soloFecha } from "../../lib/format.js";
 import ProfileBanner from "../../components/profile/ProfileBanner.jsx";
 import ProfileHero from "../../components/profile/ProfileHero.jsx";
@@ -27,6 +29,7 @@ export default function UserProfile() {
   const { username } = useParams();
   const navigate = useNavigate();
   const { usuario } = useAuth();
+  const { theme } = useTheme();
   const miId = usuario?.idUsuario || usuario?.id;
 
   const [estado, setEstado] = useState("loading"); // loading | ok | notfound
@@ -50,6 +53,8 @@ export default function UserProfile() {
           arr[pos] = {
             titulo: item.tituloContenido,
             posterUrl: item.posterUrl,
+            anioEstreno: item.anioEstreno,
+            tipoContenido: item.tipoContenido,
           };
         }
       });
@@ -148,10 +153,19 @@ export default function UserProfile() {
 
   const privadoBloqueado = perfil?.perfilPrivado && !loSigo;
   const top5Vacio = top5.filter(Boolean).length === 0;
+  const profilePrefs = prefsDesdeUsuario(perfil);
+  const profileTheme = obtenerProfileTheme(profilePrefs.colorTheme, theme);
+  const profileCoverIndex = obtenerIndicePortada(profilePrefs.coverMode);
+  const profileCoverPoster = profileCoverIndex >= 0 ? top5[profileCoverIndex]?.posterUrl : null;
 
   return (
-    <>
-      <ProfileBanner posterUrl={top5[0]?.posterUrl} />
+    <div
+      className={styles.profileShell}
+      style={profileTheme.vars}
+      data-cover-mode={profilePrefs.coverMode}
+      data-color-theme={profilePrefs.colorTheme}
+    >
+      <ProfileBanner posterUrl={profileCoverPoster} />
 
       <main className={styles.profileContainer}>
         <ProfileHero
@@ -262,6 +276,6 @@ export default function UserProfile() {
           </>
         )}
       </main>
-    </>
+    </div>
   );
 }

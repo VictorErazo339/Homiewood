@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class UsuarioService {
@@ -28,6 +29,17 @@ public class UsuarioService {
     private final PasswordEncoder passwordEncoder;
     private final CalificacionRepository calificacionRepository;
     private final SeguimientoRepository seguimientoRepository;
+    private static final String TEMA_PERFIL_DEFAULT = "yellow";
+    private static final String PORTADA_PERFIL_DEFAULT = "top1";
+
+    private static final Set<String> TEMAS_PERFIL_VALIDOS = Set.of(
+            "yellow", "crimson", "blue", "pink", "purple", "neon", "sunset", "mint", "sage"
+    );
+
+    private static final Set<String> PORTADAS_PERFIL_VALIDAS = Set.of(
+            "top1", "top2", "top3", "top4", "top5", "none"
+    );
+
     private final UsuarioLogroRepository usuarioLogroRepository;
 
     public UsuarioService(
@@ -67,6 +79,8 @@ public class UsuarioService {
         usuario.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         usuario.setIconoPerfil(1);
         usuario.setPerfilPrivado(false);
+        usuario.setTemaPerfil(TEMA_PERFIL_DEFAULT);
+        usuario.setPortadaPerfil(PORTADA_PERFIL_DEFAULT);
 
         return usuarioRepository.save(usuario);
     }
@@ -133,6 +147,8 @@ public class UsuarioService {
         response.setDescripcion(usuario.getDescripcion());
         response.setIconoPerfil(usuario.getIconoPerfil());
         response.setPerfilPrivado(usuario.getPerfilPrivado());
+        response.setTemaPerfil(normalizarTemaPerfil(usuario.getTemaPerfil()));
+        response.setPortadaPerfil(normalizarPortadaPerfil(usuario.getPortadaPerfil()));
 
         response.setCantidadPosts(cantidadPosts);
         response.setCantidadSeguidores(cantidadSeguidores);
@@ -190,6 +206,14 @@ public class UsuarioService {
             usuario.setDescripcion(descripcion.trim());
         }
 
+        if (request.getTemaPerfil() != null) {
+            usuario.setTemaPerfil(normalizarTemaPerfil(request.getTemaPerfil()));
+        }
+
+        if (request.getPortadaPerfil() != null) {
+            usuario.setPortadaPerfil(normalizarPortadaPerfil(request.getPortadaPerfil()));
+        }
+
         return usuarioRepository.save(usuario);
     }
 
@@ -213,6 +237,34 @@ public class UsuarioService {
         usuario.setPerfilPrivado(perfilPrivado);
 
         return usuarioRepository.save(usuario);
+    }
+
+    private String normalizarTemaPerfil(String temaPerfil) {
+        if (temaPerfil == null || temaPerfil.trim().isBlank()) {
+            return TEMA_PERFIL_DEFAULT;
+        }
+
+        String tema = temaPerfil.trim().toLowerCase();
+
+        if (!TEMAS_PERFIL_VALIDOS.contains(tema)) {
+            throw new BadRequestException("El tema de perfil no es válido");
+        }
+
+        return tema;
+    }
+
+    private String normalizarPortadaPerfil(String portadaPerfil) {
+        if (portadaPerfil == null || portadaPerfil.trim().isBlank()) {
+            return PORTADA_PERFIL_DEFAULT;
+        }
+
+        String portada = portadaPerfil.trim().toLowerCase();
+
+        if (!PORTADAS_PERFIL_VALIDAS.contains(portada)) {
+            throw new BadRequestException("La portada de perfil no es válida");
+        }
+
+        return portada;
     }
 
     public void eliminarUsuario(Long id) {
