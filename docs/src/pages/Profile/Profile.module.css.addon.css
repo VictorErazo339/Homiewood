@@ -1,0 +1,55 @@
+/* ---------- FIX: imágenes de logros compactas ----------
+   Pegar al FINAL de Profile.module.css si ves imágenes gigantes en el modal o perfil. */
+.profileAchievements .achievementItem img,
+.achievementItem img,
+.achIconImg {
+  width: 22px !important;
+  height: 22px !important;
+  min-width: 22px !important;
+  min-height: 22px !important;
+  max-width: 22px !important;
+  max-height: 22px !important;
+  flex: 0 0 22px !important;
+  object-fit: contain !important;
+  object-position: center !important;
+  display: block !important;
+}
+
+.achModalIconImg,
+.ach-modal-icon-img,
+.ach-modal-card img,
+.achModalCard img {
+  width: 38px !important;
+  height: 38px !important;
+  min-width: 38px !important;
+  min-height: 38px !important;
+  max-width: 38px !important;
+  max-height: 38px !important;
+  flex: 0 0 38px !important;
+  object-fit: contain !important;
+  object-position: center !important;
+  display: block !important;
+}
+
+.achAvatarRewardImg,
+.ach-avatar-reward-img {
+  width: 22px !important;
+  height: 22px !important;
+  min-width: 22px !important;
+  min-height: 22px !important;
+  max-width: 22px !important;
+  max-height: 22px !important;
+  border-radius: 999px !important;
+  object-fit: cover !important;
+}
+
+.iconOptionReward img,
+.icon-option-reward img,
+.iconOption img,
+.icon-option img {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  object-fit: cover !important;
+}

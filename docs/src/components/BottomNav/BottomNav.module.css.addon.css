@@ -1,0 +1,32 @@
+/* ---------- ACHIEVEMENT AVATAR IN BOTTOM NAV ---------- */
+.profile-nav-avatar,
+.profileNavAvatar {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 2px solid rgba(var(--profile-accent-rgb, 255, 210, 19), 0.38);
+  background: var(--surface-deep, #11131a);
+  overflow: hidden;
+  box-shadow: 0 0 0 2px rgba(var(--profile-accent-rgb, 255, 210, 19), 0.08);
+}
+
+.profile-nav-avatar img,
+.profileNavAvatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  border-radius: 50%;
+}
+
+.bottom-nav button.active .profile-nav-avatar,
+.bottomNav button.active .profileNavAvatar,
+.bottom-nav button:hover .profile-nav-avatar,
+.bottomNav button:hover .profileNavAvatar {
+  border-color: var(--accent-hot);
+  box-shadow:
+    0 0 0 2px rgba(var(--profile-accent-rgb, 255, 210, 19), 0.16),
+    0 0 16px rgba(var(--profile-accent-rgb, 255, 210, 19), 0.26);
+}

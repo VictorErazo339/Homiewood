@@ -3,17 +3,13 @@ import { apiRequest } from "../../api/api.js";
 import { obtenerContenido } from "../../api/contenidosApi.js";
 import { tagClass, soloFecha } from "../../lib/format.js";
 import { esEstrenoSensible, motivoSpoiler } from "../../lib/spoiler.js";
-import img, { avatarPorIcono } from "../../assets/images.js";
+import img, { avatarPorIcono, avatarPorUsuario } from "../../assets/images.js";
 import AddToList from "../AddToList/AddToList.jsx";
 import FilmModal from "../FilmModal/FilmModal.jsx";
 import styles from "./PostCard.module.css";
 
 import { useComentariosSocket } from "../../lib/websocket.js";
 
-
-function avatarUsuario(iconoPerfil) {
-  return avatarPorIcono(iconoPerfil);
-}
 
 const POST_LIST_OPTIONS = [
   { key: "watchlist", label: "Watchlist", img: img.watchlist },
@@ -133,6 +129,7 @@ export default function PostCard({ calificacion: c, currentUser }) {
         text: nuevoComentario.texto,
         time: "ahora mismo",
         iconoPerfil: nuevoComentario.iconoPerfil,
+        avatarPerfil: nuevoComentario.avatarPerfil,
       }];
     });
     setCommentCount((prev) => prev + 1);
@@ -149,6 +146,7 @@ export default function PostCard({ calificacion: c, currentUser }) {
           text: cm.texto,
           time: cm.fechaComentario ? soloFecha(cm.fechaComentario) : "ahora mismo",
           iconoPerfil: cm.iconoPerfil,
+          avatarPerfil: cm.avatarPerfil,
         }))
       );
       setCommentCount((data || []).length);
@@ -172,6 +170,7 @@ export default function PostCard({ calificacion: c, currentUser }) {
       text,
       time: "ahora mismo",
       iconoPerfil: currentUser?.iconoPerfil,
+      avatarPerfil: currentUser?.avatarPerfil,
     };
     setComentarios((prev) => [...prev, nuevoComentario]);
     setCommentCount((prev) => prev + 1);
@@ -195,6 +194,7 @@ export default function PostCard({ calificacion: c, currentUser }) {
   const puntaje = c.puntaje || 0;
   const titulo = c.tituloContenido || "Sin título";
   const username = c.username || c.nombreUsuario || "Usuario";
+  const autorAvatar = { iconoPerfil: c.iconoPerfil, avatarPerfil: c.avatarPerfil };
 
   const posterStyle = c.posterUrl
     ? {
@@ -255,7 +255,7 @@ export default function PostCard({ calificacion: c, currentUser }) {
       <div className={`${styles.head} ${spoilerOn ? styles.lifted : ""}`}>
         <img
           className={styles.avatar}
-          src={avatarPorIcono(c.iconoPerfil || 1)}
+          src={avatarPorUsuario(autorAvatar)}
           alt={username}
           onError={(e) => {
             e.target.onerror = null;
@@ -353,7 +353,7 @@ export default function PostCard({ calificacion: c, currentUser }) {
             <div className={styles.comment} key={i}>
               <img
                 className={styles.cAvatar}
-                src={avatarPorIcono(cm.iconoPerfil || 1)}
+                src={avatarPorUsuario({ iconoPerfil: cm.iconoPerfil, avatarPerfil: cm.avatarPerfil })}
                 alt={cm.user}
                 onError={(e) => {
                   e.target.onerror = null;

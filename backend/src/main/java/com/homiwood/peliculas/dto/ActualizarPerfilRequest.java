@@ -25,6 +25,9 @@ public class ActualizarPerfilRequest {
     )
     private String portadaPerfil;
 
+    @Size(max = 120, message = "El avatar de perfil no puede superar los 120 caracteres")
+    private String avatarPerfil;
+
     public String getNombre() {
         return nombre;
     }
@@ -55,5 +58,13 @@ public class ActualizarPerfilRequest {
 
     public void setPortadaPerfil(String portadaPerfil) {
         this.portadaPerfil = portadaPerfil;
+    }
+
+    public String getAvatarPerfil() {
+        return avatarPerfil;
+    }
+
+    public void setAvatarPerfil(String avatarPerfil) {
+        this.avatarPerfil = avatarPerfil;
     }
 }

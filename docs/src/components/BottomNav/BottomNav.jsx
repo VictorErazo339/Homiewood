@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import img from "../../assets/images.js";
+import img, { avatarPorUsuario } from "../../assets/images.js";
 import { useAuth } from "../../context/AuthContext.jsx";
 import styles from "./BottomNav.module.css";
 
@@ -15,6 +15,8 @@ export default function BottomNav() {
   const rutaMiPerfil = usernamePerfil
     ? `/profile/${usernamePerfil}`
     : "/profile";
+
+  const avatarPerfilSrc = avatarPorUsuario(usuario);
 
   const items = [
     {
@@ -44,10 +46,11 @@ export default function BottomNav() {
     {
       to: rutaMiPerfil,
       label: "Perfil",
-      src: img.homeProfileicon,
+      src: avatarPerfilSrc || img.homeProfileicon,
       w: 40,
       alt: "Perfil",
-      active: pathname === "/profile" || pathname.startsWith("/profile/"),
+      isAvatar: true,
+      active: pathname === "/profile" || pathname.startsWith("/profile/") || pathname.startsWith("/u/"),
     },
   ];
 
@@ -63,7 +66,7 @@ export default function BottomNav() {
             }`}
             onClick={() => navigate(it.to)}
           >
-            <span>
+            <span className={it.isAvatar ? styles.profileNavAvatar : undefined}>
               <img src={it.src} alt={it.alt} width={it.w} />
             </span>
 

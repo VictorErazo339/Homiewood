@@ -32,6 +32,7 @@ public class LogroService {
     private final ComentarioCalificacionService comentarioCalificacionService;
     private final LikeCalificacionService likeCalificacionService;
     private final SeguimientoService seguimientoService;
+    private final NotificacionService notificacionService;
 
     public LogroService(
             LogroRepository logroRepository,
@@ -42,7 +43,8 @@ public class LogroService {
             ContenidoGeneroService contenidoGeneroService,
             ComentarioCalificacionService comentarioCalificacionService,
             LikeCalificacionService likeCalificacionService,
-            SeguimientoService seguimientoService) {
+            SeguimientoService seguimientoService,
+            NotificacionService notificacionService) {
         this.logroRepository = logroRepository;
         this.usuarioLogroRepository = usuarioLogroRepository;
         this.usuarioRepository = usuarioRepository;
@@ -52,6 +54,7 @@ public class LogroService {
         this.comentarioCalificacionService = comentarioCalificacionService;
         this.likeCalificacionService = likeCalificacionService;
         this.seguimientoService = seguimientoService;
+        this.notificacionService = notificacionService;
     }
 
     @Transactional
@@ -209,9 +212,44 @@ public class LogroService {
         if (progreso >= logro.getValorObjetivo() && !Boolean.TRUE.equals(usuarioLogro.getDesbloqueado())) {
             usuarioLogro.setDesbloqueado(true);
             usuarioLogro.setFechaDesbloqueo(LocalDateTime.now());
+
+            notificacionService.notificarLogroDesbloqueado(usuario, logro);
+
+            AvatarRecompensa recompensa = avatarRecompensaPorLogro(logro.getCodigo());
+            if (recompensa != null) {
+                notificacionService.notificarAvatarDesbloqueado(usuario, recompensa.nombreVisible());
+            }
         }
 
         usuarioLogroRepository.save(usuarioLogro);
+    }
+
+    private AvatarRecompensa avatarRecompensaPorLogro(String codigoLogro) {
+        if (codigoLogro == null) {
+            return null;
+        }
+
+        return switch (codigoLogro) {
+            case "PRIMERA_RESENA" -> new AvatarRecompensa("Avatar reseñista");
+            case "PRIMERA_VISTA" -> new AvatarRecompensa("Avatar watchlist");
+            case "PRIMER_POR_VER" -> new AvatarRecompensa("Avatar pendiente");
+            case "TOP5_INICIADO" -> new AvatarRecompensa("Hamster cinéfilo");
+            case "TOP5_COMPLETO" -> new AvatarRecompensa("Cyber Hamster");
+            case "PRIMER_COMENTARIO" -> new AvatarRecompensa("Hamster comentarista");
+            case "PRIMER_HOMIE" -> new AvatarRecompensa("Hamster homie");
+            case "CINEFILO_CASUAL" -> new AvatarRecompensa("Cinéfilo casual");
+            case "SERIES_FAN" -> new AvatarRecompensa("Miku Hamster");
+            case "ANIME_FAN" -> new AvatarRecompensa("Otaku inicial");
+            case "ROMANCE_FAN" -> new AvatarRecompensa("Corazón romance");
+            case "COMEDIA_FAN" -> new AvatarRecompensa("Risa asegurada");
+            case "ACCION_FAN" -> new AvatarRecompensa("Adrenalina pura");
+            case "EXPLORADOR_GENEROS" -> new AvatarRecompensa("Explorador");
+            case "LEYENDA_HOMIEWOOD" -> new AvatarRecompensa("Leyenda Homiewood");
+            default -> null;
+        };
+    }
+
+    private record AvatarRecompensa(String nombreVisible) {
     }
 
     private void asegurarLogrosUsuario(Usuario usuario) {

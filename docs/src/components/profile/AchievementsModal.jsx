@@ -3,6 +3,10 @@ import { actualizarLogrosDestacados } from "../../api/usuariosApi.js";
 import Modal from "../Modal/Modal.jsx";
 import mstyles from "../Modal/Modal.module.css";
 import styles from "../../pages/Profile/Profile.module.css";
+import {
+  getAchievementImageUrl,
+  getAvatarReward,
+} from "../../utils/homiewoodAchievementAssets.js";
 
 const MAX_DESTACADOS = 3;
 
@@ -20,6 +24,48 @@ function norm(d) {
 function progreso(l) {
   if (!l.valorObjetivo) return null;
   return `Progreso: ${l.progresoActual ?? 0}/${l.valorObjetivo}`;
+}
+
+function renderAchievementImage(logro, fallback = "🏅") {
+  const imageUrl = getAchievementImageUrl(logro);
+
+  if (imageUrl) {
+    return (
+      <img
+        className={styles.achModalIconImg}
+        src={imageUrl}
+        alt=""
+        aria-hidden="true"
+        loading="lazy"
+        decoding="async"
+      />
+    );
+  }
+
+  return (
+    <span className={styles.achModalIcon} aria-hidden="true">
+      {logro?.icono || fallback}
+    </span>
+  );
+}
+
+function renderAvatarReward(logro) {
+  const reward = getAvatarReward(logro);
+  if (!reward?.src) return null;
+
+  return (
+    <span className={styles.achAvatarReward}>
+      <img
+        className={styles.achAvatarRewardImg}
+        src={reward.src}
+        alt=""
+        aria-hidden="true"
+        loading="lazy"
+        decoding="async"
+      />
+      <span>Avatar desbloqueado: {reward.label}</span>
+    </span>
+  );
 }
 
 /**
@@ -69,12 +115,11 @@ export default function AchievementsModal({
     const esDestacado = destacados.includes(l.idLogro);
     return (
       <li key={l.idLogro} className={`${styles.achModalCard} ${styles.isUnlocked}`}>
-        <span className={styles.achModalIcon} aria-hidden="true">
-          {l.icono || "🏅"}
-        </span>
+        {renderAchievementImage(l)}
         <div className={styles.achModalInfo}>
           <strong>{l.nombre}</strong>
           <small>{l.descripcion}</small>
+          {renderAvatarReward(l)}
         </div>
         {editable ? (
           <button
@@ -96,9 +141,7 @@ export default function AchievementsModal({
   function renderBloqueado(l) {
     return (
       <li key={l.idLogro} className={`${styles.achModalCard} ${styles.isLocked}`}>
-        <span className={styles.achModalIcon} aria-hidden="true">
-          {l.icono || "🏅"}
-        </span>
+        {renderAchievementImage(l)}
         <div className={styles.achModalInfo}>
           <strong>{l.nombre}</strong>
           <small>{l.descripcion}</small>

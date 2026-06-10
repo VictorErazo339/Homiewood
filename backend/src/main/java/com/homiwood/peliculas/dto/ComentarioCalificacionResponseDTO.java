@@ -13,4 +13,5 @@ public class ComentarioCalificacionResponseDTO {
     private String texto;
     private LocalDateTime fechaComentario;
     private Integer iconoPerfil;
+    private String avatarPerfil;
 }

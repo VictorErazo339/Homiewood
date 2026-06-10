@@ -9,6 +9,7 @@ public class PerfilResumenResponse {
     private String username;
     private String descripcion;
     private Integer iconoPerfil;
+    private String avatarPerfil;
     private Boolean perfilPrivado;
     private String temaPerfil;
     private String portadaPerfil;
@@ -60,6 +61,14 @@ public class PerfilResumenResponse {
 
     public void setIconoPerfil(Integer iconoPerfil) {
         this.iconoPerfil = iconoPerfil;
+    }
+
+    public String getAvatarPerfil() {
+        return avatarPerfil;
+    }
+
+    public void setAvatarPerfil(String avatarPerfil) {
+        this.avatarPerfil = avatarPerfil;
     }
 
     public Boolean getPerfilPrivado() {

@@ -109,6 +109,7 @@ public class ComentarioCalificacionService {
         dto.setTexto(c.getTexto());
         dto.setFechaComentario(c.getFechaComentario());
         dto.setIconoPerfil(c.getUsuario().getIconoPerfil());
+        dto.setAvatarPerfil(c.getUsuario().getAvatarPerfil());
         return dto;
     }
 }
