@@ -253,6 +253,36 @@
   cursor: not-allowed;
 }
 
+/* Spoiler disclaimer shown when the selected title is a recent/future release */
+.spoiler-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 12px 0;
+  padding: 11px 14px;
+  border-radius: 12px;
+  background: rgba(var(--profile-accent-rgb, 255, 210, 19), 0.14);
+  border: 1px solid rgba(var(--profile-accent-rgb, 255, 210, 19), 0.4);
+}
+
+.spoiler-notice i {
+  color: var(--gold);
+  font-size: 1.05rem;
+  margin-top: 1px;
+  flex-shrink: 0;
+}
+
+.spoiler-notice p {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--text);
+}
+
+.spoiler-notice strong {
+  color: var(--gold);
+}
+
 .composer-rating {
   display: none;
   margin-bottom: 1rem;
