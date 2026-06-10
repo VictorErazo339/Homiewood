@@ -4207,6 +4207,36 @@
   border-color: var(--danger);
 }
 
+/* Spoiler disclaimer shown when the selected title is a recent/future release */
+.spoilerNotice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 11px 14px;
+  border-radius: 12px;
+  background: rgba(var(--profile-accent-rgb, 255, 210, 19), 0.14);
+  border: 1px solid rgba(var(--profile-accent-rgb, 255, 210, 19), 0.4);
+}
+
+.spoilerNotice i {
+  color: var(--gold);
+  font-size: 1.05rem;
+  margin-top: 1px;
+  flex-shrink: 0;
+}
+
+.spoilerNotice p {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--text);
+}
+
+.spoilerNotice strong {
+  color: var(--gold);
+}
+
 .profilePostTextarea {
   width: 100%;
   min-height: 95px;
