@@ -7,6 +7,7 @@ import {
 } from "../../api/catalogoApi.js";
 import { apiRequest } from "../../api/api.js";
 import { tagClass, normalizarTipoBackend } from "../../lib/format.js";
+import { esEstrenoSensible, motivoSpoiler } from "../../lib/spoiler.js";
 import StarRating from "../StarRating/StarRating.jsx";
 import styles from "./Composer.module.css";
 
@@ -87,6 +88,7 @@ export default function Composer({ onPosted }) {
       apiId: f.apiId,
       proveedor: f.proveedor,
       generos: f.generos || [],
+      fechaEstreno: f.fechaEstreno || null,
     });
     setQuery("");
     setResults([]);
@@ -246,6 +248,20 @@ export default function Composer({ onPosted }) {
             >
               ✕
             </button>
+          </div>
+        )}
+
+        {selectedFilm && esEstrenoSensible(selectedFilm.fechaEstreno) && (
+          <div className={styles.spoilerNotice}>
+            <i className="bi bi-exclamation-triangle-fill"></i>
+            <p>
+              Tu post es sobre un{" "}
+              <strong>
+                estreno {motivoSpoiler(selectedFilm.fechaEstreno) === "futuro" ? "futuro" : "reciente"}
+              </strong>{" "}
+              y podrá ser susceptible a <strong>SPOILERS.</strong> Estará oculto
+              para los demás a menos que decidan verlo.
+            </p>
           </div>
         )}
 

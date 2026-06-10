@@ -71,3 +71,32 @@ export function listarLikesDeLista(idLista) {
 export function contarLikesDeLista(idLista) {
   return apiRequest(`/listas/${idLista}/likes/cantidad`);
 }
+
+// =========================================================
+// POR VER / VISTAS — biblioteca personal con filtros
+// =========================================================
+export function listarPorVerUsuario(idUsuario, filtros = {}) {
+  const params = new URLSearchParams();
+
+  Object.entries(filtros).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && String(value).trim() !== "") {
+      params.set(key, String(value));
+    }
+  });
+
+  const queryString = params.toString();
+  return apiRequest(`/listas/usuario/${idUsuario}/por-ver${queryString ? `?${queryString}` : ""}`);
+}
+
+export function marcarPorVerComoVista(idUsuario, idListaContenido) {
+  return apiRequest(`/listas/usuario/${idUsuario}/por-ver/${idListaContenido}/marcar-vista`, {
+    method: "POST",
+  });
+}
+
+export function guardarContenidoUsuarioEnLista(idUsuario, tipoLista, contenido) {
+  return apiRequest(`/usuarios/${idUsuario}/listas/${tipoLista}/contenidos/externo`, {
+    method: "POST",
+    body: JSON.stringify(contenido),
+  });
+}
