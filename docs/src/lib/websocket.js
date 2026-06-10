@@ -53,18 +53,28 @@ export function useComentariosSocket(idCalificacion, onComentario) {
 
   useEffect(() => {
     if (!idCalificacion) return;
-    const client = crearCliente();
-    client.onConnect = () => {
-      client.subscribe(`/topic/comentarios/${idCalificacion}`, (mensaje) => {
-        try {
-          const comentario = JSON.parse(mensaje.body);
-          if (cbRef.current) cbRef.current(comentario);
-        } catch (error) {
-          console.error("Error parseando comentario WS:", error);
-        }
-      });
+
+    const delay = Math.random() * 2000;
+    let client;
+
+    const timer = setTimeout(() => {
+      client = crearCliente();
+      client.onConnect = () => {
+        client.subscribe(`/topic/comentarios/${idCalificacion}`, (mensaje) => {
+          try {
+            const comentario = JSON.parse(mensaje.body);
+            if (cbRef.current) cbRef.current(comentario);
+          } catch (error) {
+            console.error("Error parseando comentario WS:", error);
+          }
+        });
+      };
+      client.activate();
+    }, delay);
+
+    return () => {
+      clearTimeout(timer);
+      client?.deactivate();
     };
-    client.activate();
-    return () => client.deactivate();
   }, [idCalificacion]);
 }
