@@ -23,9 +23,9 @@ public class GuardarYAgregarContenidoRequest {
 
     @NotBlank(message = "El tipo de contenido es obligatorio")
     @Pattern(
-            regexp = "PELICULA|SERIE",
+            regexp = "PELICULA|SERIE|ANIME",
             flags = Pattern.Flag.CASE_INSENSITIVE,
-            message = "El tipo de contenido debe ser PELICULA o SERIE"
+            message = "El tipo de contenido debe ser PELICULA, SERIE o ANIME"
     )
     private String tipoContenido;
 
