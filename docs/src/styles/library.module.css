@@ -663,3 +663,186 @@
     width: 62px;
   }
 }
+
+/* ==========================================================
+   FIX FINAL — FILTROS VISTAS RESPONSIVOS
+   Archivo: src/styles/library.module.css
+   ========================================================== */
+
+.moviesViewSection {
+  width: 100%;
+  max-width: 1120px;
+  margin-inline: auto;
+  box-sizing: border-box;
+}
+
+.libraryToolbar {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
+  gap: 12px;
+
+  align-items: end;
+  padding: 16px;
+
+  overflow: visible;
+}
+
+.filterField {
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.filterInput,
+.filterSelect {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  height: 40px;
+  box-sizing: border-box;
+
+  border-radius: 999px;
+  background: #070a10;
+  color: #f6f8ff;
+  color-scheme: dark;
+}
+
+/* Opciones visibles al desplegar */
+.filterSelect option {
+  background: #080c14;
+  color: #f7faff;
+}
+
+.filterSelect option:checked {
+  background: #1d4f78;
+  color: #ffffff;
+}
+
+/* Checkbox dentro de la grilla, no fuera del borde */
+.checkboxFilter {
+  width: 100%;
+  min-width: 0;
+  height: 40px;
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+
+  box-sizing: border-box;
+  white-space: nowrap;
+}
+
+/* Botón limpiar dentro del borde */
+.clearFiltersBtn {
+  width: 100%;
+  min-width: 0;
+  height: 40px;
+  box-sizing: border-box;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* En pantallas medianas: 3 columnas ordenadas */
+@media (max-width: 1250px) {
+  .libraryToolbar {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* Tablet: 2 columnas */
+@media (max-width: 760px) {
+  .libraryToolbar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Celular: 1 columna */
+@media (max-width: 520px) {
+  .libraryToolbar {
+    grid-template-columns: 1fr;
+    padding: 15px;
+  }
+
+  .filterInput,
+  .filterSelect,
+  .clearFiltersBtn {
+    height: 42px;
+  }
+
+  .checkboxFilter {
+    height: 36px;
+  }
+}
+/* ==========================================================
+   FIX POR VER — FILTROS SIN ESTRELLAS / SIN COMENTARIOS
+   Archivo: src/styles/library.module.css
+   ========================================================== */
+
+.porVerToolbar {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns:
+    minmax(180px, 1.45fr)
+    minmax(120px, 0.9fr)
+    minmax(130px, 1fr)
+    minmax(120px, 0.85fr)
+    minmax(145px, 1fr)
+    minmax(105px, 0.75fr);
+  gap: 12px;
+  align-items: end;
+  overflow: visible;
+}
+
+.porVerToolbar > * {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.porVerToolbar .clearFiltersBtn {
+  width: 100%;
+}
+
+/* Mantiene los select oscuros en Por ver también */
+.porVerToolbar .filterSelect,
+.porVerToolbar .filterInput {
+  color-scheme: dark;
+}
+
+.porVerToolbar .filterSelect option {
+  background: #080c14;
+  color: #f7faff;
+  font-weight: 700;
+}
+
+.porVerToolbar .filterSelect option:checked {
+  background: #1d4f78;
+  color: #ffffff;
+}
+
+@media (max-width: 1150px) {
+  .porVerToolbar {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .porVerToolbar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .porVerToolbar {
+    grid-template-columns: 1fr;
+  }
+}

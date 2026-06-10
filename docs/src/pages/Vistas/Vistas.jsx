@@ -97,7 +97,7 @@ function dedupe(items) {
         (i) =>
           String(i.idContenido || i.apiId) === String(item.idContenido || item.apiId) &&
           String(i.apiProvider || i.proveedor || "BD") ===
-            String(item.apiProvider || item.proveedor || "BD")
+          String(item.apiProvider || item.proveedor || "BD")
       )
   );
 }
@@ -467,15 +467,21 @@ function VistasSection() {
 
         <label className={styles.filterField}>
           <span>Año</span>
-          <input
-            className={styles.filterInput}
-            type="number"
-            min="1888"
-            max="2100"
-            placeholder="2024"
+          <select
+            className={styles.filterSelect}
             value={filtros.anio}
             onChange={(e) => actualizarFiltro("anio", e.target.value)}
-          />
+          >
+            <option value="">Todos</option>
+            {Array.from(
+              { length: new Date().getFullYear() - 1899 },
+              (_, index) => new Date().getFullYear() - index
+            ).map((anio) => (
+              <option key={anio} value={String(anio)}>
+                {anio}
+              </option>
+            ))}
+          </select>
         </label>
 
         <label className={styles.filterField}>

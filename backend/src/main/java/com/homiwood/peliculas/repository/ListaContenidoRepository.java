@@ -21,6 +21,11 @@ public interface ListaContenidoRepository extends JpaRepository<ListaContenido, 
             Long idContenido
     );
 
+    Optional<ListaContenido> findByIdListaContenidoAndListaUsuarioIdUsuario(
+            Long idListaContenido,
+            Long idUsuario
+    );
+
     List<ListaContenido> findByListaUsuarioIdUsuarioAndEstado(
             Long idUsuario,
             String estado
@@ -150,6 +155,108 @@ public interface ListaContenidoRepository extends JpaRepository<ListaContenido, 
             @Param("genero") String genero,
             @Param("puntaje") Integer puntaje,
             @Param("sinPuntaje") Boolean sinPuntaje,
+            @Param("anio") Integer anio,
+            @Param("orden") String orden,
+            @Param("limite") int limite,
+            @Param("offset") int offset
+    );
+
+    @Query(value = """
+            SELECT
+                lc.id_lista_contenido AS idListaContenido,
+                l.id_lista AS idLista,
+                c.id_contenido AS idContenido,
+                c.titulo AS titulo,
+                c.tipo_contenido AS tipoContenido,
+                c.descripcion AS descripcion,
+                c.anio_estreno AS anioEstreno,
+                c.fecha_estreno AS fechaEstreno,
+                c.poster_url AS posterUrl,
+                c.idioma AS idioma,
+                c.api_provider AS apiProvider,
+                c.api_id AS apiId,
+                lc.estado AS estado,
+                lc.nota_usuario AS notaUsuario,
+                lc.fecha_agregado AS fechaAgregado,
+                cal.id_calificacion AS idCalificacion,
+                cal.puntaje AS puntajeUsuario,
+                cal.comentario AS comentarioUsuario,
+                cal.fecha_calificacion AS fechaCalificacion,
+                COALESCE(STRING_AGG(DISTINCT g.nombre, '|' ORDER BY g.nombre), '') AS generos
+            FROM lista_contenido lc
+            JOIN listas l
+                ON l.id_lista = lc.id_lista
+            JOIN contenido c
+                ON c.id_contenido = lc.id_contenido
+            LEFT JOIN calificaciones cal
+                ON cal.id_usuario = l.id_usuario
+                AND cal.id_contenido = c.id_contenido
+            LEFT JOIN contenido_generos cg
+                ON cg.id_contenido = c.id_contenido
+            LEFT JOIN generos g
+                ON g.id_genero = cg.id_genero
+            WHERE l.id_usuario = :idUsuario
+            AND UPPER(lc.estado) = 'POR_VER'
+            AND (
+                :query IS NULL
+                OR :query = ''
+                OR LOWER(c.titulo) LIKE LOWER(CONCAT('%', :query, '%'))
+            )
+            AND (
+                :tipo IS NULL
+                OR :tipo = ''
+                OR UPPER(c.tipo_contenido) = UPPER(:tipo)
+            )
+            AND (
+                :genero IS NULL
+                OR :genero = ''
+                OR EXISTS (
+                    SELECT 1
+                    FROM contenido_generos cg2
+                    JOIN generos g2
+                        ON g2.id_genero = cg2.id_genero
+                    WHERE cg2.id_contenido = c.id_contenido
+                    AND LOWER(g2.nombre) = LOWER(:genero)
+                )
+            )
+            AND (
+                :anio IS NULL
+                OR c.anio_estreno = :anio
+            )
+            GROUP BY
+                lc.id_lista_contenido,
+                l.id_lista,
+                c.id_contenido,
+                c.titulo,
+                c.tipo_contenido,
+                c.descripcion,
+                c.anio_estreno,
+                c.fecha_estreno,
+                c.poster_url,
+                c.idioma,
+                c.api_provider,
+                c.api_id,
+                lc.estado,
+                lc.nota_usuario,
+                lc.fecha_agregado,
+                cal.id_calificacion,
+                cal.puntaje,
+                cal.comentario,
+                cal.fecha_calificacion
+            ORDER BY
+                CASE WHEN :orden = 'TITULO_ASC' THEN c.titulo END ASC,
+                CASE WHEN :orden = 'TITULO_DESC' THEN c.titulo END DESC,
+                CASE WHEN :orden = 'ANIO_DESC' THEN c.anio_estreno END DESC NULLS LAST,
+                CASE WHEN :orden = 'ANIO_ASC' THEN c.anio_estreno END ASC NULLS LAST,
+                CASE WHEN :orden = 'RECIENTES' THEN lc.fecha_agregado END DESC,
+                lc.fecha_agregado DESC
+            LIMIT :limite OFFSET :offset
+            """, nativeQuery = true)
+    List<VistaContenidoProjection> buscarPorVerUsuario(
+            @Param("idUsuario") Long idUsuario,
+            @Param("query") String query,
+            @Param("tipo") String tipo,
+            @Param("genero") String genero,
             @Param("anio") Integer anio,
             @Param("orden") String orden,
             @Param("limite") int limite,

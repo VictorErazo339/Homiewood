@@ -72,6 +72,38 @@ public class ListaController {
         );
     }
 
+    @GetMapping("/usuario/{idUsuario}/por-ver")
+    public List<VistaContenidoResponse> listarPorVerUsuario(
+            @PathVariable Long idUsuario,
+            @RequestParam(required = false) String query,
+            @RequestParam(required = false) String tipo,
+            @RequestParam(required = false) String genero,
+            @RequestParam(required = false) Integer anio,
+            @RequestParam(defaultValue = "RECIENTES") String orden,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "30") int limite
+    ) {
+        return listaService.listarPorVerUsuario(
+                idUsuario,
+                query,
+                tipo,
+                genero,
+                anio,
+                orden,
+                page,
+                limite
+        );
+    }
+
+    @PostMapping("/usuario/{idUsuario}/por-ver/{idListaContenido}/marcar-vista")
+    public ResponseEntity<Void> marcarPorVerComoVista(
+            @PathVariable Long idUsuario,
+            @PathVariable Long idListaContenido
+    ) {
+        listaService.marcarPorVerComoVista(idUsuario, idListaContenido);
+        return ResponseEntity.noContent().build();
+    }
+
     @PostMapping
     public ResponseEntity<ListaResponse> crearLista(@Valid @RequestBody CrearListaRequest request) {
         Lista listaCreada = listaService.crearLista(request);
