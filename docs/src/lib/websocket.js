@@ -1,7 +1,7 @@
 // Live ratings over SockJS + STOMP. Ports legacy docs/src/JS/webSocket.js to
 // the npm @stomp/stompjs v7 Client API (the CDN build used the old Stomp.over).
 import { useEffect, useRef } from "react";
-//import SockJS from "sockjs-client";
+import SockJS from "sockjs-client";
 import { Client } from "@stomp/stompjs";
 
 const WS_URL =
@@ -9,11 +9,11 @@ const WS_URL =
 
 function crearCliente() {
   return new Client({
-    brokerURL: WS_URL.replace("https://", "wss://").replace("http://", "ws://") + "/websocket",
+    webSocketFactory: () => new SockJS(WS_URL),
     reconnectDelay: 5000,
     heartbeatIncoming: 10000,
     heartbeatOutgoing: 10000,
-    debug: () => {},
+    debug: (str) => console.log(str),
     onStompError: (frame) => {
       console.log("❌ Error WebSocket:", frame);
     },
