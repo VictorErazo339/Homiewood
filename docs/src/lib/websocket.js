@@ -11,6 +11,8 @@ function crearCliente() {
   return new Client({
     webSocketFactory: () => new SockJS(WS_URL),
     reconnectDelay: 5000,
+    heartbeatIncoming: 10000,
+    heartbeatOutgoing: 10000,
     debug: () => {},
     onStompError: (frame) => {
       console.log("❌ Error WebSocket:", frame);

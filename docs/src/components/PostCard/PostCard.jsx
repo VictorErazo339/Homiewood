@@ -10,6 +10,11 @@ import styles from "./PostCard.module.css";
 
 import { useComentariosSocket } from "../../lib/websocket.js";
 
+
+function avatarUsuario(iconoPerfil) {
+  return avatarPorIcono(iconoPerfil);
+}
+
 const POST_LIST_OPTIONS = [
   { key: "watchlist", label: "Watchlist", img: img.watchlist },
   { key: "porver", label: "Por ver", img: img.pendinglist },
@@ -116,8 +121,14 @@ export default function PostCard({ calificacion: c, currentUser }) {
 
   useComentariosSocket(id, (nuevoComentario) => {
     setComentarios((prev) => {
-      if (prev.some((cm) => cm.text === nuevoComentario.texto)) return prev;
+      const existe = nuevoComentario.idComentario
+        ? prev.some((cm) => cm.idComentario === nuevoComentario.idComentario)
+        : prev.some((cm) => cm.text === nuevoComentario.texto && cm.user === nuevoComentario.username);
+
+      if (existe) return prev;
+
       return [...prev, {
+        idComentario: nuevoComentario.idComentario,
         user: nuevoComentario.username,
         text: nuevoComentario.texto,
         time: "ahora mismo",
@@ -127,11 +138,13 @@ export default function PostCard({ calificacion: c, currentUser }) {
     setCommentCount((prev) => prev + 1);
   });
 
+
   async function cargarComentarios() {
     try {
       const data = await apiRequest(`/comentarios-calificacion/${id}`);
       setComentarios(
         (data || []).map((cm) => ({
+          idComentario: cm.idComentario,
           user: cm.username || cm.nombreUsuario || "Usuario",
           text: cm.texto,
           time: cm.fechaComentario ? soloFecha(cm.fechaComentario) : "ahora mismo",
