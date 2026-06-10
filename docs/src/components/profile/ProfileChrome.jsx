@@ -3,6 +3,7 @@ import { useParams, useSearchParams } from "react-router-dom";
 import { apiRequest } from "../../api/api.js";
 import {
   actualizarIconoUsuario,
+  actualizarPerfilUsuario,
   obtenerPerfilResumen,
   listarLogros,
 } from "../../api/usuariosApi.js";
@@ -406,12 +407,19 @@ export default function ProfileChrome({ activeTab, children }) {
         descripcion: resumen.descripcion,
         iconoPerfil: resumen.iconoPerfil,
         perfilPrivado: resumen.perfilPrivado,
+        temaPerfil: resumen.temaPerfil || DEFAULT_PROFILE_PREFS.colorTheme,
+        portadaPerfil: resumen.portadaPerfil || DEFAULT_PROFILE_PREFS.coverMode,
       };
 
       setPerfil(perfilActualizado);
       if (esMiPerfil) {
         actualizarUsuario(perfilActualizado);
       }
+
+      setProfilePrefs(normalizarProfilePrefs({
+        colorTheme: perfilActualizado.temaPerfil,
+        coverMode: perfilActualizado.portadaPerfil,
+      }));
 
       setPostsCount(resumen.cantidadPosts ?? 0);
       setSeguidores(resumen.cantidadSeguidores ?? 0);
@@ -500,8 +508,11 @@ export default function ProfileChrome({ activeTab, children }) {
   }, [idUsuario]);
 
   useEffect(() => {
-    setProfilePrefs(leerProfilePrefs(idUsuario));
-  }, [idUsuario]);
+    setProfilePrefs(normalizarProfilePrefs({
+      colorTheme: perfil?.temaPerfil,
+      coverMode: perfil?.portadaPerfil,
+    }));
+  }, [perfil?.temaPerfil, perfil?.portadaPerfil]);
 
   const profileTheme = obtenerProfileTheme(profilePrefs.colorTheme, appearanceMode);
   const profileThemeStyle = profileTheme.vars;
@@ -546,26 +557,30 @@ export default function ProfileChrome({ activeTab, children }) {
     setSavingPerfil(true);
 
     try {
-      let actualizado = await apiRequest(`/usuarios/${idUsuario}/perfil`, {
-        method: "PUT",
-        body: JSON.stringify({
-          nombre,
-          descripcion: editDesc.trim(),
-        }),
+      let actualizado = await actualizarPerfilUsuario(idUsuario, {
+        nombre,
+        descripcion: editDesc.trim(),
+        temaPerfil: editColorTheme,
+        portadaPerfil: editCoverMode,
       });
 
       if (Number(editIcono) !== Number(perfil?.iconoPerfil || 1)) {
         actualizado = await actualizarIconoUsuario(idUsuario, editIcono);
       }
 
-      const nextPrefs = guardarProfilePrefs(idUsuario, {
-        coverMode: editCoverMode,
-        colorTheme: editColorTheme,
+      const nextPrefs = normalizarProfilePrefs({
+        colorTheme: actualizado.temaPerfil || editColorTheme,
+        coverMode: actualizado.portadaPerfil || editCoverMode,
       });
 
       setProfilePrefs(nextPrefs);
 
-      const merged = { ...perfil, ...actualizado };
+      const merged = {
+        ...perfil,
+        ...actualizado,
+        temaPerfil: nextPrefs.colorTheme,
+        portadaPerfil: nextPrefs.coverMode,
+      };
 
       setPerfil(merged);
       actualizarUsuario(merged);
@@ -662,7 +677,7 @@ export default function ProfileChrome({ activeTab, children }) {
             )}
           </div>
 
-          <div className={styles.top5Grid}>
+          <div className={`${styles.top5Grid} ${top5Vacio ? styles.top5GridEmpty : ""}`}>
             {top5Vacio ? (
               <div className={styles.top5EmptyState}>
                 <p>Tu Top 5 está vacío.</p>
@@ -742,9 +757,9 @@ export default function ProfileChrome({ activeTab, children }) {
           onClose={() => setTop5Open(false)}
           idUsuario={idUsuario}
           top5={top5}
-          onSaved={() => {
-            cargarTop5();
-            cargarPerfilResumen();
+          onSaved={async () => {
+            await cargarTop5();
+            await cargarPerfilResumen();
           }}
         />
       )}

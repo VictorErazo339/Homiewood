@@ -10,6 +10,8 @@ public class PerfilResumenResponse {
     private String descripcion;
     private Integer iconoPerfil;
     private Boolean perfilPrivado;
+    private String temaPerfil;
+    private String portadaPerfil;
 
     private Long cantidadPosts;
     private Long cantidadSeguidores;
@@ -66,6 +68,22 @@ public class PerfilResumenResponse {
 
     public void setPerfilPrivado(Boolean perfilPrivado) {
         this.perfilPrivado = perfilPrivado;
+    }
+
+    public String getTemaPerfil() {
+        return temaPerfil;
+    }
+
+    public void setTemaPerfil(String temaPerfil) {
+        this.temaPerfil = temaPerfil;
+    }
+
+    public String getPortadaPerfil() {
+        return portadaPerfil;
+    }
+
+    public void setPortadaPerfil(String portadaPerfil) {
+        this.portadaPerfil = portadaPerfil;
     }
 
     public Long getCantidadPosts() {

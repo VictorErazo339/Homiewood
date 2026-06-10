@@ -56,6 +56,14 @@ export function eliminarUsuario(idUsuario) {
   });
 }
 
+
+export function actualizarPerfilUsuario(idUsuario, datos) {
+  return apiRequest(`/usuarios/${idUsuario}/perfil`, {
+    method: "PUT",
+    body: JSON.stringify(datos),
+  });
+}
+
 export function actualizarIconoUsuario(idUsuario, iconoPerfil) {
   return apiRequest(`/usuarios/${idUsuario}/icono?iconoPerfil=${iconoPerfil}`, {
     method: "PATCH",
