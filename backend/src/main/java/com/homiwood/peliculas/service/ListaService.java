@@ -7,11 +7,13 @@ import com.homiwood.peliculas.dto.VistaContenidoResponse;
 import com.homiwood.peliculas.exception.BadRequestException;
 import com.homiwood.peliculas.exception.NotFoundException;
 import com.homiwood.peliculas.model.Lista;
+import com.homiwood.peliculas.model.ListaContenido;
 import com.homiwood.peliculas.model.Usuario;
 import com.homiwood.peliculas.repository.ListaContenidoRepository;
 import com.homiwood.peliculas.repository.ListaRepository;
 import com.homiwood.peliculas.repository.UsuarioRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
 import java.util.List;
@@ -94,6 +96,62 @@ public class ListaService {
                 .toList();
     }
 
+    public List<VistaContenidoResponse> listarPorVerUsuario(
+            Long idUsuario,
+            String query,
+            String tipo,
+            String genero,
+            Integer anio,
+            String orden,
+            int page,
+            int limite
+    ) {
+        if (idUsuario == null) {
+            throw new BadRequestException("El idUsuario es obligatorio");
+        }
+
+        int paginaSegura = Math.max(page, 0);
+        int limiteSeguro = Math.min(Math.max(limite, 1), 60);
+        int offset = paginaSegura * limiteSeguro;
+
+        String queryLimpia = limpiarTexto(query);
+        String tipoLimpio = limpiarTexto(tipo);
+        String generoLimpio = limpiarTexto(genero);
+        String ordenSeguro = normalizarOrdenPorVer(orden);
+
+        return listaContenidoRepository.buscarPorVerUsuario(
+                        idUsuario,
+                        queryLimpia,
+                        tipoLimpio,
+                        generoLimpio,
+                        anio,
+                        ordenSeguro,
+                        limiteSeguro,
+                        offset
+                )
+                .stream()
+                .map(this::toVistaContenidoResponse)
+                .toList();
+    }
+
+    @Transactional
+    public void marcarPorVerComoVista(Long idUsuario, Long idListaContenido) {
+        if (idUsuario == null) {
+            throw new BadRequestException("El idUsuario es obligatorio");
+        }
+
+        if (idListaContenido == null) {
+            throw new BadRequestException("El idListaContenido es obligatorio");
+        }
+
+        ListaContenido listaContenido = listaContenidoRepository
+                .findByIdListaContenidoAndListaUsuarioIdUsuario(idListaContenido, idUsuario)
+                .orElseThrow(() -> new NotFoundException("Contenido por ver no encontrado para este usuario"));
+
+        listaContenido.setEstado("VISTO");
+        listaContenidoRepository.save(listaContenido);
+    }
+
     private VistaContenidoResponse toVistaContenidoResponse(VistaContenidoProjection vista) {
         return new VistaContenidoResponse(
                 vista.getIdListaContenido(),
@@ -150,6 +208,23 @@ public class ListaService {
             case "RECIENTES",
                  "MEJOR_CALIFICADAS",
                  "PEOR_CALIFICADAS",
+                 "TITULO_ASC",
+                 "TITULO_DESC",
+                 "ANIO_DESC",
+                 "ANIO_ASC" -> ordenNormalizado;
+            default -> "RECIENTES";
+        };
+    }
+
+    private String normalizarOrdenPorVer(String orden) {
+        if (orden == null || orden.isBlank()) {
+            return "RECIENTES";
+        }
+
+        String ordenNormalizado = orden.trim().toUpperCase();
+
+        return switch (ordenNormalizado) {
+            case "RECIENTES",
                  "TITULO_ASC",
                  "TITULO_DESC",
                  "ANIO_DESC",
