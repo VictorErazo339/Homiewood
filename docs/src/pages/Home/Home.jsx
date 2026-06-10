@@ -137,7 +137,7 @@ export default function Home() {
     <>
       <div className={styles.mainRow}>
         <div className={styles.feedCol}>
-          <Composer onPosted={null} />
+          <Composer onPosted={recargar} />
 
           <div>
             {vacio ? (
