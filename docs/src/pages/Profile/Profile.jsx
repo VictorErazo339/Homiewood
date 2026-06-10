@@ -16,6 +16,9 @@ import {
   obtenerTagsDelItem,
 } from "../../lib/contenido.js";
 import { esEstrenoSensible, motivoSpoiler } from "../../lib/spoiler.js";
+import {
+  getUnlockedAvatarRewards,
+} from "../../utils/homiewoodAchievementAssets.js";
 import PostCard from "../../components/PostCard/PostCard.jsx";
 import ProfileBanner from "../../components/profile/ProfileBanner.jsx";
 import ProfileHero from "../../components/profile/ProfileHero.jsx";
@@ -367,6 +370,7 @@ export default function Profile() {
   const [editNombre, setEditNombre] = useState("");
   const [editDesc, setEditDesc] = useState("");
   const [editIcono, setEditIcono] = useState(1);
+  const [editAvatarPerfil, setEditAvatarPerfil] = useState("");
   const [profilePrefs, setProfilePrefs] = useState(DEFAULT_PROFILE_PREFS);
   const [editCoverMode, setEditCoverMode] = useState(DEFAULT_PROFILE_PREFS.coverMode);
   const [editColorTheme, setEditColorTheme] = useState(DEFAULT_PROFILE_PREFS.colorTheme);
@@ -402,6 +406,11 @@ export default function Profile() {
 
   const composerInputRef = useRef(null);
 
+  useEffect(() => {
+    setLogros([]);
+    setLogrosCargados(false);
+  }, [idUsuario]);
+
   // Open the edit modal when arriving via the navbar's "Editar perfil" (?edit=1).
   useEffect(() => {
     if (esMiPerfil && searchParams.get("edit") === "1") {
@@ -429,6 +438,7 @@ export default function Profile() {
         perfilPrivado: resumen.perfilPrivado,
         temaPerfil: resumen.temaPerfil || DEFAULT_PROFILE_PREFS.colorTheme,
         portadaPerfil: resumen.portadaPerfil || DEFAULT_PROFILE_PREFS.coverMode,
+        avatarPerfil: resumen.avatarPerfil || null,
       };
 
       setPerfil(perfilActualizado);
@@ -526,18 +536,27 @@ export default function Profile() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [idUsuario]);
 
+  const cargarLogrosUsuario = useCallback(async () => {
+    if (!idUsuario) return [];
+
+    try {
+      const data = await listarLogros(idUsuario);
+      const normalizados = Array.isArray(data) ? data : [];
+      setLogros(normalizados);
+      setLogrosCargados(true);
+      return normalizados;
+    } catch (error) {
+      console.error("Error cargando logros:", error);
+      return [];
+    }
+  }, [idUsuario]);
+
   async function abrirLogros() {
     setAchOpen(true);
 
     if (logrosCargados || !idUsuario) return;
 
-    try {
-      const data = await listarLogros(idUsuario);
-      setLogros(Array.isArray(data) ? data : []);
-      setLogrosCargados(true);
-    } catch (error) {
-      console.error("Error cargando logros:", error);
-    }
+    await cargarLogrosUsuario();
   }
   async function quitarDelTop5(index) {
     if (!esMiPerfil) return;
@@ -659,9 +678,14 @@ export default function Profile() {
     setEditNombre(perfil?.nombre || "");
     setEditDesc(perfil?.descripcion || "");
     setEditIcono(Number(perfil?.iconoPerfil) || 1);
+    setEditAvatarPerfil(perfil?.avatarPerfil || "");
     setEditCoverMode(profilePrefs.coverMode);
     setEditColorTheme(profilePrefs.colorTheme);
     setEditOpen(true);
+
+    if (!logrosCargados) {
+      cargarLogrosUsuario();
+    }
   }
 
   async function guardarPerfil() {
@@ -680,9 +704,10 @@ export default function Profile() {
         descripcion,
         temaPerfil: editColorTheme,
         portadaPerfil: editCoverMode,
+        avatarPerfil: editAvatarPerfil || "",
       });
-      // Persist the icon separately when it changed (dedicated PATCH endpoint).
-      if (Number(editIcono) !== Number(perfil?.iconoPerfil || 1)) {
+      // Persist the legacy numeric icon only when no unlocked avatar is selected.
+      if (!editAvatarPerfil && Number(editIcono) !== Number(perfil?.iconoPerfil || 1)) {
         actualizado = await actualizarIconoUsuario(idUsuario, editIcono);
       }
       const nextPrefs = normalizarProfilePrefs({
@@ -697,6 +722,7 @@ export default function Profile() {
         ...actualizado,
         temaPerfil: nextPrefs.colorTheme,
         portadaPerfil: nextPrefs.coverMode,
+        avatarPerfil: actualizado.avatarPerfil || null,
       };
       setPerfil(merged);
       actualizarUsuario(merged);
@@ -711,6 +737,7 @@ export default function Profile() {
 
   const top5Vacio = top5.filter(Boolean).length === 0;
   const pCanPost = !!pSelected && pText.trim().length > 0;
+  const unlockedAvatarRewards = getUnlockedAvatarRewards(logros);
 
   // Header shows up to 3 unlocked featured achievements; the modal lists all.
   const headerLogros = (logrosDestacados.length ? logrosDestacados : logros)
@@ -1165,23 +1192,57 @@ export default function Profile() {
             >
               {avatars.map((src, i) => {
                 const n = i + 1;
-                const selected = Number(editIcono) === n;
+                const selected = !editAvatarPerfil && Number(editIcono) === n;
 
                 return (
                   <button
-                    key={n}
+                    key={`legacy-${n}`}
                     type="button"
                     className={`${styles.iconOption} ${
                       selected ? styles.iconOptionSelected : ""
                     }`}
                     aria-pressed={selected}
-                    aria-label={`Icono ${n}`}
-                    onClick={() => setEditIcono(n)}
+                    aria-label={`Icono base ${n}`}
+                    onClick={() => {
+                      setEditAvatarPerfil("");
+                      setEditIcono(n);
+                    }}
                   >
-                    <img src={src} alt={`Icono ${n}`} />
+                    <img src={src} alt={`Icono base ${n}`} />
                   </button>
                 );
               })}
+
+              <div className={styles.avatarRewardDivider}>
+                Avatares ganados por logros
+              </div>
+
+              {unlockedAvatarRewards.length === 0 ? (
+                <p className={styles.avatarRewardHint}>
+                  Aún no tienes avatares de logros desbloqueados. Se irán activando al ganar logros.
+                </p>
+              ) : (
+                unlockedAvatarRewards.map((reward) => {
+                  const selected = editAvatarPerfil === reward.avatarPerfil;
+
+                  return (
+                    <button
+                      key={reward.avatarPerfil}
+                      type="button"
+                      className={`${styles.iconOption} ${styles.iconOptionReward} ${
+                        selected ? styles.iconOptionSelected : ""
+                      }`}
+                      aria-pressed={selected}
+                      aria-label={`${reward.label}, desbloqueado por ${reward.nombreLogro}`}
+                      title={`${reward.label} · ${reward.nombreLogro}`}
+                      onClick={() => setEditAvatarPerfil(reward.avatarPerfil)}
+                    >
+                      <img src={reward.src} alt={reward.label} />
+                      <span className={styles.avatarRewardBadge}>★</span>
+                    </button>
+                  );
+                })
+              )}
             </div>
           </section>
         </div>

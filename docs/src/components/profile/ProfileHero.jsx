@@ -1,5 +1,9 @@
 import { avatarPorIcono } from "../../assets/images.js";
 import { iconoTag } from "../../lib/contenido.js";
+import {
+  getAchievementImageUrl,
+  getAvatarProfileUrl,
+} from "../../utils/homiewoodAchievementAssets.js";
 import styles from "./ProfileHero.module.css";
 
 function descripcionPerfil(perfil) {
@@ -31,6 +35,8 @@ export default function ProfileHero({
   const totalPosts = stats?.posts ?? 0;
   const totalSeguidores = stats?.seguidores ?? 0;
   const totalSiguiendo = stats?.siguiendo ?? 0;
+  const avatarSrc =
+    getAvatarProfileUrl(perfil?.avatarPerfil) || avatarPorIcono(perfil?.iconoPerfil);
 
   return (
     <section className={styles.profileHeader} aria-label="Información del perfil">
@@ -41,7 +47,7 @@ export default function ProfileHero({
               <div className={styles.avatarCircle}>
                 <img
                   className={styles.avatarImg}
-                  src={avatarPorIcono(perfil?.iconoPerfil)}
+                  src={avatarSrc}
                   alt={`Avatar de ${username}`}
                   loading="eager"
                   decoding="async"
@@ -129,17 +135,41 @@ export default function ProfileHero({
                   <span className={styles.achName}>Sin logros destacados</span>
                 </div>
               ) : (
-                headerLogros.map((logro) => (
-                  <div
-                    key={logro.idLogro ?? logro.id ?? logro.nombre}
-                    className={styles.achievementItem}
-                  >
-                    <span className={styles.achIcon} aria-hidden="true">
-                      {logro.icono || "🏅"}
-                    </span>
-                    <span className={styles.achName}>{logro.nombre}</span>
-                  </div>
-                ))
+                headerLogros.map((logro) => {
+                  const achievementImageUrl = getAchievementImageUrl(logro);
+
+                  return (
+                    <div
+                      key={logro.idLogro ?? logro.id ?? logro.nombre}
+                      className={styles.achievementItem}
+                    >
+                      {achievementImageUrl ? (
+                        <img
+                          className={styles.achIconImg}
+                          src={achievementImageUrl}
+                          alt=""
+                          aria-hidden="true"
+                          loading="lazy"
+                          decoding="async"
+                          style={{
+                            width: "22px",
+                            height: "22px",
+                            maxWidth: "22px",
+                            maxHeight: "22px",
+                            flex: "0 0 22px",
+                            objectFit: "contain",
+                            display: "block",
+                          }}
+                        />
+                      ) : (
+                        <span className={styles.achIcon} aria-hidden="true">
+                          {logro.icono || "🏅"}
+                        </span>
+                      )}
+                      <span className={styles.achName}>{logro.nombre}</span>
+                    </div>
+                  );
+                })
               )}
 
               {onVerLogros && (

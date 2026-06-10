@@ -1343,3 +1343,45 @@
     min-width: 100vw;
   }
 }
+/* ---------- FIX: logros destacados no gigantes ----------
+   Pegar al FINAL de ProfileHero.module.css.
+   También sirve si el JSX usa CSS Modules y la imagen trae clase achIconImg. */
+.achievements .achievementItem,
+.achievements .achievementItem[class] {
+  min-height: 32px !important;
+  max-height: 40px !important;
+  align-items: center !important;
+  overflow: hidden !important;
+}
+
+.achievements .achievementItem img,
+.achievementItem img,
+.achIconImg {
+  width: 22px !important;
+  height: 22px !important;
+  min-width: 22px !important;
+  min-height: 22px !important;
+  max-width: 22px !important;
+  max-height: 22px !important;
+  flex: 0 0 22px !important;
+  object-fit: contain !important;
+  object-position: center !important;
+  display: block !important;
+  border-radius: 0 !important;
+}
+
+.achievements .achievementItem .achName,
+.achievementItem .achName,
+.achName {
+  min-width: 0 !important;
+  max-width: 190px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.achievementItem:hover .achIconImg,
+.achievementItem:hover img {
+  transform: scale(1.08);
+  filter: drop-shadow(0 0 9px rgba(var(--profile-accent-rgb, 232, 185, 79), 0.46));
+}

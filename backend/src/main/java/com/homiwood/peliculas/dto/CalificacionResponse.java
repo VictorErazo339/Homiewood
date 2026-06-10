@@ -7,6 +7,8 @@ public record CalificacionResponse(
         Long idUsuario,
         String nombreUsuario,
         String username,
+        Integer iconoPerfil,
+        String avatarPerfil,
         Long idContenido,
         String tituloContenido,
         String tipoContenido,

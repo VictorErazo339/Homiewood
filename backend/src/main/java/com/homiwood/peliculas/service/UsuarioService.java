@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 @Service
@@ -38,6 +39,24 @@ public class UsuarioService {
 
     private static final Set<String> PORTADAS_PERFIL_VALIDAS = Set.of(
             "top1", "top2", "top3", "top4", "top5", "none"
+    );
+
+    private static final Map<String, String> LOGRO_POR_AVATAR_PERFIL = Map.ofEntries(
+            Map.entry("avatar1.webp", "PRIMERA_RESENA"),
+            Map.entry("avatar2.webp", "PRIMERA_VISTA"),
+            Map.entry("avatar3.webp", "PRIMER_POR_VER"),
+            Map.entry("hamstericon.webp", "TOP5_INICIADO"),
+            Map.entry("cyberhamster.webp", "TOP5_COMPLETO"),
+            Map.entry("hamstercomment.webp", "PRIMER_COMENTARIO"),
+            Map.entry("hamstersolo.webp", "PRIMER_HOMIE"),
+            Map.entry("cinefilocasual.webp", "CINEFILO_CASUAL"),
+            Map.entry("mikuhamster.webp", "SERIES_FAN"),
+            Map.entry("gokuotakuinicial.webp", "ANIME_FAN"),
+            Map.entry("corazonromance.webp", "ROMANCE_FAN"),
+            Map.entry("risaasegurada.webp", "COMEDIA_FAN"),
+            Map.entry("adrenalinapura.webp", "ACCION_FAN"),
+            Map.entry("exploradordegeneros.webp", "EXPLORADOR_GENEROS"),
+            Map.entry("leyendahomiewood.webp", "LEYENDA_HOMIEWOOD")
     );
 
     private final UsuarioLogroRepository usuarioLogroRepository;
@@ -78,6 +97,7 @@ public class UsuarioService {
         usuario.setEmail(email);
         usuario.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         usuario.setIconoPerfil(1);
+        usuario.setAvatarPerfil(null);
         usuario.setPerfilPrivado(false);
         usuario.setTemaPerfil(TEMA_PERFIL_DEFAULT);
         usuario.setPortadaPerfil(PORTADA_PERFIL_DEFAULT);
@@ -146,6 +166,7 @@ public class UsuarioService {
         response.setUsername(usuario.getUsername());
         response.setDescripcion(usuario.getDescripcion());
         response.setIconoPerfil(usuario.getIconoPerfil());
+        response.setAvatarPerfil(usuario.getAvatarPerfil());
         response.setPerfilPrivado(usuario.getPerfilPrivado());
         response.setTemaPerfil(normalizarTemaPerfil(usuario.getTemaPerfil()));
         response.setPortadaPerfil(normalizarPortadaPerfil(usuario.getPortadaPerfil()));
@@ -214,6 +235,10 @@ public class UsuarioService {
             usuario.setPortadaPerfil(normalizarPortadaPerfil(request.getPortadaPerfil()));
         }
 
+        if (request.getAvatarPerfil() != null) {
+            usuario.setAvatarPerfil(normalizarAvatarPerfil(usuario.getIdUsuario(), request.getAvatarPerfil()));
+        }
+
         return usuarioRepository.save(usuario);
     }
 
@@ -265,6 +290,39 @@ public class UsuarioService {
         }
 
         return portada;
+    }
+
+    private String normalizarAvatarPerfil(Long idUsuario, String avatarPerfil) {
+        if (avatarPerfil == null || avatarPerfil.trim().isBlank()) {
+            return null;
+        }
+
+        String avatar = limpiarNombreArchivo(avatarPerfil);
+
+        String codigoLogro = LOGRO_POR_AVATAR_PERFIL.get(avatar);
+        if (codigoLogro == null) {
+            throw new BadRequestException("El avatar de perfil no es válido");
+        }
+
+        UsuarioLogro usuarioLogro = usuarioLogroRepository
+                .findByUsuarioIdUsuarioAndLogroCodigo(idUsuario, codigoLogro)
+                .orElseThrow(() -> new BadRequestException("Aún no has desbloqueado este avatar"));
+
+        if (!Boolean.TRUE.equals(usuarioLogro.getDesbloqueado())) {
+            throw new BadRequestException("Aún no has desbloqueado este avatar");
+        }
+
+        return avatar;
+    }
+
+    private String limpiarNombreArchivo(String valor) {
+        return valor.trim()
+                .replace("\\", "/")
+                .replaceFirst("^/+", "")
+                .replaceFirst("^\\./img/", "")
+                .replaceFirst("^img/", "")
+                .replaceFirst("^assets/img/", "")
+                .replaceFirst("^src/assets/img/", "");
     }
 
     public void eliminarUsuario(Long id) {

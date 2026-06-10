@@ -4,7 +4,7 @@ import { useAuth } from "../../context/AuthContext.jsx";
 import { useTheme } from "../../context/ThemeContext.jsx";
 import { useNotifications } from "../../context/NotificationsContext.jsx";
 import { buscarUsuarios } from "../../api/usuariosApi.js";
-import img, { avatarPorIcono } from "../../assets/images.js";
+import img, { avatarPorUsuario } from "../../assets/images.js";
 import styles from "./Navbar.module.css";
 
 function tiempoRelativo(ts) {
@@ -217,7 +217,7 @@ export default function Navbar({ showSidebarToggle = false, onSidebarToggle }) {
                 >
                   <img
                     className={styles.navSearchAvatar}
-                    src={avatarPorIcono(u.iconoPerfil)}
+                    src={avatarPorUsuario(u)}
                     alt=""
                   />
                   <span className={styles.navSearchItemText}>
@@ -314,7 +314,7 @@ export default function Navbar({ showSidebarToggle = false, onSidebarToggle }) {
         >
           <span className={styles.nombreUsuario}>@{nombre}</span>
           <span className={styles.avatar}>
-            <img src={avatarPorIcono(usuario?.iconoPerfil)} alt="Perfil" width="30" />
+            <img src={avatarPorUsuario(usuario)} alt="Perfil" width="30" />
           </span>
         </button>
 

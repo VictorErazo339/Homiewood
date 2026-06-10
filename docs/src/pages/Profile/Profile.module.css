@@ -6453,3 +6453,81 @@
     overflow-x: hidden;
   }
 }
+
+/* ---------- ACHIEVEMENT IMAGES + AVATAR REWARDS ---------- */
+.achModalIconImg {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  object-fit: contain;
+  filter: drop-shadow(0 0 8px rgba(var(--profile-accent-rgb, 255, 210, 19), 0.22));
+}
+
+.achAvatarReward {
+  width: fit-content;
+  max-width: 100%;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.38rem;
+  margin-top: 0.24rem;
+  padding: 0.22rem 0.52rem;
+  border: 1px solid rgba(var(--profile-accent-rgb, 255, 210, 19), 0.28);
+  border-radius: 999px;
+  background: rgba(var(--profile-accent-rgb, 255, 210, 19), 0.08);
+  color: var(--gold);
+  font-size: 0.68rem;
+  font-weight: 850;
+  line-height: 1.1;
+}
+
+.achAvatarRewardImg {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 1px solid rgba(var(--profile-accent-rgb, 255, 210, 19), 0.32);
+  background: var(--surface-deep);
+}
+
+.iconOptionReward {
+  position: relative;
+  border-color: rgba(var(--profile-accent-rgb, 255, 210, 19), 0.28);
+  background:
+    radial-gradient(circle at 50% 18%, rgba(var(--profile-accent-rgb, 255, 210, 19), 0.16), transparent 54%),
+    var(--card);
+}
+
+.avatarRewardDivider {
+  width: 100%;
+  margin: 0.55rem 0 0.08rem;
+  color: var(--gold);
+  font-size: 0.72rem;
+  font-weight: 950;
+  letter-spacing: 0.095em;
+  text-transform: uppercase;
+}
+
+.avatarRewardHint {
+  width: 100%;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.avatarRewardBadge {
+  position: absolute;
+  right: -1px;
+  bottom: -1px;
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  border: 1px solid var(--card);
+  background: var(--gold);
+  color: var(--on-accent);
+  font-size: 0.66rem;
+  font-weight: 950;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.34);
+}

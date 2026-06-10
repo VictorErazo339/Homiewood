@@ -29,6 +29,9 @@ public class Usuario {
     @Column
     private Integer iconoPerfil = 1;
 
+    @Column(length = 120)
+    private String avatarPerfil;
+
     @Column(nullable = false)
     private Boolean perfilPrivado = false;
 
@@ -94,6 +97,14 @@ public class Usuario {
 
     public void setIconoPerfil(Integer iconoPerfil) {
         this.iconoPerfil = iconoPerfil;
+    }
+
+    public String getAvatarPerfil() {
+        return avatarPerfil;
+    }
+
+    public void setAvatarPerfil(String avatarPerfil) {
+        this.avatarPerfil = avatarPerfil;
     }
 
     public Boolean getPerfilPrivado() {
