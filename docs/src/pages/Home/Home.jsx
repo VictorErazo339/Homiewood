@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { apiRequest } from "../../api/api.js";
+import { obtenerPerfilResumen } from "../../api/usuariosApi.js";
 import { useAuth } from "../../context/AuthContext.jsx";
 import { useCalificacionesSocket } from "../../lib/websocket.js";
 import Composer from "../../components/Composer/Composer.jsx";
 import Sidebar from "../../components/Sidebar/Sidebar.jsx";
 import PostCard from "../../components/PostCard/PostCard.jsx";
 import FilmModal from "../../components/FilmModal/FilmModal.jsx";
+import { obtenerProfileTheme, prefsDesdeUsuario } from "../../lib/profileTheme.js";
 import styles from "./Home.module.css";
 
 const POSTS_PER_PAGE = 10;
@@ -22,6 +24,10 @@ export default function Home() {
 
   const [posts, setPosts] = useState([]);
   const [modalFilm, setModalFilm] = useState(null);
+  const [feedThemeStyle, setFeedThemeStyle] = useState(() => {
+    const prefs = prefsDesdeUsuario(usuario);
+    return obtenerProfileTheme(prefs.colorTheme).vars;
+  });
   const [cargando, setCargando] = useState(false);
   const [hayMas, setHayMas] = useState(true);
   const [cargaInicial, setCargaInicial] = useState(true);
@@ -131,13 +137,36 @@ export default function Home() {
     return () => observer.disconnect();
   }, [cargarMas]);
 
+  useEffect(() => {
+    let activo = true;
+
+    const prefsIniciales = prefsDesdeUsuario(usuario);
+    setFeedThemeStyle(obtenerProfileTheme(prefsIniciales.colorTheme).vars);
+
+    if (!idUsuario) return undefined;
+
+    obtenerPerfilResumen(idUsuario)
+      .then((resumen) => {
+        if (!activo) return;
+        const prefs = prefsDesdeUsuario(resumen);
+        setFeedThemeStyle(obtenerProfileTheme(prefs.colorTheme).vars);
+      })
+      .catch((error) => {
+        console.error("Error cargando color del perfil para el feed:", error);
+      });
+
+    return () => {
+      activo = false;
+    };
+  }, [idUsuario, usuario?.temaPerfil, usuario?.colorTheme, usuario?.portadaPerfil, usuario?.coverMode]);
+
   const vacio = !cargaInicial && posts.length === 0;
 
   return (
     <>
-      <div className={styles.mainRow}>
+      <div className={styles.mainRow} style={feedThemeStyle}>
         <div className={styles.feedCol}>
-          <Composer onPosted={recargar} />
+          <Composer onPosted={null} />
 
           <div>
             {vacio ? (

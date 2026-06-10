@@ -8,6 +8,11 @@ export function buscarUsuarioPorId(idUsuario) {
   return apiRequest(`/usuarios/${idUsuario}`);
 }
 
+export function obtenerPerfilResumen(idUsuario) {
+  return apiRequest(`/usuarios/${idUsuario}/perfil-resumen`);
+}
+
+
 export function buscarUsuarioPorUsername(username) {
   return apiRequest(`/usuarios/username/${encodeURIComponent(username)}`);
 }
@@ -48,6 +53,14 @@ export function crearUsuario(datos) {
 export function eliminarUsuario(idUsuario) {
   return apiRequest(`/usuarios/${idUsuario}`, {
     method: "DELETE",
+  });
+}
+
+
+export function actualizarPerfilUsuario(idUsuario, datos) {
+  return apiRequest(`/usuarios/${idUsuario}/perfil`, {
+    method: "PUT",
+    body: JSON.stringify(datos),
   });
 }
 

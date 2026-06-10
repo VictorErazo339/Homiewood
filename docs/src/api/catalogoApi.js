@@ -18,3 +18,10 @@ export function guardarContenidoExterno(contenido) {
     body: JSON.stringify(contenido),
   });
 }
+
+export function guardarYAgregarContenidoEnLista(idLista, contenido) {
+  return apiRequest(`/listas/${idLista}/contenidos/externo`, {
+    method: "POST",
+    body: JSON.stringify(contenido),
+  });
+}

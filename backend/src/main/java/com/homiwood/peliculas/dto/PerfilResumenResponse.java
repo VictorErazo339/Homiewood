@@ -1,44 +1,26 @@
-package com.homiwood.peliculas.model;
+package com.homiwood.peliculas.dto;
 
-import jakarta.persistence.*;
-import java.time.LocalDateTime;
+import java.util.List;
 
-@Entity
-@Table(name = "usuarios")
-public class Usuario {
+public class PerfilResumenResponse {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long idUsuario;
-
-    @Column(nullable = false, length = 100)
     private String nombre;
-
-    @Column(nullable = false, unique = true, length = 50, updatable = false)
     private String username;
-
-    @Column(nullable = false, unique = true, length = 150)
-    private String email;
-
-    @Column(nullable = false)
-    private String passwordHash;
-
-    @Column(length = 255)
     private String descripcion;
+    private Integer iconoPerfil;
+    private Boolean perfilPrivado;
+    private String temaPerfil;
+    private String portadaPerfil;
 
-    @Column
-    private Integer iconoPerfil = 1;
+    private Long cantidadPosts;
+    private Long cantidadSeguidores;
+    private Long cantidadSiguiendo;
 
-    @Column(nullable = false)
-    private Boolean perfilPrivado = false;
+    private List<LogroResponse> logrosDestacados;
 
-    @Column(nullable = false, length = 30)
-    private String temaPerfil = "yellow";
-
-    @Column(nullable = false, length = 20)
-    private String portadaPerfil = "top1";
-
-    private LocalDateTime fechaCreacion = LocalDateTime.now();
+    public PerfilResumenResponse() {
+    }
 
     public Long getIdUsuario() {
         return idUsuario;
@@ -62,22 +44,6 @@ public class Usuario {
 
     public void setUsername(String username) {
         this.username = username;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getPasswordHash() {
-        return passwordHash;
-    }
-
-    public void setPasswordHash(String passwordHash) {
-        this.passwordHash = passwordHash;
     }
 
     public String getDescripcion() {
@@ -120,11 +86,35 @@ public class Usuario {
         this.portadaPerfil = portadaPerfil;
     }
 
-    public LocalDateTime getFechaCreacion() {
-        return fechaCreacion;
+    public Long getCantidadPosts() {
+        return cantidadPosts;
     }
 
-    public void setFechaCreacion(LocalDateTime fechaCreacion) {
-        this.fechaCreacion = fechaCreacion;
+    public void setCantidadPosts(Long cantidadPosts) {
+        this.cantidadPosts = cantidadPosts;
+    }
+
+    public Long getCantidadSeguidores() {
+        return cantidadSeguidores;
+    }
+
+    public void setCantidadSeguidores(Long cantidadSeguidores) {
+        this.cantidadSeguidores = cantidadSeguidores;
+    }
+
+    public Long getCantidadSiguiendo() {
+        return cantidadSiguiendo;
+    }
+
+    public void setCantidadSiguiendo(Long cantidadSiguiendo) {
+        this.cantidadSiguiendo = cantidadSiguiendo;
+    }
+
+    public List<LogroResponse> getLogrosDestacados() {
+        return logrosDestacados;
+    }
+
+    public void setLogrosDestacados(List<LogroResponse> logrosDestacados) {
+        this.logrosDestacados = logrosDestacados;
     }
 }

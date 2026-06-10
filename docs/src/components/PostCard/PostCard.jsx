@@ -204,8 +204,21 @@ export default function PostCard({ calificacion: c, currentUser }) {
 
         <div className={styles.postColSocial}>
           <div className={styles.username}>
-            <div className={styles.userIcon}>👤</div>
-            {username}
+
+            <img 
+              src={avatarPorIcono(c.iconoPerfil || 1)} 
+              alt={username || "Perfil"} 
+              width="30" 
+              height="30"
+              style={{ borderRadius: "50%", objectFit: "cover", marginRight: "8px" }}
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = avatarPorIcono(1);
+              }}
+            />
+            <span>{username}</span>
+
+
           </div>
 
           <p className={`${styles.postText} mb-0`}>{c.comentario || ""}</p>

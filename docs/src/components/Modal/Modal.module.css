@@ -128,3 +128,40 @@
   border-color: var(--muted);
   color: var(--text);
 }
+
+/* ---------- SOLUCIÓN: modal más estable en pantallas bajas ---------- */
+.modal-overlay {
+  align-items: center;
+  padding: clamp(0.75rem, 2vw, 1.25rem);
+}
+
+.modal-dialog.lg {
+  max-width: min(920px, calc(100vw - 2rem));
+}
+
+.modal-box {
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: clamp(1.15rem, 2.2vw, 2rem);
+}
+
+.modal-box::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modal-box::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(var(--profile-accent-rgb, 255, 210, 19), 0.35);
+}
+
+@media (max-width: 640px) {
+  .modal-overlay {
+    align-items: flex-start;
+  }
+
+  .modal-dialog,
+  .modal-dialog.lg {
+    max-width: 100%;
+  }
+}

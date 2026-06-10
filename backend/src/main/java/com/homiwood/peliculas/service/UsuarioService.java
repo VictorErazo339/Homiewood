@@ -2,28 +2,57 @@ package com.homiwood.peliculas.service;
 
 import com.homiwood.peliculas.dto.ActualizarPerfilRequest;
 import com.homiwood.peliculas.dto.CrearUsuarioRequest;
+import com.homiwood.peliculas.dto.LogroResponse;
+import com.homiwood.peliculas.dto.PerfilResumenResponse;
 import com.homiwood.peliculas.dto.UsuarioSearchResponse;
 import com.homiwood.peliculas.exception.BadRequestException;
 import com.homiwood.peliculas.exception.DuplicateResourceException;
 import com.homiwood.peliculas.exception.NotFoundException;
+import com.homiwood.peliculas.model.Logro;
 import com.homiwood.peliculas.model.Usuario;
+import com.homiwood.peliculas.model.UsuarioLogro;
+import com.homiwood.peliculas.repository.CalificacionRepository;
+import com.homiwood.peliculas.repository.SeguimientoRepository;
+import com.homiwood.peliculas.repository.UsuarioLogroRepository;
 import com.homiwood.peliculas.repository.UsuarioRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
+    private final CalificacionRepository calificacionRepository;
+    private final SeguimientoRepository seguimientoRepository;
+    private static final String TEMA_PERFIL_DEFAULT = "yellow";
+    private static final String PORTADA_PERFIL_DEFAULT = "top1";
+
+    private static final Set<String> TEMAS_PERFIL_VALIDOS = Set.of(
+            "yellow", "crimson", "blue", "pink", "purple", "neon", "sunset", "mint", "sage"
+    );
+
+    private static final Set<String> PORTADAS_PERFIL_VALIDAS = Set.of(
+            "top1", "top2", "top3", "top4", "top5", "none"
+    );
+
+    private final UsuarioLogroRepository usuarioLogroRepository;
 
     public UsuarioService(
             UsuarioRepository usuarioRepository,
-            PasswordEncoder passwordEncoder) {
+            PasswordEncoder passwordEncoder,
+            CalificacionRepository calificacionRepository,
+            SeguimientoRepository seguimientoRepository,
+            UsuarioLogroRepository usuarioLogroRepository) {
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
+        this.calificacionRepository = calificacionRepository;
+        this.seguimientoRepository = seguimientoRepository;
+        this.usuarioLogroRepository = usuarioLogroRepository;
     }
 
     public List<Usuario> listarUsuarios() {
@@ -50,6 +79,8 @@ public class UsuarioService {
         usuario.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         usuario.setIconoPerfil(1);
         usuario.setPerfilPrivado(false);
+        usuario.setTemaPerfil(TEMA_PERFIL_DEFAULT);
+        usuario.setPortadaPerfil(PORTADA_PERFIL_DEFAULT);
 
         return usuarioRepository.save(usuario);
     }
@@ -94,6 +125,74 @@ public class UsuarioService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public PerfilResumenResponse obtenerPerfilResumen(Long idUsuario) {
+        Usuario usuario = buscarPorId(idUsuario);
+
+        Long cantidadPosts = calificacionRepository.contarResenasConComentario(idUsuario);
+        Long cantidadSeguidores = seguimientoRepository.countBySeguidoIdUsuario(idUsuario);
+        Long cantidadSiguiendo = seguimientoRepository.countBySeguidorIdUsuario(idUsuario);
+
+        List<LogroResponse> logrosDestacados = usuarioLogroRepository
+                .listarDestacadosPorUsuario(idUsuario)
+                .stream()
+                .map(this::toLogroResponse)
+                .toList();
+
+        PerfilResumenResponse response = new PerfilResumenResponse();
+
+        response.setIdUsuario(usuario.getIdUsuario());
+        response.setNombre(usuario.getNombre());
+        response.setUsername(usuario.getUsername());
+        response.setDescripcion(usuario.getDescripcion());
+        response.setIconoPerfil(usuario.getIconoPerfil());
+        response.setPerfilPrivado(usuario.getPerfilPrivado());
+        response.setTemaPerfil(normalizarTemaPerfil(usuario.getTemaPerfil()));
+        response.setPortadaPerfil(normalizarPortadaPerfil(usuario.getPortadaPerfil()));
+
+        response.setCantidadPosts(cantidadPosts);
+        response.setCantidadSeguidores(cantidadSeguidores);
+        response.setCantidadSiguiendo(cantidadSiguiendo);
+
+        response.setLogrosDestacados(logrosDestacados);
+
+        return response;
+    }
+
+    private LogroResponse toLogroResponse(UsuarioLogro usuarioLogro) {
+        Logro logro = usuarioLogro.getLogro();
+
+        boolean desbloqueado = Boolean.TRUE.equals(usuarioLogro.getDesbloqueado());
+        boolean oculto = Boolean.TRUE.equals(logro.getOculto());
+        boolean visible = !oculto || desbloqueado;
+
+        LogroResponse response = new LogroResponse();
+
+        response.setIdLogro(logro.getIdLogro());
+        response.setOculto(oculto);
+        response.setVisible(visible);
+        response.setDesbloqueado(desbloqueado);
+        response.setDestacado(Boolean.TRUE.equals(usuarioLogro.getDestacado()));
+        response.setFechaDesbloqueo(usuarioLogro.getFechaDesbloqueo());
+        response.setDificultad(logro.getDificultad());
+        response.setValorObjetivo(logro.getValorObjetivo());
+        response.setProgresoActual(usuarioLogro.getProgresoActual());
+
+        if (visible) {
+            response.setCodigo(logro.getCodigo());
+            response.setNombre(logro.getNombre());
+            response.setDescripcion(logro.getDescripcion());
+            response.setIcono(logro.getIcono());
+        } else {
+            response.setCodigo("OCULTO");
+            response.setNombre("???");
+            response.setDescripcion("Logro oculto. Sigue usando Homiewood para descubrirlo.");
+            response.setIcono("🔒");
+        }
+
+        return response;
+    }
+
     public Usuario actualizarPerfil(Long id, ActualizarPerfilRequest request) {
         Usuario usuario = buscarPorId(id);
 
@@ -105,6 +204,14 @@ public class UsuarioService {
             usuario.setDescripcion(null);
         } else {
             usuario.setDescripcion(descripcion.trim());
+        }
+
+        if (request.getTemaPerfil() != null) {
+            usuario.setTemaPerfil(normalizarTemaPerfil(request.getTemaPerfil()));
+        }
+
+        if (request.getPortadaPerfil() != null) {
+            usuario.setPortadaPerfil(normalizarPortadaPerfil(request.getPortadaPerfil()));
         }
 
         return usuarioRepository.save(usuario);
@@ -130,6 +237,34 @@ public class UsuarioService {
         usuario.setPerfilPrivado(perfilPrivado);
 
         return usuarioRepository.save(usuario);
+    }
+
+    private String normalizarTemaPerfil(String temaPerfil) {
+        if (temaPerfil == null || temaPerfil.trim().isBlank()) {
+            return TEMA_PERFIL_DEFAULT;
+        }
+
+        String tema = temaPerfil.trim().toLowerCase();
+
+        if (!TEMAS_PERFIL_VALIDOS.contains(tema)) {
+            throw new BadRequestException("El tema de perfil no es válido");
+        }
+
+        return tema;
+    }
+
+    private String normalizarPortadaPerfil(String portadaPerfil) {
+        if (portadaPerfil == null || portadaPerfil.trim().isBlank()) {
+            return PORTADA_PERFIL_DEFAULT;
+        }
+
+        String portada = portadaPerfil.trim().toLowerCase();
+
+        if (!PORTADAS_PERFIL_VALIDAS.contains(portada)) {
+            throw new BadRequestException("La portada de perfil no es válida");
+        }
+
+        return portada;
     }
 
     public void eliminarUsuario(Long id) {

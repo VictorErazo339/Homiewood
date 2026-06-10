@@ -20,6 +20,7 @@ import avatar1 from "./img/avatar1.webp";
 import avatar2 from "./img/avatar2.webp";
 import avatar3 from "./img/avatar3.webp";
 
+
 // Selectable profile icons, indexed by the backend's iconoPerfil (1-based).
 export const avatars = [avatar1, avatar2, avatar3];
 
