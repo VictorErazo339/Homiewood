@@ -45,6 +45,17 @@ public interface CalificacionRepository extends JpaRepository<Calificacion, Long
             Pageable pageable
     );
 
+    @Query("""
+        SELECT c
+        FROM Calificacion c
+        JOIN FETCH c.usuario u
+        JOIN FETCH c.contenido con
+        WHERE c.comentario IS NOT NULL
+        AND TRIM(c.comentario) <> ''
+        ORDER BY c.fechaCalificacion DESC
+        """)
+    List<Calificacion> findAllByOrderByFechaCalificacionDesc(Pageable pageable);
+
     @Query("SELECT AVG(c.puntaje) FROM Calificacion c WHERE c.contenido.idContenido = :idContenido")
     Double calcularPromedioPorContenido(@Param("idContenido") Long idContenido);
 
@@ -76,4 +87,7 @@ public interface CalificacionRepository extends JpaRepository<Calificacion, Long
             AND EXTRACT(HOUR FROM c.fecha_calificacion) BETWEEN 0 AND 3
             """, nativeQuery = true)
     long contarCalificacionesMadrugada(@Param("idUsuario") Long idUsuario);
+
+
+
 }

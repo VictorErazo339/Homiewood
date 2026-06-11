@@ -62,8 +62,17 @@ public class CalificacionService {
         this.responseMapper = responseMapper;
     }
 
-    public List<Calificacion> listarCalificaciones() {
-        return calificacionRepository.findAll();
+    //public List<Calificacion> listarCalificaciones() {
+    //    return calificacionRepository.findAll();
+    //}
+
+
+    public List<Calificacion> listarCalificaciones(int page, int limite) {
+        int paginaSegura = Math.max(page, 0);
+        int limiteSeguro = Math.min(Math.max(limite, 1), 30);
+        return calificacionRepository.findAllByOrderByFechaCalificacionDesc(
+                PageRequest.of(paginaSegura, limiteSeguro)
+        );
     }
 
     public List<Calificacion> listarFeedHomies(Long idUsuario, int page, int limite) {

@@ -37,9 +37,18 @@ public class CalificacionController {
                 .toList();
     }
 
+    //@GetMapping
+    //public List<CalificacionResponse> listarCalificaciones() {
+    //    return calificacionService.listarCalificaciones()
+    //            .stream()
+    //            .map(responseMapper::toCalificacionResponse)
+    //            .toList();
+    //}
     @GetMapping
-    public List<CalificacionResponse> listarCalificaciones() {
-        return calificacionService.listarCalificaciones()
+    public List<CalificacionResponse> listarCalificaciones(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int limite) {
+        return calificacionService.listarCalificaciones(page, limite)
                 .stream()
                 .map(responseMapper::toCalificacionResponse)
                 .toList();
@@ -108,4 +117,9 @@ public class CalificacionController {
                 "totalCalificacionesMadrugada", calificacionService.contarCalificacionesMadrugada(idUsuario),
                 "rachaActual", calificacionService.calcularRachaActualUsuario(idUsuario));
     }
+
+
+
+
+
 }
